@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- T01087：危险操作红（危险区卡片描边 + 清除按钮文字） -->
+    <color name="danger_stroke">#A32D2D</color>
+    <color name="danger_text">#A32D2D</color>
+    <!-- T01090：连接状态语义色（就绪绿 / 缺失琥珀） -->
+    <color name="conn_ok">#3B6D11</color>
+    <color name="conn_todo">#854F0B</color>
+</resources>

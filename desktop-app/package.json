@@ -1,0 +1,79 @@
+{
+  "name": "emoreply-desktop",
+  "version": "20261012-001",
+  "description": "EmoReply 桌面端 POC：悬浮窗 + 剪贴板交付（T01054，壳选型：Electron）",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "node scripts/pkg-semver.js --win --x64",
+    "dist:mac": "node scripts/pkg-semver.js --mac",
+    "test": "node scripts/generate.smoke.js && node scripts/sanitize.smoke.js && node scripts/llm.smoke.js && node scripts/tone.smoke.js && node scripts/kb.smoke.js && node scripts/ocr.smoke.js && node scripts/settings.smoke.js",
+    "test:e2e": "node scripts/ui-e2e.js",
+    "test:asar": "electron scripts/ocr-asar-check.js"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.emoreply.desktop",
+    "productName": "EmoReply",
+    "copyright": "Copyright © 2026 EmoReply",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "settings-store.js",
+      "kb.js",
+      "ocr.js",
+      "llm.js",
+      "sanitize.js",
+      "tone.js",
+      "index.html",
+      "assets/**/*",
+      "!node_modules/tesseract.js-core/*.wasm.js"
+    ],
+    "win": {
+      "icon": "assets/emoreply.ico",
+      "target": [
+        {
+          "target": "nsis"
+        },
+        {
+          "target": "portable"
+        }
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "installerIcon": "assets/emoreply.ico",
+      "uninstallerIcon": "assets/emoreply.ico",
+      "installerHeaderIcon": "assets/emoreply.ico",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "EmoReply"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-${arch}-portable.${ext}"
+    },
+    "mac": {
+      "icon": "assets/emoreply.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "icon": "assets/emoreply-512.png",
+      "target": [
+        "AppImage"
+      ]
+    }
+  },
+  "dependencies": {
+    "tesseract.js": "^7.0.0"
+  }
+}

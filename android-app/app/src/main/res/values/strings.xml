@@ -1,0 +1,84 @@
+<resources>
+    <string name="app_name">EmoReply</string>
+    <string name="notify_service_label">EmoReply 通知捕获</string>
+    <string name="ime_label">EmoReply 输入法</string>
+    <string name="reader_service_label">EmoReply 读屏（pull 模式原型）</string>
+    <string name="reader_service_description">仅用于 EmoReply 输入法在您主动点击「读屏」按钮时，读取当前微信聊天窗口的可见文本以生成回复。不在后台收集内容、不模拟点击、内容不外传不保存。可随时在系统无障碍设置中关闭。</string>
+
+    <string name="btn_notify_access">① 授权通知使用权</string>
+    <string name="btn_ime_settings">② 启用 EmoReply 输入法</string>
+    <string name="btn_ime_picker">③ 切换输入法</string>
+
+    <string name="status_template">通知监听：%1$s\n输入法启用：%2$s\n输入法为默认：%3$s</string>
+    <string name="last_none">最近捕获：暂无（收到微信/钉钉通知后自动出现候选）</string>
+    <string name="last_template">最近捕获：%1$s：%2$s\n候选：%3$s\n%4$s</string>
+
+    <string name="llm_section_title">云端生成设置（OpenAI 兼容接口）</string>
+    <string name="llm_enable">启用云端 LLM 生成（未启用/未填全时使用本地模板）</string>
+    <string name="llm_base_url_hint">接口地址，如 https://api.deepseek.com/v1</string>
+    <string name="llm_model_hint">模型名，如 deepseek-chat</string>
+    <string name="llm_api_key_hint">API Key（仅保存在本机，不上传、不入仓库）</string>
+    <string name="llm_save">保存云端设置</string>
+    <string name="llm_status_on">云端生成：已启用（%1$s / %2$s）</string>
+    <string name="llm_status_off">云端生成：未启用（使用本地模板桩）</string>
+    <string name="llm_status_saved">已保存。密钥仅存于本机应用私有目录。</string>
+
+    <string name="update_section_title">版本更新</string>
+    <string name="update_url_hint">版本清单 URL（JSON：versionCode/apkUrl/notes）</string>
+    <string name="update_check">检查更新</string>
+    <string name="update_do">发现新版本 %1$s，立即更新</string>
+    <string name="update_latest">已是最新版本（%1$s）</string>
+    <string name="update_downloading">下载中 %1$d%%</string>
+    <string name="update_download_done">下载完成，正在拉起安装…（若未弹出，请授予「安装未知应用」权限后重试）</string>
+    <string name="update_checking">正在检查更新…</string>
+    <string name="update_failed">检查/更新失败：%1$s</string>
+    <string name="update_cancel">取消下载</string>
+    <string name="update_cancelled">已取消下载，可再次点击「立即更新」继续</string>
+
+    <string name="style_section_title">回复风格（FR-3.2）</string>
+    <string name="feedback_section_title">反馈统计（FR-4.3，仅本机计数、不含正文）</string>
+    <string name="feedback_stats">采纳：%1$d　忽略：%2$d　采纳率：%3$s（目标 ≥40%%）</string>
+    <string name="feedback_empty">暂无反馈记录（点选候选记「采纳」，候选被替换未用记「忽略」）</string>
+    <string name="clear_data">一键清除全部本地数据（FR-6.3）</string>
+    <string name="clear_data_done">已清除：反馈统计、云端设置、待回复缓存均已重置</string>
+    <string name="clear_confirm_title">清除全部本地数据？</string>
+    <string name="clear_confirm_msg">将不可恢复地清空：API Key 与云端设置、反馈统计、待回复缓存、人设与关系、知识库、常用模板。建议先确认不再需要这些数据。</string>
+    <string name="clear_confirm_yes">清除</string>
+    <string name="clear_confirm_no">取消</string>
+    <string name="style_saved">回复风格已切换为「%1$s」</string>
+
+    <string name="persona_section_title">人设与关系（FR-5.1/5.2，本机加密存储）</string>
+    <string name="persona_me_hint">自称（如：小王），用于生成语气</string>
+    <string name="persona_banned_hint">禁语，逗号分隔（候选出现即拦截）</string>
+    <string name="persona_save">保存人设</string>
+    <string name="persona_saved">人设已保存（加密存储于本机）</string>
+    <string name="relation_name_hint">联系人备注名/群名</string>
+    <string name="relation_save">保存联系人关系</string>
+    <string name="relation_saved">%1$s 已标注为「%2$s」</string>
+    <string name="relation_need_name">请先填写联系人名称</string>
+
+    <string name="kb_section_title">RAG 知识库（决策③，本机加密存储）</string>
+    <string name="kb_contact_hint">联系人（仅关系话术需要，可留空）</string>
+    <string name="kb_text_hint">知识内容（如：给老板发生日祝福，语气正式一点）</string>
+    <string name="kb_save">保存知识条目</string>
+    <string name="kb_saved">已保存（加密存储于本机）</string>
+    <string name="kb_need_text">请填写知识内容</string>
+    <string name="kb_status">知识条目：%1$d 条（生成时按相关性自动引用，最多 3 条）</string>
+
+    <string name="quality_section_title">生成质量</string>
+    <string name="style_label">回复风格</string>
+    <string name="relation_section_title">联系人关系</string>
+    <string name="connection_ready">连接就绪</string>
+    <string name="connection_ready_detail">通知监听 ✓ · 输入法已启用 ✓ · 已设为默认 ✓</string>
+    <string name="connection_todo">待完成 %1$d 项（点击下方按钮补齐）</string>
+    <string name="llm_test_connection">测试连接</string>
+    <string name="llm_test_running">测试中…</string>
+    <string name="llm_test_ok">连接成功：%1$s · %2$s</string>
+    <string name="llm_test_need_key">请先填写 API Key（留空时沿用已保存的密钥）</string>
+    <string name="about_section_title">关于与更新</string>
+    <string name="about_arrow_down">▾</string>
+    <string name="about_arrow_up">▸</string>
+    <!-- T01336：通知渠道（小图标用单色白剪影 ic_stat_emoreply，系统会着色，彩色图会变灰块） -->
+    <string name="notif_channel_default_name">EmoReply 提示</string>
+    <string name="notif_channel_default_desc">读屏完成、候选已生成等轻量状态提示</string>
+</resources>

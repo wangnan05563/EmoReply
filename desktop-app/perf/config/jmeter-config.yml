@@ -1,0 +1,144 @@
+# ============================================================================
+# EmoReply 桌面端本地 HTTP API 压测配置（jmeter-performance-test 技能）
+# ----------------------------------------------------------------------------
+# 目标：对 desktop-app 的本地接口（127.0.0.1:17777）做性能/回归压测。
+# SUT：perf/sut-harness.js（纯 Node，镜像 main.js 的 startHttpApi，降级模式离线运行）。
+# 模式：python_replay（本机无 Java/JMeter，按技能决策树自动回退）。
+# 覆盖端点：GET /health、POST /generate（降级模板路径，确定性、无外部依赖）。
+# 未覆盖：云端 LLM 真实生成路径（需用户 Key + 出网，延迟由上游模型主导）。
+# ============================================================================
+
+mode: python_replay   # 无 Java/JMeter，强制内置回放引擎
+
+# ---------------------------------------------------------------------------
+# 目标服务（外部 SUT：harness 由本机手动启动，引擎只发请求、不拉起/不杀进程）
+# ---------------------------------------------------------------------------
+target:
+  base_url: "http://127.0.0.1:17777"
+  default_timeout_sec: 30
+  ramp_stagger: true          # 错峰爬坡，模拟真实流量
+  fixed_headers: {}
+  auth:
+    type: none
+
+# ---------------------------------------------------------------------------
+# 沙箱隔离：关闭（SUT 即本地 harness，非生产；生产 Electron 实例未运行）
+# ---------------------------------------------------------------------------
+sandbox:
+  enabled: false
+  port: 17777
+  health_path: "/health"
+  process_match:
+    mode: "pid_file"
+    pid_file: "sut.pid"       # harness 启动后写入自身 pid，供定向关停/监控定位
+  lifecycle:
+    never_global_kill: true   # 绝不按映像名全局杀进程
+    kill_tree: true
+
+# ---------------------------------------------------------------------------
+# 资源监控 sidecar（量化 SUT 进程 RSS/CPU；引擎不自动跑，需单独起 monitor_sut.py）
+# ---------------------------------------------------------------------------
+resource_monitor:
+  enabled: true
+  match:
+    mode: "pid_file"
+    pid_file: "sut.pid"
+  sample_interval_sec: 2
+  duration_samples: 0          # 0 = 一直采样到被中断
+  metrics: ["rss_mb", "private_mb", "cpu_percent"]
+  output_csv: "output/sut_resource.csv"
+  alert:
+    enabled: true
+    max_rss_mb: 2000
+    on_exceed: warn
+
+# ---------------------------------------------------------------------------
+# 场景生成（配置驱动批量生成 JMX，零硬编码端点/端口/夹具）
+# ---------------------------------------------------------------------------
+scenarios:
+  enabled: true
+  output_jmx_dir: "jmx"
+  default_protocol: "http"
+  default_method: "GET"
+  fixtures: {}
+  # 命名线程档
+  thread_profiles:
+    smoke:   { threads: 1,  ramp: 1,  duration: 20 }
+    load10:  { threads: 10, ramp: 5,  duration: 30 }
+    load50:  { threads: 50, ramp: 10, duration: 20 }
+  # 场景列表（每个生成一份 .jmx）
+  list:
+    - name: "smoke"            # 冒烟：单线程跑两个端点做健康门闸
+      profile: "smoke"
+      samplers:
+        - { name: "health",   path: "/health",   method: "GET" }
+        - { name: "generate", path: "/generate", method: "POST",
+            body: '{"text":"今晚一起吃饭吗？","style":"亲切"}' }
+    - name: "health"           # 健康端点高并发基线
+      profile: "load50"
+      samplers:
+        - { name: "health",   path: "/health",   method: "GET" }
+    - name: "generate"         # 主压测：/generate 降级全管线
+      profile: "load50"
+      samplers:
+        - { name: "generate", path: "/generate", method: "POST",
+            body: '{"text":"今晚一起吃饭吗？","style":"亲切"}' }
+
+# ---------------------------------------------------------------------------
+# 压测阶段：引用生成的 JMX
+# ---------------------------------------------------------------------------
+phases:
+  - name: "smoke"
+    jmx: "jmx/smoke.jmx"
+    enabled: true
+    threads_override: null
+    duration_override: null
+  - name: "health"
+    jmx: "jmx/health.jmx"
+    enabled: true
+    threads_override: null
+    duration_override: null
+  - name: "generate"
+    jmx: "jmx/generate.jmx"
+    enabled: true
+    threads_override: null
+    duration_override: null
+
+# ---------------------------------------------------------------------------
+# 缺陷判定：区分「真实服务缺陷」与「断言口径错误」
+# ---------------------------------------------------------------------------
+defect_rules:
+  defect_codes: ["000", "405"]   # 000=连接失败/重置；405=方法不允许(路由缺失)
+  defect_prefixes: ["5"]         # 5xx 服务端错误
+  expected_codes: ["404"]        # 404 为预期内（非 /generate 路径），不计入缺陷
+  assertion_mismatch_is_defect: false
+
+# ---------------------------------------------------------------------------
+# 回归对比（本次无基线，关闭）
+# ---------------------------------------------------------------------------
+comparison:
+  enabled: false
+analysis:
+  enabled: false
+
+# ---------------------------------------------------------------------------
+# 报告
+# ---------------------------------------------------------------------------
+report:
+  formats: ["markdown"]
+  output_dir: "output"
+  percentiles: [50, 95, 99]
+  endpoint_table: true
+  group_label_prefixes: []
+
+# ---------------------------------------------------------------------------
+# 结果文件 / 日志
+# ---------------------------------------------------------------------------
+results:
+  output_dir: "output"
+  format: csv
+  keep_count: 10
+logging:
+  level: INFO
+  file: "output/perf.log"
+  verbose: false

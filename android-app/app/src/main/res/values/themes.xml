@@ -1,0 +1,4 @@
+<resources>
+    <!-- T01088：升级 Material3 主题——DayNight 跟随系统深色模式（P10 顺带达成） -->
+    <style name="Theme.EmoReplyPoc" parent="Theme.Material3.DayNight.NoActionBar" />
+</resources>

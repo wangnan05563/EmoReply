@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- T01090：连接状态卡圆点（默认色由代码切换） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/conn_todo" />
+    <size android:width="10dp" android:height="10dp" />
+</shape>

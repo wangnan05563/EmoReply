@@ -1,0 +1,76 @@
+{
+  "project": {
+    "name": "EmoReply",
+    "version_source": "package_json",
+    "version_file_path": "desktop-app/package.json",
+    "description": "EmoReply AI 高情商回复输入法：桌面端 Electron (NSIS+便携) + 安卓 APK 一键构建并发布到 GitHub Releases",
+    "root": ".."
+  },
+  "encoding": {
+    "bat_encoding": "ascii",
+    "ps1_encoding": "utf8bom",
+    "line_ending": "crlf"
+  },
+  "runtime": {
+    "java_home": "D:\\android\\jdk17\\jdk-17.0.20.1+1",
+    "gradle": "D:\\android\\gradle-8.9\\bin\\gradle.bat"
+  },
+  "build_pipeline": {
+    "steps": [
+      {
+        "name": "install desktop deps (npm install)",
+        "command": "pushd \"<REPO_ROOT>\\desktop-app\" && npm install --no-audit --no-fund && popd",
+        "on_fail": "stop"
+      },
+      {
+        "name": "build desktop Electron NSIS + portable (npm run dist)",
+        "command": "pushd \"<REPO_ROOT>\\desktop-app\" && set ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/ && set ELECTRON_BUILDER_BINARIES_MIRROR=https://registry.npmmirror.com/-/binary/electron-builder-binaries/ && npm run dist && popd",
+        "on_fail": "stop"
+      },
+      {
+        "name": "build Android APK (assembleDebug, offline)",
+        "command": "set JAVA_HOME=<JAVA_HOME> && \"<GRADLE>\" -p \"<REPO_ROOT>\\android-app\" assembleDebug --offline",
+        "on_fail": "stop"
+      }
+    ]
+  },
+  "github_release": {
+    "enabled": true,
+    "repo": "<FILL_OWNER>/<FILL_NAME>",
+    "tag_source": "package_json",
+    "version_file_path": "desktop-app/package.json",
+    "asset": {
+      "dir": "desktop-app/dist",
+      "glob": "EmoReply-*-setup.exe",
+      "exclude_patterns": ["arm64"]
+    },
+    "additional_assets": [
+      {
+        "dir": "desktop-app/dist",
+        "glob": "EmoReply-*-portable.exe",
+        "display_name": "EmoReply-<VER>-portable.exe"
+      },
+      {
+        "dir": "android-app/app/build/outputs/apk/debug",
+        "glob": "app-debug.apk",
+        "display_name": "EmoReply-<VER>-android.apk"
+      }
+    ],
+    "notes": {
+      "path_template": "release-notes-<VER>.md",
+      "auto_generate": true,
+      "auto_generate_git_log": null
+    },
+    "publish_script": "scripts/publish-release.py",
+    "python": {
+      "candidates": [
+        "%USERPROFILE%\\.workbuddy\\binaries\\python\\envs\\default\\Scripts\\python.exe",
+        "python",
+        "python3"
+      ]
+    },
+    "dry_run": false,
+    "draft": false,
+    "prerelease": false
+  }
+}

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="EmoReply">
+  <title>EmoReply · 高情商聊天回复助手</title>
+  <desc>主标：超椭圆徽标（深蓝 #08275E → 青 #21AFAF 渐变）+ 白色对话气泡（左下尾）+ 浅蓝爱心 #8DB9D5 + 淡青星光 #C5FEF5。画布 1024，徽标 900（含 62 安全边距），圆角 250。</desc>
+  <defs>
+    <linearGradient id="erBadge" x1="0" y1="62" x2="0" y2="962" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#08275E"/>
+      <stop offset="0.55" stop-color="#10517A"/>
+      <stop offset="1" stop-color="#21AFAF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 徽标底 -->
+  <path fill="url(#erBadge)" d="M312 62 H712 A250 250 0 0 1 962 312 V712 A250 250 0 0 1 712 962 H312 A250 250 0 0 1 62 712 V312 A250 250 0 0 1 312 62 Z"/>
+
+  <!-- 气泡尾（左下，与气泡主体同色叠加） -->
+  <path fill="#FFFFFF" d="M372 640 C350 712 300 776 286 812 C348 790 418 724 452 668 Z"/>
+  <!-- 气泡主体 -->
+  <ellipse cx="500" cy="478" rx="296" ry="228" fill="#FFFFFF"/>
+  <!-- 爱心（共情） -->
+  <path fill="#8DB9D5" transform="translate(545 552) scale(1.5)"
+        d="M0 -52 C-24 -82 -96 -86 -128 -50 C-160 -14 -100 42 0 95 C100 42 160 -14 128 -50 C96 -86 24 -82 0 -52 Z"/>
+  <!-- 星光（AI） -->
+  <path fill="#C5FEF5" transform="translate(653 294)"
+        d="M0 -77 C7 -21 21 -7 77 0 C21 7 7 21 0 77 C-7 21 -21 7 -77 0 C-21 -7 -7 -21 0 -77 Z"/>
+</svg>

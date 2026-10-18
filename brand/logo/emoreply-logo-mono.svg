@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="EmoReply mono">
+  <title>EmoReply · 单色版（实心徽标 + 图形镂空）</title>
+  <desc>单色/单色打印场景：单一色值 #08275E（可改 fill 适配），气泡与星光以 mask 镂空、爱心保留实心（保证 &lt;24px 仍可辨），不依赖渐变与多色。与 mono/emoreply-mono-*.png 位图版一致。</desc>
+  <defs>
+    <!-- 徽标外形：超椭圆圆角方（圆角 250 / 边长 900） -->
+    <path id="erShape" d="M312 62 H712 A250 250 0 0 1 962 312 V712 A250 250 0 0 1 712 962 H312 A250 250 0 0 1 62 712 V312 A250 250 0 0 1 312 62 Z"/>
+    <!-- 气泡（含左下尾） -->
+    <path id="erBubble" d="M372 640 C350 712 300 776 286 812 C348 790 418 724 452 668 Z"/>
+    <ellipse id="erBubbleBody" cx="500" cy="478" rx="296" ry="228"/>
+    <!-- 爱心 -->
+    <path id="erHeart" transform="translate(545 552) scale(1.5)"
+          d="M0 -52 C-24 -82 -96 -86 -128 -50 C-160 -14 -100 42 0 95 C100 42 160 -14 128 -50 C96 -86 24 -82 0 -52 Z"/>
+    <!-- 星光 -->
+    <path id="erSpark" transform="translate(653 294)"
+          d="M0 -77 C7 -21 21 -7 77 0 C21 7 7 21 0 77 C-7 21 -21 7 -77 0 C-21 -7 -7 -21 0 -77 Z"/>
+    <mask id="erMonoMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <use href="#erShape" fill="#FFFFFF"/>
+      <use href="#erBubble" fill="#000000"/>
+      <use href="#erBubbleBody" fill="#000000"/>
+      <use href="#erHeart" fill="#FFFFFF"/>
+      <use href="#erSpark" fill="#000000"/>
+    </mask>
+  </defs>
+  <use href="#erShape" fill="#08275E" mask="url(#erMonoMask)"/>
+</svg>

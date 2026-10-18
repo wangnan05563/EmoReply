@@ -1,0 +1,69 @@
+# ============================================================
+# EmoReply (28_AIMsg) — 忽略规则
+# 规则依据 2026-10-13 全空间实测扫描；只列本项目真实存在/可再生成的类别
+# ============================================================
+
+# ---------- 构建产物 ----------
+# Android/Gradle：工程内缓存与兜底输出目录
+android-app/.gradle/
+android-app/app/build/
+android-app/build/
+# 构建产物统一外置目录（app/build.gradle.kts: layout.buildDirectory = ../release/build/app）
+release/
+# APK/AAB 与中间签名物
+*.apk
+*.aab
+
+# Desktop（Electron + electron-builder）
+desktop-app/node_modules/
+desktop-app/dist/
+desktop-app/tmp/
+
+# Python POC（m1-poc）
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# iOS（预防：Xcode 衍生数据；当前源码树尚无这些目录）
+ios-app/**/build/
+xcuserdata/
+DerivedData/
+Pods/
+
+# ---------- 本机配置（机器相关，不入库） ----------
+local.properties
+*.properties.bak
+*.jks
+*.keystore
+*.p12
+*.pem
+
+# ---------- 敏感信息 ----------
+# 含明文 API key 的品牌工具配置（2026-10-13 核实）
+brand/_source/agnes-config.yaml
+.env
+.env.*
+*credentials*
+
+# ---------- 日志 / 临时 / 清理残留 ----------
+*.log
+tmp/
+cleanup-logs/
+.cleanup-quarantine/
+
+# ---------- IDE / Agent 工作区 ----------
+.idea/
+.vscode/
+*.iml
+.qoder-cn/
+.workbuddy/
+
+# ---------- 系统生成 ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- 补充（2026-10-18 git 初始化时补扫） ----------
+/.build/
+.pytest_cache/

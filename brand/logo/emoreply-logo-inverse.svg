@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="EmoReply inverse">
+  <title>EmoReply · 反白版（深色背景用）</title>
+  <desc>深色背景（启动页、深色模式、托盘高亮）使用：白色气泡+星光，爱心镂空，无徽标底。建议最小 24px。</desc>
+  <defs>
+    <path id="erBubble" d="M372 640 C350 712 300 776 286 812 C348 790 418 724 452 668 Z"/>
+    <ellipse id="erBubbleBody" cx="500" cy="478" rx="296" ry="228"/>
+    <path id="erHeart" transform="translate(545 552) scale(1.5)"
+          d="M0 -52 C-24 -82 -96 -86 -128 -50 C-160 -14 -100 42 0 95 C100 42 160 -14 128 -50 C96 -86 24 -82 0 -52 Z"/>
+    <path id="erSpark" transform="translate(653 294)"
+          d="M0 -77 C7 -21 21 -7 77 0 C21 7 7 21 0 77 C-7 21 -21 7 -77 0 C-21 -7 -7 -21 0 -77 Z"/>
+    <mask id="erInvMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <use href="#erBubble" fill="#FFFFFF"/>
+      <use href="#erBubbleBody" fill="#FFFFFF"/>
+      <use href="#erSpark" fill="#FFFFFF"/>
+      <use href="#erHeart" fill="#000000"/>
+    </mask>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" fill="#FFFFFF" mask="url(#erInvMask)"/>
+</svg>

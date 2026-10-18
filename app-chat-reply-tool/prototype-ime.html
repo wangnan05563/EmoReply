@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EmoReply · IME 形态原型（Android IME + 悬浮窗降级）</title>
+<style>
+  :root{
+    --bg:#f2f2f2; --text:#111; --sub:#777; --line:#e6e6e6; --card:#fff;
+    --accent:#111; --soft:#f6f6f6; --chip:#eee; --ok:#2e7d32; --warn:#b26a00; --wechat:#07c160;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;}
+  body{background:var(--bg);color:var(--text);padding:20px;line-height:1.5;}
+  h1{font-size:18px;} .sub{color:var(--sub);font-size:13px;margin:4px 0 16px;}
+  .toc{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .toc button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 14px;font-size:13px;cursor:pointer;}
+  .toc button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+  /* Flow */
+  .flow{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:20px;}
+  .flow h3{font-size:14px;margin-bottom:12px;}
+  .steps{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;}
+  .step{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;flex:1;min-width:120px;position:relative;}
+  .step b{display:block;font-size:12px;margin-bottom:2px;}
+  .step span{color:var(--sub);}
+  .arrow{display:flex;align-items:center;color:var(--sub);font-size:18px;}
+
+  .views{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;}
+  .view{display:none;} .view.show{display:block;}
+
+  /* Phone */
+  .phone{width:360px;border:10px solid #222;border-radius:34px;background:#fff;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  .phone .statusbar{display:flex;justify-content:space-between;font-size:11px;padding:6px 14px;color:#333;background:#fff;}
+  .phone .appbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);}
+  .peer-av{width:30px;height:30px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;font-size:13px;color:#666;}
+  .peer-name{font-size:15px;font-weight:600;}
+  .capture{font-size:11px;color:var(--ok);padding:6px 14px;background:#eaf7ee;display:flex;align-items:center;gap:6px;}
+  .capture .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);}
+  .chats{flex:1;height:300px;overflow-y:auto;padding:14px;background:#ededed;display:flex;flex-direction:column;gap:10px;}
+  .b{font-size:13px;padding:9px 12px;border-radius:12px;max-width:76%;line-height:1.45;}
+  .b.l{background:#fff;border-top-left-radius:3px;align-self:flex-start;}
+  .b.r{background:var(--wechat);color:#fff;border-top-right-radius:3px;align-self:flex-end;}
+  .inputbar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid var(--line);min-height:42px;}
+  .inputbar .fake{font-size:13px;color:var(--sub);}
+  .inputbar .send{margin-left:auto;background:var(--wechat);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:13px;}
+
+  /* IME keyboard */
+  .ime{border-top:2px solid #ccc;background:#d4d6da;}
+  .aibar{background:#fff;border-bottom:1px solid var(--line);padding:8px 10px;}
+  .aibar .lbl{font-size:11px;color:var(--sub);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .aibar .lbl .tag{background:var(--accent);color:#fff;border-radius:4px;padding:1px 6px;font-size:10px;}
+  .cand{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px;background:#fff;cursor:pointer;transition:.12s;}
+  .cand:hover{border-color:#999;}
+  .cand p{font-size:13px;line-height:1.45;color:#222;}
+  .cand .meta{display:flex;gap:6px;margin-top:6px;}
+  .cand .style{font-size:10px;color:#555;background:var(--chip);border-radius:10px;padding:1px 7px;}
+  .kbd{background:#fbfbfd;border-top:1px solid #c8cace;padding:8px 10px;}
+  .kbd .row{display:flex;gap:4px;justify-content:center;margin-bottom:4px;}
+  .kbd .key{flex:1;max-width:34px;background:#fff;border:1px solid #c8cace;border-radius:6px;text-align:center;font-size:12px;padding:8px 0;color:#333;}
+  .kbd .py{display:flex;gap:6px;padding:4px 2px;font-size:13px;color:#222;flex-wrap:wrap;}
+  .kbd .py span{border-bottom:2px solid var(--wechat);padding:0 2px;}
+
+  /* Desktop floating window */
+  .desktop{width:520px;height:420px;border:1px solid var(--line);border-radius:12px;background:#fff;position:relative;overflow:hidden;}
+  .desktop .appbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);}
+  .desktop .chats{height:300px;}
+  .fw{position:absolute;right:16px;bottom:16px;width:240px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px;}
+  .fw .lbl{font-size:11px;color:var(--sub);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .fw .lbl .tag{background:var(--accent);color:#fff;border-radius:4px;padding:1px 6px;font-size:10px;}
+  .fw .cand{border:1px solid var(--line);border-radius:9px;padding:7px 9px;margin-bottom:6px;cursor:pointer;}
+  .fw .cand p{font-size:12px;line-height:1.4;}
+  .fw .cand .meta{display:flex;gap:6px;margin-top:5px;}
+  .fw .cand .style{font-size:10px;background:var(--chip);border-radius:10px;padding:1px 6px;color:#555;}
+  .fw .cand .copy{margin-left:auto;font-size:10px;color:#1a73e8;cursor:pointer;}
+
+  .note{font-size:12px;color:var(--sub);margin-top:14px;max-width:900px;line-height:1.7;}
+  .badge{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:11px;margin-right:6px;}
+</style>
+</head>
+<body>
+  <h1>EmoReply · IME 形态原型</h1>
+  <div class="sub">跨平台高情商聊天回复助手 — 系统级输入法插件（IME）+ 通知监听（只读）交付面演示</div>
+
+  <div class="toc">
+    <button id="tFlow" class="on" onclick="show('flow')">① 数据流</button>
+    <button id="tAnd" onclick="show('and')">② Android 输入法插件</button>
+    <button id="tDesk" onclick="show('desk')">③ 桌面悬浮窗降级</button>
+  </div>
+
+  <!-- Flow -->
+  <div class="view show" id="viewFlow">
+    <div class="flow">
+      <h3>数据流（合规姿态：只读通知 + 输入法注入 + 人工确认发送）</h3>
+      <div class="steps">
+        <div class="step"><b>① 通知监听（只读）</b><span>系统通知监听捕获微信/钉钉消息，不读聊天库、不模拟点击</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><b>② 去重 & 指向判定</b><span>过滤系统/自己消息；私聊默认、群聊 @/引用/语义判定「指向我」</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><b>③ 云端 LLM 生成</b><span>意图/情感/关系 → 2–3 高情商候选（安全护栏双层）</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><b>④ 候选呈现</b><span>输入法候选条「AI 条」/ 桌面悬浮窗</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><b>⑤ 人工点选发送</b><span>注入输入框或复制；用户最终手动发送，产品不代发</span></div>
+      </div>
+    </div>
+    <div class="note">
+      <span class="badge">合规边界</span>仅用系统通知监听（用户授权能力）获取消息；仅用输入法注入/复制交付；绝不读取聊天数据库、模拟点击、自动代发。<br>
+      <span class="badge">质量边界</span>只读通知下上下文有限，回复以「礼貌得体、不编造事实」为下限，不承诺长程记忆。<br>
+      <span class="badge">降级</span>iOS 键盘扩展无法跨 App 读内容/稳定读通知 → 降级独立 App + 复制（见③）；桌面以悬浮窗+剪贴板并行。
+    </div>
+  </div>
+
+  <!-- Android IME -->
+  <div class="view" id="viewAnd">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="appbar"><div class="peer-av">琳</div><div class="peer-name">琳琳</div></div>
+      <div class="capture"><span class="dot"></span>通知捕获（只读）：琳琳「周末那个聚会你还来吗？我留了位置」→ 判定：指向我</div>
+      <div class="chats" id="aChats">
+        <div class="b l">周末那个聚会你还来吗？我留了位置</div>
+        <div class="b r">来呀！几点呀</div>
+        <div class="b l">下午三点，老地方～</div>
+      </div>
+      <div class="inputbar"><span class="fake" id="aInput">点下方 AI 候选即可注入…</span><button class="send">发送</button></div>
+      <div class="ime">
+        <div class="aibar">
+          <div class="lbl"><span class="tag">AI 情商回复</span>基于通知上下文生成（不编造事实）</div>
+          <div id="aCands"></div>
+        </div>
+        <div class="kbd">
+          <div class="py"><span>zhou</span><span>mo</span><span>kuai</span><span>le</span></div>
+          <div class="row"><div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div><div class="key">Y</div><div class="key">U</div></div>
+          <div class="row"><div class="key">A</div><div class="key">S</div><div class="key">D</div><div class="key">F</div><div class="key">G</div><div class="key">H</div><div class="key">J</div></div>
+          <div class="row"><div class="key">中</div><div class="key">英</div><div class="key">空格</div><div class="key">⌫</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">说明：AI 候选条位于普通拼音候选上方、独立区域，不与拼音候选混排。点选候选 → 注入当前输入框；用户手动点「发送」才发出，产品全程不代发。</div>
+  </div>
+
+  <!-- Desktop floating window -->
+  <div class="view" id="viewDesk">
+    <div class="desktop">
+      <div class="appbar"><div class="peer-av">琳</div><div class="peer-name">琳琳（微信桌面版）</div></div>
+      <div class="chats" id="dChats">
+        <div class="b l">周末那个聚会你还来吗？我留了位置</div>
+        <div class="b r">来呀！几点呀</div>
+        <div class="b l">下午三点，老地方～</div>
+      </div>
+      <div class="fw">
+        <div class="lbl"><span class="tag">AI 情商回复</span>悬浮窗（IME 未激活时兜底）</div>
+        <div id="dCands"></div>
+      </div>
+    </div>
+    <div class="note">说明：桌面端在 IME 未激活 / 非输入焦点场景，用全局悬浮窗 + 复制兜底（点「复制」写入剪贴板，手动粘贴）。这是桌面与 Android IME 平行的交付面，也是 iOS 降级形态。</div>
+  </div>
+
+  <div class="note">
+    <b>原型交互：</b>切换上方标签查看三视图；在 Android / 桌面视图点选任一候选可「注入/复制」到对应输入框（演示用，未接真实云端 LLM 与系统通知）。
+    本原型仅展示交互形态，真实落地需 Android 自定义 IME（建议基于开源 IME 内核裁剪）、系统通知监听服务、云端 LLM 编排与双端安全护栏。
+  </div>
+
+<script>
+  const CANDS = [
+    {t:"好呀三点没问题！老地方见，我准时到～", s:"亲切"},
+    {t:"来的！三点老地方，到时候见😊", s:"简短"},
+    {t:"感谢留位～我下午三点准时赴约，辛苦你安排啦", s:"正式"}
+  ];
+
+  function render(containerId){
+    const box = document.getElementById(containerId);
+    box.innerHTML = '';
+    CANDS.forEach(c=>{
+      const el = document.createElement('div');
+      el.className = 'cand';
+      const meta = containerId==='dCands'
+        ? `<div class="meta"><span class="style">${c.s}</span><span class="copy" onclick="copyCand('${c.t.replace(/'/g,"\\'")}')">复制</span></div>`
+        : `<div class="meta"><span class="style">${c.s}</span></div>`;
+      el.innerHTML = `<p>${c.t}</p>${meta}`;
+      if(containerId==='aCands') el.onclick = ()=>inject(c.t);
+      box.appendChild(el);
+    });
+  }
+  function inject(text){
+    document.getElementById('aInput').textContent = text;
+    document.getElementById('aInput').style.color = '#111';
+  }
+  function copyCand(text){
+    if(navigator.clipboard) navigator.clipboard.writeText(text).catch(()=>{});
+    const inp = document.getElementById('dChats');
+    // visual feedback only
+    event.target.textContent = '已复制';
+    setTimeout(()=>event.target.textContent='复制', 1200);
+  }
+  function show(which){
+    ['flow','and','desk'].forEach(v=>{
+      document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1)).classList.toggle('show', v===which);
+      document.getElementById('t'+v.charAt(0).toUpperCase()+v.slice(1)).classList.toggle('on', v===which);
+    });
+    if(which==='and') render('aCands');
+    if(which==='desk') render('dCands');
+  }
+</script>
+</body>
+</html>

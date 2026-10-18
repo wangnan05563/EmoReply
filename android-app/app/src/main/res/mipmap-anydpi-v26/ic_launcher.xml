@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- T01164：自适应启动器图标（Android 8+ / minSdk 26）
+     背景 = 深蓝 → 青渐变（108dp 满幅），前景 = 白色气泡+爱心（62%，落在 72dp 安全区内） -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>

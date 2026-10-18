@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 256" width="1080" height="256" role="img" aria-label="EmoReply">
+  <title>EmoReply · 横向组合标（图形 + 字标）</title>
+  <desc>组合标：左侧主标 256（含 62 单位安全边距），右侧字标 EmoReply（Segoe UI Semibold / PingFang SC 600，字号 150，字距 -2）。分发前请将 text 转曲或以 Web Font 嵌入。</desc>
+  <defs>
+    <linearGradient id="erBadgeL" x1="0" y1="62" x2="0" y2="962" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#08275E"/>
+      <stop offset="0.55" stop-color="#10517A"/>
+      <stop offset="1" stop-color="#21AFAF"/>
+    </linearGradient>
+  </defs>
+  <g transform="scale(0.25)">
+    <path fill="url(#erBadgeL)" d="M312 62 H712 A250 250 0 0 1 962 312 V712 A250 250 0 0 1 712 962 H312 A250 250 0 0 1 62 712 V312 A250 250 0 0 1 312 62 Z"/>
+    <path fill="#FFFFFF" d="M372 640 C350 712 300 776 286 812 C348 790 418 724 452 668 Z"/>
+    <ellipse cx="500" cy="478" rx="296" ry="228" fill="#FFFFFF"/>
+    <path fill="#8DB9D5" transform="translate(545 552) scale(1.5)"
+          d="M0 -52 C-24 -82 -96 -86 -128 -50 C-160 -14 -100 42 0 95 C100 42 160 -14 128 -50 C96 -86 24 -82 0 -52 Z"/>
+    <path fill="#C5FEF5" transform="translate(653 294)"
+          d="M0 -77 C7 -21 21 -7 77 0 C21 7 7 21 0 77 C-7 21 -21 7 -77 0 C-21 -7 -7 -21 0 -77 Z"/>
+  </g>
+  <text x="322" y="182"
+        font-family="Segoe UI Semibold, Segoe UI, PingFang SC, Microsoft YaHei, Helvetica Neue, Arial, sans-serif"
+        font-size="150" font-weight="600" letter-spacing="-2" fill="#08275E">EmoReply</text>
+</svg>

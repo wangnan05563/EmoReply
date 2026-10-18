@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  读屏服务配置（T01111，pull 模式）：
+  - 不设 packageNames（服务可枚举窗口），代码层按 TARGET_PKGS 白名单过滤 + 仅用户点按钮时读一次
+  - 只声明 typeWindowStateChanged（能力声明所需），onAccessibilityEvent 不收集任何内容
+  - canRetrieveWindowContent 为 pull 读取（用户显式点按钮时读一次）所必需
+  - T01124：canTakeScreenshot 允许节点树被保护（微信）时 fallback 截图+端侧 OCR，
+    仍仅在用户点按钮时执行一次，不落盘不外传
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagIncludeNotImportantViews|flagReportViewIds"
+    android:canRetrieveWindowContent="true"
+    android:canTakeScreenshot="true"
+    android:canPerformGestures="true"
+    android:description="@string/reader_service_description"
+    android:notificationTimeout="100" />

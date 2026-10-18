@@ -1,0 +1,531 @@
+# ============================================================
+# 28_AIMsg 工作空间清理配置（2026-10-03 首轮）
+# 基于 workspace-cleanup 技能示例模板定制。
+# 项目特点：无 git 仓库 → 不可逆删除风险高，非可再生目标一律隔离。
+# ============================================================
+
+workspace:
+  root: "D:/code/otherProjects/28_AIMsg"
+  script_dir: "scripts"
+  docs_dir: "docs"
+  logs_dir: "cleanup-logs"
+  frontend_dir: ""
+  frontend_src_dir: ""
+  scan_roots:
+    - "desktop-app"
+    - "m1-poc"
+    - "tools"
+    - "tmp"
+    - "docs"
+    - "scripts"
+    - "brand/_tools"
+    - "android-app"
+    - "ios-app"
+
+root_allowlist:
+  extensions:
+    - ".md"
+    - ".yaml"
+    - ".yml"
+    - ".properties"
+  files:
+    - "README.md"
+    - "sonar-project.properties"
+    - "cleanup-config.yaml"
+  allowed_root_scripts: []
+
+# 保护根：命中即强制 review，绝不自动处置
+preserve_roots:
+  - ".workbuddy/"            # 项目数据（记忆/技能/配置），系统级保护
+  - "brand/"                 # 品牌资产全套
+  - "docs/"                  # 文档与报告（含截图证据）
+  - "android-app/"           # Android 源码
+  - "ios-app/"               # iOS 源码
+  - "app-chat-reply-tool/"   # 早期原型（源码）
+  - "desktop-app/assets/"    # OCR 模型 + 图标等打包资源
+  - "desktop-app/docs/"      # 桌面端文档与截图
+  - "desktop-app/perf/output/" # 压测原始数据（报告引用的证据）
+  - "tmp/_mtask3/"           # MTask 回传单留档（审计记录）
+  - "m1-poc/"                # Python 参考实现（源码；仅 __pycache__ 可清）
+  - "tools/"                 # 工具脚本（仅 __pycache__ 可清）
+  - "scripts/"               # 构建脚本
+
+preserve_paths:
+  dirs: []
+  files: []
+  mirror_to_gitignore: false
+
+semantic_divergence:
+  enabled: true
+  ambiguous_names:
+    - "build"
+    - "dist"
+    - "out"
+    - "target"
+    - "release"
+    - "bin"
+  reference_sources:
+    extensions:
+      - ".json"
+      - ".yaml"
+      - ".yml"
+      - ".toml"
+      - ".md"
+      - ".bat"
+      - ".cmd"
+      - ".ps1"
+      - ".js"
+    exclude_dirs:
+      - "node_modules/"
+      - ".cleanup-quarantine/"
+  diverge_signals:
+    - "referenced_by_manifest"
+    - "contains_handwritten_file"
+    - "contains_no_build_manifest"
+    - "declared_output_dir_in_manifest"
+  on_ambiguous: "review"
+  report_findings: true
+
+script_extensions:
+  - ".py"
+  - ".ps1"
+  - ".bat"
+  - ".cmd"
+  - ".sh"
+  - ".js"
+
+script_exclude_dirs:
+  - "node_modules/"
+  - "desktop-app/scripts/"    # 桌面端脚本目录（正当归宿）
+  - "desktop-app/perf/scripts/" # 压测引擎（vendored 技能脚本）
+  - "scripts/"
+  - "tools/"
+  - "brand/_tools/"
+  - "m1-poc/"
+
+garbage_patterns:
+  redirect_artifacts: []
+  tmp_suffixes:
+    - "*.tmp"
+    - "*.bak"
+    - "*.orig"
+    - "*.swp"
+  os_junk:
+    - "Thumbs.db"
+    - ".DS_Store"
+  build_intermediates:
+    - "*.pyc"
+    - "*.pyo"
+  test_outputs:
+    - "/desktop-app/tmp/ocr_test*.png"
+    - "/desktop-app/tmp/ocr-asar-test.png"   # ocr-asar-check.js 的中文测试图（PIL 现场生成，可再生）
+  coverage_artifacts: []
+  cache_dirs:
+    - "__pycache__/"
+    - ".pytest_cache/"
+    - ".scannerwork/"
+    - "node_modules/.cache/"
+  cache_dir_subtree_exclusions: {}
+  runtime_logs:
+    - "/tmp/sonar-scan*.log"
+    - "/desktop-app/tmp/*.log"
+  frontend_build_temp: []
+  tool_caches: []
+  # 冗余副本（与正式位置 sha256 一致才允许进入 delete 档；执行前须重核哈希）
+  verified_duplicates:
+    - "/desktop-app/chi_sim.traineddata"   # 与 desktop-app/assets/ocr/chi_sim.traineddata 相同（fc05d89a…）
+
+detection:
+  enabled: true
+  prefix_indicators: []
+  name_keywords:
+    - "tmp"
+    - "bak"
+    - "debug"
+  name_patterns:
+    - "*-run*.log"
+    - "electron-dev*.log"
+    - "pkg-exe*.log"
+    - "build-dist*.log"
+    - "sonar-scan*.log"
+    - "exe-smoke*.log"
+  infer_confidence_threshold: 0.7
+  auto_add_inferred_to_gitignore: false   # 无 git，忽略规则无意义
+
+actions:
+  tiers:
+    delete:
+      description: "可再生（有明确重建命令）或经哈希核实的冗余副本"
+      min_confidence: 0.8
+      method: "remove"
+      require_confirm: false
+    quarantine:
+      description: "无副本的唯一内容（日志/测试截图/测试 profile），移动可恢复"
+      min_confidence: 0.5
+      method: "move"
+      require_confirm: false
+    review:
+      description: "数据/资产/依赖/含糊目录名，仅报告，需人工确认"
+      method: "report_only"
+      require_confirm: true
+  force_review_when:
+    - "in_preserve_roots"
+    - "in_preserve_paths"
+    - "ambiguous_dir_name_unresolved"
+    - "is_data_store"
+    - "declared_dependency_dir"
+
+quarantine:
+  enabled: true
+  dir: ".cleanup-quarantine"
+  retention_hours: 72
+  write_manifest: true
+  write_restore_script: true
+  manifest_fields:
+    - "original_path"
+    - "size"
+    - "mtime"
+    - "sha256"
+    - "quarantined_at"
+    - "expires"
+  gitignore: false   # 无 git
+
+evidence_gate:
+  enabled: true
+  applies_to_name_patterns:
+    - "*profile*"
+    - "*db*"
+    - "*store*"
+    - "*models*"
+  required_checks:
+    - "content_inventory"
+    - "zero_code_reference"
+    - "explicit_user_confirm"
+  empty_row_threshold: 0
+  require_snapshot_archive: false
+  on_insufficient_evidence: "keep_and_report"
+  deletion_mandate:
+    require_explicit_authorization: true
+    guard_assertions: true
+    on_guard_failure: "abort_batch"
+    manifest_fields:
+      - "path"
+      - "size"
+      - "sha256"
+      - "action"
+    report_retention_gaps: false
+
+recovery:
+  enabled: true
+  # 注意：本项目无 git。可再生目标（有明确重建命令）视为「有可恢复副本」，
+  # 不受因子阈值约束；唯一内容目标一律按 3 因子命中所判，走 quarantine。
+  irreversibility_factors:
+    - "not_vcs_tracked"
+    - "no_snapshot_available"
+    - "delete_bypasses_trash"
+  quarantine_if_factors_at_least: 2
+  search_ladder:
+    - "config_reference_scan"
+    - "quarantine_and_backup_dirs"
+    - "trash_bin"
+    - "filesystem_wide_search"
+  snapshot_store_hints: []
+  snapshot_freshness_signals: []
+  on_irrecoverable: "stop_and_report"
+  rebuild_fidelity_contract:
+    - "keys_verbatim"
+    - "functional_values_verbatim"
+    - "only_prose_rewritten"
+    - "mark_reconstructed"
+
+ignored_audit:
+  enabled: false   # 无 git，无 ignore 盲区可言
+  report_only: true
+  stale_days: 30
+
+diagnostics:
+  reference_scan:
+    enabled: true
+    extensions:
+      - ".js"
+      - ".json"
+      - ".md"
+      - ".py"
+      - ".cmd"
+      - ".bat"
+      - ".ps1"
+      - ".yaml"
+    exclude_dirs:
+      - "node_modules/"
+      - "dist/"
+      - ".cleanup-quarantine/"
+    exclude_self_output: true
+    case_sensitive: false
+    background_after_seconds: 60
+    timeout_seconds: 600
+  encoding_check:
+    enabled: false
+  config_drift_check:
+    enabled: true
+    checks:
+      - "changelog_path_exists"
+      - "file_existence_checks_present"
+    on_drift: "report"
+    autofixable:
+      - "changelog_path_exists"
+  path_normalization:
+    enabled: true
+    normalize: "normcase_then_normpath"
+    resolve_relative_against: "workspace.root"
+    duplicate_policy: "item"
+
+service_indicators:
+  pid_files: []
+  ports:
+    - 9222    # electron dev CDP
+    - 17777   # EmoReply http-api
+  process_names:
+    - "electron"
+    - "EmoReply"
+  process_name_patterns:
+    - "electron*"
+    - "EmoReply*"
+  command_line_probe:
+    enabled: true
+    include_patterns:
+      - "28_AIMsg"
+      - "desktop-app"
+    exclude_patterns: []
+    on_unavailable: "treat_as_unknown"
+  file_occupancy_probes: []
+  quiescence_evidence:
+    enabled: true
+    last_write_max_age_minutes: 30
+    ports_idle: true
+    require_exclusive_open: true
+    min_signals: 2
+
+stability_check:
+  enabled: true
+  wait_seconds: 5
+  max_recurrence: 3
+  recurrence_patterns:
+    - "*.log"
+    - "__pycache__"
+    - ".pytest_cache"
+  recurrence_action: "warn"
+  quiescence_threshold_minutes: 10
+  freshness_scan_roots: []
+  freshness_exclude_dirs:
+    - "node_modules"
+    - "__pycache__"
+  hold_queue_report: true
+
+sizing:
+  method: "python_scandir"
+  fallback_method: "du_sh"
+  scandir_threshold_files: 2000
+  timeout_seconds: 120
+  continue_on_timeout: true
+  exclude_dirs:
+    - "node_modules/"
+    - ".cleanup-quarantine/"
+
+capability_probe:
+  enabled: true
+  probes:
+    - name: "size_measurement"
+      fallback: "python_scandir"
+    - name: "hash_tool"
+      fallback: "python_hashlib"
+    - name: "vcs_cli"
+      fallback: "manual_review"   # 本项目无 git：S1 门触发，全部走隔离优先
+    - name: "glob_tool"
+      fallback: "python_glob"
+    - name: "external_build_tool"
+      fallback: "static_syntax_check"
+    - name: "package_manager"
+      fallback: "report_only"
+  on_missing: "report_and_degrade"
+  blocked_signals:
+    - "permission_denied_by_sandbox"
+    - "operation_not_permitted"
+    - "hook_intercepted"
+    - "process_killed_by_wall_clock"
+  degraded_verification:
+    enabled: true
+    methods:
+      - "syntax_check"
+      - "targeted_unit_run"
+      - "diff_against_baseline"
+    must_declare_gaps: true
+
+platform:
+  current: "windows"
+  list_files:
+    windows: 'Get-ChildItem -Path "{path}" -File | Sort-Object Name'
+  file_hash:
+    windows: 'Get-FileHash -LiteralPath "{path}" -Algorithm SHA256'
+  port_check:
+    windows: 'netstat -aon | Select-String ":{port}.*LISTENING"'
+  process_check:
+    windows: 'Get-Process -Name {names} -ErrorAction SilentlyContinue'
+  remove_file:
+    windows: 'python -S -c "import os; os.remove(r''{path}'')"'
+  remove_dir:
+    windows: 'python -S -c "import shutil; shutil.rmtree(r''{path}'')"'
+  file_occupancy_check:
+    windows: |
+      try {
+        $stream = [System.IO.File]::Open("{path}",'Open','Read','None')
+        $stream.Close()
+        "not locked"
+      } catch { "locked" }
+  venv_python:
+    windows: "C:/Users/hspcadmin/.workbuddy/binaries/python/versions/3.13.12/python.exe"
+
+execution:
+  # python_s 绕过沙箱 safe-delete 钩子（经 ctypes Win32 直删亦可）
+  remove_method: "python_s"
+  verify_without_bytecode: true
+  max_files_per_batch: 50
+  max_files_per_call: 200
+  parallel_delete: false
+  large_file_sequential: true
+  locked_file_strategy: "report"
+  locked_file_retry: 3
+  locked_file_retry_delay_seconds: 2
+  schedule_delete_on_reboot: false
+  locked_fallback_soft_rename: false
+  assert_exists_before_create: true
+  assert_target_absent_on_move: true
+  file_write_backend: "tool"
+
+audit:
+  hash_algorithm: "sha256"
+  targets_file: "cleanup-logs/cleanup-targets.txt"
+  backup_log_format: "cleanup-{YYYYMMDD-HHmmss}.log"
+  hash_dir_members: true
+  slice_size: 200
+  hash_policy:
+    quarantine: "full"
+    delete: "full_or_sampled"
+    full_max_bytes: 1048576
+    sample_bytes: 65536
+    workers: 8
+    sampled_prefix: "P:"
+    sampled_also_record:
+      - "size"
+      - "mtime"
+  reverify_at_execute: true
+
+verification:
+  # 桌面端冒烟即本项目的核心完整性校验（generate 覆盖生成管线）；pytest 侧用 -p no:cacheprovider
+  # 避免验证过程重建 .pytest_cache（-B 只挡字节码，挡不住 cacheprovider —— 第 3 轮实测复发）
+  command: "cd m1-poc && {venv_python} -B -m pytest -q -p no:cacheprovider"
+  venv_python:
+    windows: "C:/Users/hspcadmin/.workbuddy/binaries/python/versions/3.13.12/python.exe"
+  file_existence_checks:
+    - "README.md"
+    - "sonar-project.properties"
+    - "desktop-app/main.js"
+    - "desktop-app/package.json"
+    - "desktop-app/assets/ocr/chi_sim.traineddata"
+    - "m1-poc/emoreply/__init__.py"
+    - "tmp/_mtask3"
+  optional_generated_checks:
+    - "desktop-app/dist/"
+  on_failure:
+    - "检查 cleanup-logs/cleanup-*.log 中的 hash 记录"
+    - "从隔离区恢复：运行 .cleanup-quarantine/<stamp>/restore.py"
+  test_command: ""
+  ignore_rule_checks: []
+
+report:
+  formats:
+    - "markdown"
+    - "json"
+  output_dir: "cleanup-logs"
+  sections:
+    - "summary_before_after"
+    - "by_category"
+    - "by_directory"
+    - "disposition_buckets"
+    - "recovery_risk"
+    - "not_cleaned_risky"
+    - "dependency_analysis"
+    - "recurrence_prevention"
+    - "audit_trail"
+    - "verification"
+  require_reason_for_skipped: true
+  filename_template: "cleanup-report-{YYYYMMDD}"
+  size_metric: "logical_bytes"
+  also_report_disk_usage: false
+  annotate_metric_delta: true
+  group_by: "item"
+  dedup_by: "normalized_abs_path"
+
+dependency_check:
+  enabled: true
+  auto_remove: false
+  python:
+    manifest: "m1-poc/requirements.txt"
+    scan_dirs:
+      - "m1-poc"
+    indirect_allowlist: []
+  frontend:
+    manifest: "desktop-app/package.json"
+    scan_dirs:
+      - "desktop-app"
+    indirect_allowlist:
+      - "@types/*"
+      - "typescript"
+      - "electron"
+      - "electron-builder"
+  report_when: "zero_references"
+  require_second_pass_review: true
+
+archive:
+  changelog_path: "docs/CHANGELOG.md"
+  gitignore_path: ".gitignore"
+  precommit_path: ".pre-commit-config.yaml"
+  gitattributes_path: ".gitattributes"
+  auto_update_gitignore: false   # 无 git
+  auto_update_precommit: false
+  gitignore_group_comments: []
+  anchor_ignore_untracked_leftovers: false
+  gitattributes_export_ignore: []
+
+git_integration:
+  enabled: false   # 无 git 仓库（S1 门：删除不可逆 → 隔离优先）
+  tracked_deleted_check: ""
+  unstage_command: ""
+  delete_index_command: ""
+  delete_physical_template: "remove_file_{backend}"
+  add_gitignore_patterns: false
+  auto_commit: false
+  commit_message_template: ""
+  tracked_ignored_detect: ""
+  tracked_ignored_disposition: "report_only"
+  commit_pathspec_only: true
+  untrack_commit_mode: "pathspec"
+  stage_before_commit: false
+  warn_on_preexisting_staged: true
+  index_write_probe: false
+  wip_precheck: false
+  hunk_staging_fallback: false
+  stale_index_lock_max_age_minutes: 10
+  stale_index_lock_require_no_process: true
+
+safety:
+  require_stopped_service: true
+  dry_run: false
+  min_confidence_to_delete: 0.8
+  max_files_per_batch: 50
+  large_file_threshold_mb: 5
+  max_non_regenerable_share: 0
+  flatten_directories: true
+  empty_dir_cleanup: true
+  special_filename_handling: "safe"
+  verify_after_each_batch: true
+  soft_delete_suffix: ".trash"

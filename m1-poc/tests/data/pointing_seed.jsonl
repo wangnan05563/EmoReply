@@ -1,0 +1,44 @@
+// FR-1.6 语义指向判定·种子测试集（群聊、无 @、无引用场景）
+// label: need_reply=指向我需要回应 | ignore=无需回复（广播/通知/泛问/闲聊）
+// 注意：种子集为按判定规则人工构造的能力边界样本（正负例均衡设计），
+//       用于守护规则层与 LLM 回退层的验收指标；真实分布效果需后续真实数据评估。
+{"body": "小王，你上次说的方案发我一下", "label": "need_reply", "why": "称呼+请求"}
+{"body": "王工在吗？有个技术问题请教", "label": "need_reply", "why": "称呼+呼叫"}
+{"body": "阿王别忘了今天的周报", "label": "need_reply", "why": "称呼+行动要求"}
+{"body": "你昨天提的那个 bug 修复了吗", "label": "need_reply", "why": "第二人称问询"}
+{"body": "您好，请问是负责采购这块的吗", "label": "need_reply", "why": "第二人称确认"}
+{"body": "你们的接口什么时候能联调", "label": "need_reply", "why": "第二人称排期问询"}
+{"body": "小王，麻烦帮我把这单加急处理下", "label": "need_reply", "why": "称呼+请求"}
+{"body": "王工，客户那边催了，你那边进度怎么样", "label": "need_reply", "why": "称呼+进度问询"}
+{"body": "你发我的链接打不开，再发一次", "label": "need_reply", "why": "第二人称反馈"}
+{"body": "之前是你接手的这个项目吧？找你有事", "label": "need_reply", "why": "第二人称确认+有事"}
+{"body": "小王在不在？会议室等你", "label": "need_reply", "why": "称呼+呼叫"}
+{"body": "你的报销单被打回来了，看下", "label": "need_reply", "why": "第二人称事务"}
+{"body": "阿王，晚上聚餐你来不来", "label": "need_reply", "why": "称呼+邀约"}
+{"body": "就差你的数据了，快点发我", "label": "need_reply", "why": "第二人称催办"}
+{"body": "大家下午三点开会，请准时参加", "label": "ignore", "why": "广播通知"}
+{"body": "各位同事，新版客户端已发布", "label": "ignore", "why": "广播通知"}
+{"body": "今天天气不错，适合摸鱼", "label": "ignore", "why": "闲聊"}
+{"body": "有人知道今晚食堂有什么菜吗", "label": "ignore", "why": "泛问求助"}
+{"body": "这家店的外卖真不错，推荐", "label": "ignore", "why": "闲聊分享"}
+{"body": "群公告：本周五团建报名接龙", "label": "ignore", "why": "公告"}
+{"body": "刚才电梯坏了，大家注意安全", "label": "ignore", "why": "通知+广播"}
+{"body": "谁有 Excel 合并单元格的教程", "label": "ignore", "why": "泛问求助"}
+{"body": "明天快递停发一天", "label": "ignore", "why": "通知"}
+{"body": "大家帮忙投个票", "label": "ignore", "why": "广播求助"}
+{"body": "会议室的空调好像坏了", "label": "ignore", "why": "陈述"}
+{"body": "昨天球赛看了吗？太精彩了", "label": "ignore", "why": "泛问闲聊"}
+{"body": "服务器今晚 10 点升级维护", "label": "ignore", "why": "通知"}
+{"body": "新来的同事大家多关照", "label": "ignore", "why": "广播"}
+{"body": "这周末有人去爬山吗", "label": "ignore", "why": "泛问邀约"}
+{"body": "周报截止时间是周五下午五点", "label": "ignore", "why": "通知"}
+{"body": "各位注意查收邮件", "label": "ignore", "why": "广播通知"}
+{"body": "今天加班到九点，辛苦大家了", "label": "ignore", "why": "广播"}
+{"body": "有人捡到工卡吗，黑色卡套", "label": "ignore", "why": "泛问求助"}
+{"body": "下午茶拼单，要的接龙", "label": "ignore", "why": "广播"}
+{"body": "项目复盘会改到明天上午", "label": "ignore", "why": "通知"}
+{"body": "大家好，我是新报到的产品经理", "label": "ignore", "why": "自我介绍"}
+{"body": "楼下咖啡店买一送一", "label": "ignore", "why": "闲聊"}
+{"body": "记得给文档补上评审记录", "label": "ignore", "why": "泛指行动要求（无第二人称无称呼，宁漏勿扰）"}
+{"body": "系统已恢复，问题原因排查中", "label": "ignore", "why": "通知"}
+{"body": "各位记得填年度体检表", "label": "ignore", "why": "广播通知"}

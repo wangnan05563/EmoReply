@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <title>EmoReply 桌面端</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+  <style>
+    /* T01413 主题令牌（浅深共用语义令牌；浅色默认，深色覆盖 data-theme 即可） */
+    :root {
+      --c-brand-deep: #08275E;   /* 品牌深蓝（T01163 主标定稿） */
+      --c-brand-teal: #21AFAF;   /* 品牌青 */
+      --c-accent: #2563eb;       /* 强调色（T01414 可切换） */
+      --c-accent-hover: color-mix(in srgb, var(--c-accent) 16%, white);
+      --c-accent-soft: color-mix(in srgb, var(--c-accent) 9%, white);  /* 候选卡底 */
+      --c-accent-soft-hover: color-mix(in srgb, var(--c-accent) 22%, white);
+      --c-on-accent: #ffffff;
+      --c-text: #1f2937;
+      --c-text-strong: #111827;
+      --c-text-head: #374151;
+      --c-text-muted: #9ca3af;
+      --c-surface: #ffffff;
+      --c-surface-page: #f4f6fa;
+      --c-surface-alt: #f9fafb;
+      --c-border: #d1d5db;
+      --c-ok: #059669;
+      --c-warn: #b45309;
+      --c-danger-bg: #fee2e2;
+      --c-danger: #b91c1c;
+      --c-shadow: rgba(0,0,0,.08);
+    }
+    /* T01413 补完（FR-PC/FR-9.1 暗色模式）：同一套语义令牌的深色取值，切 data-theme 即整体换肤 */
+    [data-theme='dark'] {
+      --c-accent-hover: color-mix(in srgb, var(--c-accent) 70%, #0b1220);
+      --c-accent-soft: color-mix(in srgb, var(--c-accent) 18%, #0b1220);
+      --c-accent-soft-hover: color-mix(in srgb, var(--c-accent) 30%, #0b1220);
+      --c-text: #d5dae3;
+      --c-text-strong: #f1f4f9;
+      --c-text-head: #e6eaf1;
+      --c-text-muted: #8b94a5;
+      --c-surface: #151b27;
+      --c-surface-page: #0b1220;
+      --c-surface-alt: #1b2230;
+      --c-border: #2c3444;
+      --c-ok: #34d399;
+      --c-warn: #fbbf24;
+      --c-danger-bg: #3f1d1d;
+      --c-danger: #f87171;
+      --c-shadow: rgba(0,0,0,.45);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Microsoft YaHei", system-ui, sans-serif;
+      background: var(--c-surface-page); color: var(--c-text);
+      padding: 12px; user-select: none; -webkit-app-region: drag;
+    }
+    input, textarea, button, select, summary { -webkit-app-region: no-drag; }
+    h1 { font-size: 14px; color: var(--c-text-head); padding-right: 118px; }
+    h1 small { color: var(--c-text-muted); font-weight: normal; }
+    /* T01530：悬浮窗控制栏（最小化按钮；与正文右上角避让） */
+    .win-ctrl { position: fixed; top: 8px; right: 8px; z-index: 60; display: flex; gap: 2px; }
+    .win-ctrl button {
+      width: 24px; height: 24px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+      background: transparent; color: var(--c-text-muted); border-radius: 5px;
+    }
+    .win-ctrl button:hover { background: var(--c-accent-hover); color: var(--c-text-strong); }
+    .win-ctrl button:active { transform: scale(.9); }
+    .win-ctrl svg { width: 12px; height: 12px; }
+    /* T01566：置顶态强调（图钉填充 + 品牌色），与「未置顶」描边灰态一眼可辨 */
+    .win-ctrl button.on { color: var(--c-accent); background: var(--c-accent-soft); }
+    .win-ctrl button.on:hover { background: var(--c-accent-soft-hover); }
+    /* T01566：关闭按钮 hover 危险色（区分于最小化/置顶，防误点语义误导） */
+    .win-ctrl button#winClose:hover { background: var(--c-danger-bg); color: var(--c-danger); }
+    /* T01532：设置中心覆盖层——低频模块统一收纳，主界面只留右上角齿轮 */
+    #settingsPage {
+      position: fixed; inset: 0; z-index: 70; display: none; flex-direction: column;
+      background: var(--c-surface-page); -webkit-app-region: no-drag;
+    }
+    #settingsPage.on { display: flex; animation: pop-in .18s ease-out; }
+    #settingsPage .sp-head {
+      display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+      border-bottom: 1px solid var(--c-border); flex: none;
+    }
+    #settingsPage .sp-head strong { font-size: 13px; color: var(--c-text-head); flex: 1; }
+    #settingsPage .sp-body { flex: 1; overflow-y: auto; padding: 2px 12px 12px; }
+    .card {
+      background: var(--c-surface); border-radius: 10px; padding: 10px;
+      margin-top: 10px; box-shadow: 0 1px 3px var(--c-shadow);
+    }
+    .msg { font-size: 13px; line-height: 1.6; min-height: 40px; color: var(--c-text-strong);
+      white-space: pre-wrap; user-select: text; }
+    .muted { color: var(--c-text-muted); }
+    .row { display: flex; gap: 6px; margin-top: 8px; }
+    select, input {
+      flex: 1; padding: 6px; border: 1px solid var(--c-border); border-radius: 6px; font-size: 12px;
+    }
+    button {
+      padding: 7px 12px; border: none; border-radius: 6px; font-size: 12px;
+      background: var(--c-accent); color: var(--c-on-accent); cursor: pointer;
+    }
+    button:disabled { background: var(--c-text-muted); cursor: default; }
+    button.ghost { background: var(--c-accent-hover); color: var(--c-text-head); }
+    .candidate {
+      padding: 9px 10px; margin-top: 8px; border-radius: 8px;
+      background: var(--c-accent-soft); color: var(--c-accent); font-size: 13px; cursor: pointer;
+      line-height: 1.5; user-select: text;
+    }
+    .candidate:hover { background: var(--c-accent-soft-hover); }
+    /* T01393：流式卡——逐字追加 + 光标闪烁动画（FR-PC2-1） */
+    .candidate.streaming { cursor: default; min-height: 1.5em; }
+    .candidate.streaming::after {
+      content: '▍'; display: inline-block; margin-left: 2px;
+      color: var(--c-brand-teal); animation: blink 0.9s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    /* T01395：候选卡三动作 + 美化按钮 */
+    .cand-text { user-select: text; }
+    .cand-actions { margin-top: 6px; display: flex; gap: 6px; }
+    .cand-actions .act {
+      border: none; border-radius: 8px;
+      background: var(--c-surface); color: var(--c-accent); cursor: pointer;
+    }
+    .cand-actions .act:hover { background: var(--c-accent-hover); }
+    /* T01398：来源徽标 + 按模型分组的流式卡标签 */
+    .src {
+      display: inline-block; margin-right: 6px; padding: 1px 6px; border-radius: 5px;
+      background: var(--c-accent-soft-hover); color: var(--c-brand-deep); font-size: 10px; font-weight: bold;
+    }
+    .cand-head { display: flex; align-items: center; margin-bottom: 2px; }
+    .stream-model { font-size: 10px; color: var(--c-brand-deep); font-weight: bold; margin-bottom: 2px; }
+    /* T01410：加载骨架行（shimmer）+ 候选完成弹入动画 */
+    .skeleton {
+      padding: 9px 10px; margin-top: 8px; border-radius: 8px; background: var(--c-accent-soft);
+      height: 14px; overflow: hidden; position: relative;
+    }
+    .skeleton::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.25), transparent);
+      animation: shimmer 1.2s infinite;
+    }
+    @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+    .candidate.pop { animation: pop-in 0.25s ease-out; }
+    @keyframes pop-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.notice .fix-link { color: var(--c-accent); cursor: pointer; text-decoration: underline; }
+    /* T01414：强调色色板 */
+    .swatches { display: flex; gap: 6px; }
+    .swatches .sw {
+      width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+      border: 2px solid transparent; padding: 0;
+    }
+    .swatches .sw.on { border-color: var(--c-text); }
+    /* T01399：快捷指令栏 */
+    .cmd-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .cmd-bar .cmd {
+      font-size: 11px; padding: 4px 10px; border: none; border-radius: 999px;
+      background: var(--c-accent-soft); color: var(--c-brand-deep); cursor: pointer;
+    }
+    .cmd-bar .cmd:hover { background: var(--c-accent-soft-hover); }
+    .cmd-bar .cmd:disabled { opacity: 0.5; cursor: default; }
+    /* T01411：语气标签（rationale 可点击） */
+    .tone-tag {
+      display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 10px;
+      background: #fef3c7; color: #92400e; cursor: pointer; max-width: 180px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .tone-tag:hover { background: var(--c-accent-soft); }
+    .notice { margin-top: 8px; font-size: 12px; color: var(--c-warn); line-height: 1.5; }
+    .ok { color: var(--c-ok); }
+    .collapsible summary { font-size: 12px; color: var(--c-text-muted); cursor: pointer; }
+    .collapsible input { margin-top: 6px; }
+    textarea {
+      width: 100%; margin-top: 6px; padding: 6px; border: 1px solid var(--c-border);
+      border-radius: 6px; font-size: 12px; font-family: inherit; resize: vertical;
+    }
+    .kb-item {
+      display: flex; justify-content: space-between; align-items: center; gap: 6px;
+      padding: 6px 8px; margin-top: 6px; border-radius: 6px;
+      background: var(--c-surface-alt); font-size: 12px; line-height: 1.5;
+    }
+    .kb-item .cat { color: var(--c-brand-deep); font-weight: bold; white-space: nowrap; }
+    .kb-item .del { background: var(--c-danger-bg); color: var(--c-danger); }
+    .count { font-size: 12px; color: var(--c-text-muted); align-self: center; }
+    /* T01396：首次运行向导（三步：Key → 模型 → 试一句） */
+    #wizard {
+      position: fixed; inset: 0; z-index: 50; display: none;
+      background: rgba(15, 23, 42, 0.45);
+    }
+    #wizard .panel {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: 92%; max-width: 340px; background: #fff; border-radius: 12px;
+      padding: 14px 16px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    }
+    #wizard h2 { margin: 0 0 6px; font-size: 14px; color: var(--c-text-head); }
+    #wizard .step { font-size: 12px; color: var(--c-text); margin-top: 10px; line-height: 1.6; }
+    #wizard .step b { color: var(--c-accent); margin-right: 4px; }
+    #wizard input, #wizard select {
+      width: 100%; margin-top: 4px; padding: 6px; border: 1px solid var(--c-border);
+      border-radius: 6px; font-size: 12px; box-sizing: border-box;
+    }
+    #wizard .actions { margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end; }
+    #wizard .actions button {
+      border: none; border-radius: 10px; cursor: pointer;
+      background: var(--c-accent); color: var(--c-on-accent);
+    }
+    #wizard .actions button.ghost { background: var(--c-accent-hover); color: var(--c-text-head); }
+    #wizard .status { font-size: 12px; margin-top: 8px; min-height: 1.2em; }
+    #wizard .status.ok { color: var(--c-ok); }
+    #wizard .status.bad { color: var(--c-warn); }
+    /* ---- T01531：全局图标按钮体系（无文字·无边框·大图标 + 悬浮倾斜 Tilt + 文字提示 Tooltip）---- */
+    /* 倾斜：transform 由 renderer 按鼠标坐标实时写入；移动中短过渡、离开回弹用长过渡 */
+    button { transition: transform .18s ease-out, background .15s, box-shadow .15s, color .15s; }
+    button.tilt { transition: transform .05s linear, background .15s, box-shadow .15s, color .15s; }
+    /* T01531 返工：扁平化——去背景色块/阴影（用户反馈色块看起来像边框），仅图标着色，hover 淡底 */
+    button.ibtn {
+      width: 34px; height: 34px; padding: 0; border: none; border-radius: 9px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: transparent; color: var(--c-accent); box-shadow: none; flex: none;
+    }
+    button.ibtn .ic { width: 18px; height: 18px; }
+    button.ibtn.sm { width: 26px; height: 26px; border-radius: 7px; }
+    button.ibtn.sm .ic { width: 14px; height: 14px; }
+    button.ibtn:hover { background: var(--c-accent-soft); box-shadow: none; }
+    button.ibtn:active { background: var(--c-accent-soft-hover); }
+    button.ibtn:disabled { background: transparent; color: var(--c-text-muted); opacity: .5; cursor: default; }
+    .ghost.ibtn { background: transparent; color: var(--c-text-head); }
+    .ghost.ibtn:hover { background: var(--c-accent-soft); }
+    .cand-actions .act.ibtn { background: transparent; color: var(--c-accent); }
+    .cand-actions .act.ibtn:hover { background: var(--c-accent-soft); }
+    .kb-item .del.ibtn { background: transparent; color: var(--c-danger); }
+    .kb-item .del.ibtn:hover { background: var(--c-danger-bg); }
+    #wizard .actions button.ibtn { background: transparent; color: var(--c-accent); }
+    #wizard .actions button.ibtn:hover { background: var(--c-accent-soft); }
+    #wizard .actions button.ghost.ibtn { background: transparent; color: var(--c-text-head); }
+    .ic { stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    /* 生成中忙碌态：图标换转圈（图标按钮不再改文案） */
+    button.ibtn.busy .ic { visibility: hidden; }
+    button.ibtn.busy::after {
+      content: ''; position: absolute; width: 18px; height: 18px;
+      border: 2px solid var(--c-accent); border-top-color: transparent;
+      border-radius: 50%; animation: spin .8s linear infinite;
+    }
+    button.ibtn.busy { position: relative; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Tooltip：data-tip=「名称｜功能说明」，300ms 延迟显示，JS 定位（fixed 免裁切） */
+    #tip {
+      position: fixed; z-index: 999; max-width: 240px; padding: 5px 9px;
+      border-radius: 7px; background: rgba(17, 24, 39, .94); color: #f9fafb;
+      font-size: 11px; line-height: 1.55; white-space: pre-wrap; pointer-events: none;
+      opacity: 0; transform: translateY(4px); transition: opacity .18s, transform .18s;
+      -webkit-app-region: no-drag;
+    }
+    #tip.on { opacity: 1; transform: none; }
+    [data-theme='dark'] #tip { background: rgba(240, 244, 249, .95); color: #111827; }
+  </style>
+</head>
+<body>
+  <!-- T01530：窗口控制栏——最小化按钮（窗口收进任务栏，托盘单击/Alt+Shift+E 唤回） -->
+  <div class="win-ctrl">
+    <!-- T01532：设置中心唯一入口（无文字齿轮，RAG/设置/历史已整合进去） -->
+    <button id="openSettings" aria-label="设置中心" data-tip="设置中心｜RAG 知识库 / 常规设置 / 本地历史 统一入口"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg></button>
+    <!-- T01566：置顶切换（图钉：填充=已置顶/描边灰=未置顶；失焦不影响置顶层级） -->
+    <button id="winPin" aria-label="置顶切换" data-tip="置顶｜点击使窗口始终显示在最前"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></button>
+    <button id="winMin" aria-label="最小化" data-tip="最小化｜窗口收进任务栏，托盘单击或 Alt+Shift+E 唤回">
+      <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <path d="M2.5 8.5h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <!-- T01566：关闭＝隐藏到系统托盘（进程不退出，托盘单击唤回）；托盘不可用时降级收进任务栏 -->
+    <button id="winClose" aria-label="关闭到托盘" data-tip="关闭｜收起窗口到系统托盘（程序不退出，托盘图标可唤回）"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+
+  <!-- T01531：图标精灵（lucide 风格手绘描边图标：24 网格 / 1.8 描边 / currentColor，零外部依赖） -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></symbol>
+      <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 4l1.7 4.6L18 10l-4.3 1.4L12 16l-1.7-4.6L6 10l4.3-1.4z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
+      <symbol id="i-wand" viewBox="0 0 24 24"><path d="M15 4l5 5L9 20l-5 1 1-5z"/><path d="M14 5l5 5"/><path d="M5 3v4M3 5h4"/></symbol>
+      <symbol id="i-camera" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8.5 7l1.2-2.5h4.6L15.5 7"/><circle cx="12" cy="13.5" r="3.5"/></symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></symbol>
+      <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+      <symbol id="i-ear" viewBox="0 0 24 24"><path d="M6 8.5a6.5 6.5 0 1 1 13 0c0 6-6 6-6 10a3.5 3.5 0 1 1-7 0"/><path d="M15 8.5a2.5 2.5 0 0 0-5 0v1a2 2 0 1 1 0 4"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
+      <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+      <symbol id="i-paste-in" viewBox="0 0 24 24"><path d="M9 10L4 15l5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></symbol>
+      <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+      <!-- T01532：设置中心入口（lucide settings 齿轮） -->
+      <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+      <!-- T01566：置顶图标（pin / pin-off 斜杠态）+ 关闭叉号（控制栏 12px 小图标） -->
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></symbol>
+      <symbol id="i-pin-off" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/><path d="M3 3l18 18"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- T01396：首次运行向导（三步：Key → 模型 → 试一句），完成后不再弹出 -->
+  <div id="wizard">
+    <div class="panel">
+      <h2>欢迎使用 EmoReply</h2>
+      <div class="step"><b>1.</b>粘贴 API Key（DeepSeek / OpenAI 兼容接口，密钥只存本机）
+        <input id="wzKey" type="password" placeholder="sk-..." />
+      </div>
+      <div class="step"><b>2.</b>选择模型
+        <select id="wzPreset">
+          <option value="deepseek-chat|https://api.deepseek.com/v1">DeepSeek（deepseek-chat）</option>
+          <option value="gpt-4o-mini|https://api.openai.com/v1">OpenAI（gpt-4o-mini）</option>
+          <option value="custom|">自定义…</option>
+        </select>
+        <input id="wzModel" placeholder="模型名" style="display:none" />
+        <input id="wzBaseUrl" placeholder="接口地址 https://…" style="display:none" />
+      </div>
+      <div class="step"><b>3.</b>试一句——一键连接测试（发送一句问候并收到回复）</div>
+      <div class="status" id="wzStatus"></div>
+      <div class="actions">
+        <button class="ghost ibtn sm" id="wzSkip" data-tip="稍后再说｜跳过向导，之后可经右上角齿轮进「设置中心」配置"><svg class="ic" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+        <button class="ibtn sm" id="wzTest" data-tip="保存并测试连接｜保存密钥与模型，并发送一句测试请求验证连通"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <h1>EmoReply 桌面端 <small>悬浮窗 · 剪贴板交付（不自动发送）</small></h1>
+
+  <div class="card">
+    <div class="msg muted" id="msg">复制对方消息后，点「读剪贴板」</div>
+    <div class="row">
+      <select id="style">
+        <option>正式</option>
+        <option selected>亲切</option>
+        <option>简短</option>
+        <option>幽默</option>
+      </select>
+      <button class="ibtn" id="btnRead" data-tip="读剪贴板｜读取剪贴板中的对方消息原文填入消息区"><svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg></button>
+      <button class="ibtn" id="btnGen" data-tip="生成回复｜按所选语气生成候选回复（多模型套件时并行对比）"><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg></button>
+      <button class="ibtn" id="btnBeautify" data-tip="美化剪贴板｜AI 润色剪贴板原文并写回剪贴板"><svg class="ic" aria-hidden="true"><use href="#i-wand"/></svg></button>
+      <button class="ghost ibtn" id="btnOcr" data-tip="截图取文｜全屏截图 OCR 识别对方消息（离线识别）"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg></button>
+      <button class="ghost ibtn" id="btnUndo" data-tip="撤回｜恢复被本应用覆盖的剪贴板内容（多层栈）"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg></button>
+    </div>
+    <!-- T01399：快捷指令栏（按 order 排序，来自设置管理） -->
+    <div id="cmdBar" class="cmd-bar"></div>
+    <div class="row">
+      <input id="curContact" placeholder="当前联系人（可选，用于关系话术加权）" />
+    </div>
+    <div class="notice" id="notice"></div>
+    <div id="candidates"></div>
+  </div>
+
+  <!-- T01532：设置中心覆盖层开始（RAG/设置/历史整体从主流程移入，DOM id 不变、逻辑零迁移） -->
+  <div id="settingsPage" role="dialog" aria-label="设置中心">
+    <div class="sp-head">
+      <button class="ghost ibtn sm" id="closeSettings" data-tip="返回主界面｜关闭设置中心"><svg class="ic" aria-hidden="true"><use href="#i-arrow-left"/></svg></button>
+      <strong>设置中心</strong>
+    </div>
+    <div class="sp-body">
+  <details class="card collapsible">
+    <summary>RAG 知识库（人设 / 关系话术 / 平台礼仪；加密存本机）</summary>
+    <div class="row">
+      <select id="kbCategory">
+        <option value="persona">个人事实</option>
+        <option value="relation">关系话术</option>
+        <option value="platform">平台礼仪</option>
+      </select>
+      <input id="kbContact" placeholder="联系人（仅关系话术）" style="display:none" />
+    </div>
+    <textarea id="kbText" rows="2" placeholder="知识内容，如：老板周报口径以部门模板为准"></textarea>
+    <div class="row">
+      <button class="ibtn" id="btnKbSave" data-tip="保存条目｜将下方知识存入本机加密知识库"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg></button>
+      <span class="count" id="kbCount">共 0 条</span>
+      <button class="ghost ibtn" id="btnKbWipe" data-tip="清空知识库｜删除全部知识条目（不可恢复）"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></button>
+    </div>
+    <div class="notice" id="kbStatus"></div>
+    <div id="kbList"></div>
+  </details>
+
+  <details class="card collapsible">
+    <summary id="settingsBox">设置（OpenAI 兼容接口；密钥加密存本机）</summary>
+    <input id="cfgBaseUrl" placeholder="接口地址，如 https://api.deepseek.com/v1" />
+    <input id="cfgModel" placeholder="模型名，如 deepseek-chat" />
+    <input id="cfgApiKey" type="password" placeholder="API Key（留空沿用已存）" />
+    <input id="cfgMe" placeholder="自称（用于语气，默认「我」）" />
+    <input id="cfgEmbedModel" placeholder="Embedding 模型（可选，如 text-embedding-3-small；留空用词面检索）" />
+    <!-- T01404：本地加密历史（默认不存，显式开启） -->
+    <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;">
+      <input type="checkbox" id="cfgHistory" style="width:auto;margin:0;" />
+      启用本地历史（AES-256-GCM 加密，仅存本机；关闭后可清空）
+    </label>
+    <!-- T01414：强调色色板（品牌衍生 6 档） -->
+    <div class="row" style="align-items:center;">
+      <span style="font-size:12px;color:var(--c-text-muted);">强调色</span>
+      <div id="accentSwatches" class="swatches"></div>
+    </div>
+    <!-- T01409：失焦自动收纳（默认关；生成中不收纳） -->
+    <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;">
+      <input type="checkbox" id="cfgAutoHide" style="width:auto;margin:0;" />
+      失焦自动收纳悬浮窗（生成中不收纳）
+    </label>
+    <!-- T01412：界面缩放（多 DPI/视力适配） -->
+    <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;">
+      界面缩放
+      <select id="cfgUiScale" style="width:auto;margin:0;">
+        <option value="0.9">小（90%）</option>
+        <option value="1" selected>标准（100%）</option>
+        <option value="1.15">大（115%）</option>
+      </select>
+      候选可用数字键 1-9 直选复制，↑↓ 键导航，Enter 复制
+    </label>
+    <!-- FR-9.1 暗色模式（T01413 令牌已就绪，此处补切换开关） -->
+    <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;">
+      主题
+      <select id="cfgTheme" style="width:auto;margin:0;">
+        <option value="light" selected>浅色</option>
+        <option value="dark">深色</option>
+        <option value="auto">跟随系统</option>
+      </select>
+    </label>
+    <div class="row">
+      <button class="ibtn" id="btnSaveCfg" data-tip="保存设置｜将接口/模型/密钥等配置写入本机"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg></button>
+      <button class="ghost ibtn" id="btnCheck" data-tip="检查当前配置｜向已配置接口发送测试请求验证连通"><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg></button>
+    </div>
+    <div class="notice ok" id="cfgStatus"></div>
+    <!-- T01408：个人语气学习（粘贴聊天记录 → 提取高频句式 → 注入知识库） -->
+    <details class="collapsible">
+      <summary>语气学习（可选：粘贴你自己的聊天记录，提取惯用句式注入知识库）</summary>
+      <textarea id="toneText" rows="3" placeholder="粘贴聊天记录（每行一条，建议 5 条以上）"></textarea>
+      <div class="row">
+        <input id="toneContact" placeholder="联系人（可选，绑定后仅该联系人加权命中）" style="flex:1" />
+        <button class="ghost ibtn" id="btnToneLearn" data-tip="学习语气｜从粘贴的聊天记录提取惯用句式注入知识库"><svg class="ic" aria-hidden="true"><use href="#i-ear"/></svg></button>
+      </div>
+      <div class="notice" id="toneStatus"></div>
+    </details>
+    <!-- T01399：快捷指令管理（每行 名称|提示词模板|绑定模型(可选)；{message}=对方消息占位符） -->
+    <details class="collapsible">
+      <summary>快捷指令（可选，显示为主界面指令按钮）</summary>
+      <textarea id="cfgCommands" rows="4" placeholder="每行一条：名称|提示词模板|绑定模型名(可选)&#10;模板可用 {message} 占位符代表对方消息"></textarea>
+    </details>
+    <!-- T01398：多模型配置（每行 名称|接口地址|模型名|Key；≥2 套时并行对比） -->
+    <details class="collapsible">
+      <summary>多模型并行对比（可选，≥2 套生效）</summary>
+      <textarea id="cfgModels" rows="3" placeholder="每行一套：名称|接口地址|模型名|Key&#10;例：GPT|https://api.openai.com/v1|gpt-4o-mini|sk-..."></textarea>
+      <div class="row">
+        <button class="ghost ibtn" id="btnAddOllama" data-tip="添加 Ollama｜把本机 Ollama 离线模型套件加入多模型配置"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+        <button class="ghost ibtn" id="btnCheckOllama" data-tip="检查 Ollama 连通｜探测本机 11434 服务并列出可用模型"><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg></button>
+      </div>
+      <div class="notice" id="cfgModelsStatus"></div>
+    </details>
+  </details>
+
+  <details class="collapsible" id="historyBox">
+    <summary>本地历史（需在设置里显式开启；加密存储于本机）</summary>
+    <div class="row">
+      <button class="ghost ibtn" id="btnHistoryRefresh" data-tip="刷新｜重新加载本机加密历史列表"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+      <button class="ghost ibtn" id="btnHistoryClear" data-tip="清空历史｜删除本机存储的全部历史（不可恢复）"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></button>
+    </div>
+    <div id="historyList"></div>
+  </details>
+    </div><!-- /sp-body -->
+  </div><!-- /settingsPage T01532 -->
+
+  <script src="renderer.js"></script>
+</body>
+</html>
