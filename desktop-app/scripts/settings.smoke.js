@@ -1,6 +1,6 @@
 // T01541 冒烟测试：node scripts/settings.smoke.js
 // 覆盖：原子写与落盘、损坏自愈、版本兼容（未知键保留/缺失回落）、密钥加密与降级、
-// 解密失败剔除、跨实例持久化复读。safeStorage 用可注入假件，纯 Node 无需 Electron。
+// 解密失败剔除、跨实例持久化复读、删除语义（T03639：立即落盘+不复活）。safeStorage 用可注入假件，纯 Node 无需 Electron。
 'use strict';
 const assert = require('node:assert');
 const fs = require('node:fs');
@@ -98,6 +98,39 @@ function run3() {
     const all = s.getAll();
     ok(!('emoreply_config' in all), '解不开的敏感键剔除（宁缺勿错）');
     eq(all.emoreply_theme, 'dark', '其余键不受影响');
+  }
+  // ---- 7. T03639 删除语义：与 set 对称、立即落盘、跨实例不复活 ----
+  {
+    const dir = tmpdir('remove');
+    const s = createSettingsStore({ dir, safeStorage: fakeSafe(), debounceMs: 5000, log: silentLog });
+    s.set('emoreply_wizard_done', '1');
+    s.set('emoreply_config', '{"apiKey":"sk-secret"}');
+    ok(!fs.existsSync(dir + '/settings.json'), '前置：set 仍卡在防抖窗口未落盘');
+    ok(s.remove('emoreply_wizard_done') === true, 'remove 命中已有键返回 true');
+    ok(fs.existsSync(dir + '/settings.json'), 'remove 立即落盘（不进防抖窗口）');
+    ok(s.remove('never_written_key') === false, 'remove 不存在的键返回 false');
+    const allAfter = s.getAll();
+    ok(!('emoreply_wizard_done' in allAfter), '删除后内存视图即无该键');
+    ok(s.remove('emoreply_config') === true &&
+      !('emoreply_config' in JSON.parse(fs.readFileSync(dir + '/settings.json', 'utf8')).values),
+      '敏感键删除后落盘视图同步剔除');
+    const s3 = createSettingsStore({ dir, safeStorage: fakeSafe(), log: silentLog });
+    eq(s3.getAll(), {}, '重启复读：已删的键不复活');
+  }
+  // ---- 8. T03639 existed()：渲染层据此区分「首启迁移」与「文件已确立事实源」----
+  {
+    const dir = tmpdir('existed');
+    const fresh = createSettingsStore({ dir, safeStorage: fakeSafe(), log: silentLog });
+    ok(fresh.existed() === false, '新目录无文件：existed=false（镜像可当老数据迁移）');
+    fresh.set('emoreply_theme', 'dark');
+    fresh.flushSync();
+    ok(createSettingsStore({ dir, safeStorage: fakeSafe(), log: silentLog }).existed() === true,
+      '文件已落盘：existed=true（此后文件是唯一事实源）');
+    const bad = path.join(dir, '..', 'existed-corrupt');
+    fs.mkdirSync(bad, { recursive: true });
+    fs.writeFileSync(path.join(bad, 'settings.json'), '{TRUNCATED');
+    ok(createSettingsStore({ dir: bad, safeStorage: fakeSafe(), log: silentLog }).existed() === false,
+      '损坏回落：existed=false（宁可从镜像救回，不可把用户数据判成幽灵）');
   }
   console.log(`\n===== SETTINGS SMOKE: ${pass} PASS =====`);
 }

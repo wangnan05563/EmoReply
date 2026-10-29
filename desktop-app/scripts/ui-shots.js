@@ -1,13 +1,16 @@
 // UI 截图佐证自动化（T01418 人工清单第 2 项的部分自动化）：
-// 前提：electron 以 --remote-debugging-port=9222 启动（env -u ELECTRON_RUN_AS_NODE）。
+// 前提：electron 以 --remote-debugging-port=9222 + 独立 --user-data-dir 启动（env -u ELECTRON_RUN_AS_NODE）。
+//   本脚本会清掉向导标志等持久化键以复现「首启向导」，事实源落在 OS 默认配置目录时直接拒跑（T03639）。
 // 用 Node22 内置 WebSocket 直连 CDP：Runtime.evaluate 操纵 DOM → Page.captureScreenshot。
 // 用法：node scripts/ui-shots.js
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
+const guard = require('./profile-guard');
 
 const PORT = 9222;
 const OUT = path.join(__dirname, '..', 'docs', 'screenshots');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function getTarget() {
   const res = await fetch(`http://127.0.0.1:${PORT}/json`);
@@ -54,28 +57,54 @@ async function evalJs(cdp, expr) {
   await cdp.send('Runtime.evaluate', { expression: expr });
 }
 
+// 需要回读页面值（护栏取 settings.stats、复位后验残留）
+async function ev(cdp, expr) {
+  const r = await cdp.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
+  if (r.exceptionDetails) throw new Error('page eval: ' + (r.exceptionDetails.text || '?'));
+  return r.result?.value;
+}
+
 async function main() {
   const wsUrl = await getTarget();
   const cdp = await connect(wsUrl);
+  const evp = (expr) => ev(cdp, expr);
   await cdp.send('Page.enable');
-  await new Promise((r) => setTimeout(r, 800));
+  await sleep(800);
+
+  // 护栏先于任何清键动作：脚本会把向导标志/配置写穿删除，真实用户档案不该被动
+  const cfgFile = await guard.readCfgFile(evp);
+  if (guard.isDefaultProfileFile(cfgFile)) {
+    console.error(guard.guardHint(cfgFile));
+    await cdp.close();
+    process.exit(3);
+  }
 
   // 0) 主界面（初始态）
   await shot(cdp, '01-main-default');
 
-  // 1) 强制重跑向导（清 wiz_done → reload）
-  await evalJs(cdp, `localStorage.removeItem('wiz_done'); location.reload();`);
-  await new Promise((r) => setTimeout(r, 1500));
+  // 1) 强制重跑向导：清 emoreply_wizard_done 并等写穿落盘（旧版清的 wiz_done 是废键，
+  //    产品从不读它，所以这里历史上一张向导截图都没拍到——T03639 复核时一并修正）
+  const resetHint = await guard.resetProfileState(evp, sleep, async () => {
+    await evalJs(cdp, `location.reload()`);
+    await sleep(1500);
+  });
+  if (resetHint) console.error('  ⚠ ' + resetHint);
   await shot(cdp, '02-wizard-step1');
-  await evalJs(cdp, `document.querySelector('#wzNext')?.click()`);
-  await new Promise((r) => setTimeout(r, 300));
+  // 向导为单面板内联三步（无独立「下一步」按钮）：选「自定义…」让模型名/接口地址显形
+  await evalJs(cdp, `
+    (function(){
+      const s = document.querySelector('#wzPreset');
+      s.value = 'custom|';
+      s.dispatchEvent(new Event('change', {bubbles:true}));
+    })()`);
+  await sleep(400);
   await shot(cdp, '03-wizard-step2');
-  await evalJs(cdp, `document.querySelector('#wzSkip')?.click(); document.querySelector('#wzNext')?.click();`);
-  await new Promise((r) => setTimeout(r, 500));
 
-  // 2) 指令栏（内置场景包按钮）
-  await evalJs(cdp, `localStorage.setItem('wiz_done','1'); location.reload();`);
-  await new Promise((r) => setTimeout(r, 1200));
+  // 2) 指令栏（内置场景包按钮）：走真实「稍后再说」出口，标志写穿后不再弹向导
+  await evalJs(cdp, `document.querySelector('#wzSkip')?.click()`);
+  await sleep(500);
+  await evalJs(cdp, `location.reload()`);
+  await sleep(1200);
   await shot(cdp, '04-cmd-bar');
 
   // 3) 设置区全展开（多模型/快捷指令/语气学习/色板/缩放）
@@ -96,6 +125,10 @@ async function main() {
   await shot(cdp, '06-history-kb');
 
   // 5) 候选卡模拟（注入两条假候选看样式：来源徽标+语气标签+三动作）
+  // 先关设置中心覆盖层：它盖在主界面上，不关掉时 #candidates 的 scrollIntoView 无效，
+  // 07 与 06 会拍成同一张（T03639 复核发现）
+  await evalJs(cdp, `document.getElementById('settingsPage')?.classList.remove('on')`);
+  await sleep(200);
   await evalJs(cdp, `
     (function(){
       const box = document.querySelector('#candidates');

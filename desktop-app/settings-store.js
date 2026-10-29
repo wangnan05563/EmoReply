@@ -23,6 +23,7 @@ const ENC_PREFIX = 'enc:';
 function createSettingsStore({ dir, safeStorage = null, debounceMs = 150, log = console }) {
   const file = path.join(dir, 'settings.json');
   let data = { schema: SCHEMA, values: {}, meta: {} };
+  let loadedFromDisk = false; // T03639：渲染层据此区分「首启迁移」与「文件已确立事实源」
   let dirtyTimer = 0;
   let lastErr = null;
 
@@ -58,6 +59,7 @@ function createSettingsStore({ dir, safeStorage = null, debounceMs = 150, log = 
     try {
       const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
       data = migrate(raw);
+      loadedFromDisk = true;
     } catch (e) {
       if (e.code !== 'ENOENT') {
         // 损坏自愈：备份原件再重建，绝不静默吞掉用户数据
@@ -100,9 +102,20 @@ function createSettingsStore({ dir, safeStorage = null, debounceMs = 150, log = 
     if (!dirtyTimer) dirtyTimer = setTimeout(() => { dirtyTimer = 0; flushSync(); }, debounceMs); // 防抖不阻塞主线程
   }
 
+  // T03639：删除与 set 不对称——立即落盘、不防抖。删除若落在防抖窗口内被硬杀，
+  // 文件里还留着这个键，下次启动水合就把旧值灌回镜像，用户看到「删了又回来了」。
+  // 删除代价低（个位数 KB 原子写），宁慢勿丢。
+  function remove(k) {
+    if (!(k in data.values)) return false;
+    delete data.values[k];
+    flushSync();
+    return true;
+  }
+
   load();
   return {
-    getAll, set, flushSync,
+    getAll, set, remove, flushSync,
+    existed: () => loadedFromDisk,
     stats: () => ({ file, schema: data.schema, keys: Object.keys(data.values).length, lastErr, meta: data.meta }),
   };
 }

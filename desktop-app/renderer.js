@@ -4,7 +4,8 @@
 // 唯一事实源是主进程 userData/settings.json（原子写/版本兼容/密钥 safeStorage 加密）。
 // 本块必须位于一切 localStorage 读取之前（顶层同步水合）：
 //   ① sendSync 拉全量 → 覆写镜像；② 文件没有但镜像有的键（老用户首启）→ 回写迁移；
-//   ③ 拦载 SYNC_KEYS 的 setItem → 写穿主进程。降级口径：IPC 不可用时维持旧行为。
+//   ③ 拦载 SYNC_KEYS 的 setItem → 写穿主进程；④（T03639）removeItem 同样写穿——
+//      只拦 set 会让删除停留在镜像里，事实源仍是旧值，下次水合把已删的键灌回来。
 (() => {
   const SYNC_KEYS = new Set([
     'emoreply_config', 'emoreply_models', 'emoreply_commands', 'emoreply_commands_seeded',
@@ -13,15 +14,27 @@
   const er = globalThis.emoReply;
   if (!er || !er.settingsSync || !er.settings) return;
   const _set = Storage.prototype.setItem;
-  let all = {};
-  try { all = er.settingsSync.get() || {}; } catch (e) { /* 水合失败维持旧行为 */ }
+  const _remove = Storage.prototype.removeItem;
+  let snap = {};
+  try { snap = er.settingsSync.get() || {}; } catch (e) { /* 水合失败维持旧行为 */ }
+  const all = snap.values || {};
   for (const [k, v] of Object.entries(all)) _set.call(localStorage, k, v);
   for (const k of SYNC_KEYS) {
-    if (!(k in all)) { const legacy = localStorage.getItem(k); if (legacy !== null) er.settings.set(k, legacy); }
+    if (k in all) continue;
+    const legacy = localStorage.getItem(k);
+    if (legacy === null) continue;
+    // 磁盘文件已存在 = 它是事实源，镜像里的多余值是「删了但 leveldb 快照未落」的幽灵，剪掉；
+    // 只有文件缺失/损坏（首启或自愈）才把镜像当老数据迁进去。不剪这一刀，删除会在下次启动复活。
+    if (snap.existed) _remove.call(localStorage, k);
+    else er.settings.set(k, legacy);
   }
   Storage.prototype.setItem = function (k, v) {
     _set.call(this, k, v);
     if (SYNC_KEYS.has(k)) er.settings.set(k, String(v));
+  };
+  Storage.prototype.removeItem = function (k) {
+    _remove.call(this, k);
+    if (SYNC_KEYS.has(k)) er.settings.remove(k);
   };
 })();
 const $ = (id) => document.getElementById(id);

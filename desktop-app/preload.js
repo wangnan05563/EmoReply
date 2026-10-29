@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('emoReply', {
   settingsSync: { get: () => ipcRenderer.sendSync('settings:get-all') },
   settings: {
     set: (k, v) => ipcRenderer.invoke('settings:set', k, v),
+    remove: (k) => ipcRenderer.invoke('settings:remove', k),
     stats: () => ipcRenderer.invoke('settings:stats'),
   },
   readClipboard: () => ipcRenderer.invoke('clipboard:read'),

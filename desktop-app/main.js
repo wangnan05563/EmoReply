@@ -194,8 +194,14 @@ app.on('before-quit', () => { isQuitting = true; if (settings) settings.flushSyn
 // ---- T01541 设置持久化 IPC ----
 // get-all 走 sendSync：渲染层顶层代码（主题/向导/指令种子）在首个 await 前就要读值，
 // 异步注入会赶不上；payload 为个位数 KB 的一次性水合，阻塞可忽略。
-ipcMain.on('settings:get-all', (e) => { e.returnValue = settings ? settings.getAll() : {}; });
+// T03639：existed 告诉渲染层这次读盘是否可信——文件在 = 它是唯一事实源，镜像里有而文件里
+// 没有的键是被删过的，不能再当「老用户待迁移」回灌；文件缺失/损坏才走首启迁移。
+ipcMain.on('settings:get-all', (e) => {
+  e.returnValue = settings ? { values: settings.getAll(), existed: settings.existed() } : { values: {}, existed: false };
+});
 ipcMain.handle('settings:set', (_e, k, v) => { if (settings) settings.set(String(k), String(v)); });
+// T03639：删除也走 IPC——渲染层 localStorage.removeItem 需同步清掉事实源，否则下次水合灌回
+ipcMain.handle('settings:remove', (_e, k) => (settings ? settings.remove(String(k)) : false));
 ipcMain.handle('settings:stats', () => (settings ? settings.stats() : null));
 app.on('will-quit', () => globalShortcut.unregisterAll());
 

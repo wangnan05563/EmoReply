@@ -71,16 +71,17 @@ npm run test:asar  # 打包态 OCR 回归（需先 npm run dist，验 asar 内 O
 
 ```bash
 cd desktop-app
-rm -rf tmp/e2e-fresh        # 必须用全新 user-data-dir，见下
+rm -rf tmp/e2e-profile      # 首次准备；日常复跑不必清，脚本自己复位状态
 env -u ELECTRON_RUN_AS_NODE ./node_modules/electron/dist/electron.exe . \
-  --remote-debugging-port=9222 --user-data-dir=tmp/e2e-fresh
+  --remote-debugging-port=9222 --user-data-dir=tmp/e2e-profile
 # 另开终端
 npm run test:e2e   # 51 项断言 + 截图（产物在 desktop-app/docs/screenshots/e2e-*.png）
 ```
 
-> **为什么必须换全新目录**：偏好项（`emoreply_wizard_done`、云端配置等）会写穿到主进程的
-> `settings.json`，用例开头清 localStorage 后一 reload 又被磁盘上的值恢复，
-> 「首次运行向导」两条断言（A1/A2）会稳定假失败。复用旧目录时实测 49/51。
+> **profile 要求**：必须是独立 `--user-data-dir`。偏好（`emoreply_wizard_done`、云端配置等）
+> 写穿到主进程 `settings.json`，用例开头会成套清掉这些键（删除同样写穿，见 `scripts/profile-guard.js`），
+> 所以同一目录可以反复跑、配过 Key 也不影响「首次运行向导」两条断言；
+> 事实源若落在系统默认配置目录（真实用户档案），脚本直接拒跑（exit 3）以免清掉用户配置。
 > 窗口若被系统隐藏（`document.hidden=true`），脚本会跳过截图并提示重启实例。
 
 ### Android 端
@@ -177,7 +178,7 @@ python tools/gen_social_preview.py
 - 部分 IM（如微信）主动保护无障碍节点树，故提供截图 + 端侧 OCR 回落路径；OCR 存在轻微识别波动
 - 读屏判侧在**内嵌截图的消息**上，现有证据是离线回归 + 真机历史截图回放（图内文字簇过滤、「零证据不落我方」两条判据）；换新包后的现场复测仍建议补跑一轮，判据细节与残留边界见 `docs/T02222-气泡颜色判方向.md`
 - 桌面端安装包**不入库**（产物可再生），需要时 `npm run dist` 约 2 分钟重建；Android 产物同理落在被 gitignore 的 `release/`
-- `npm run test:e2e` 依赖全新 `--user-data-dir`（复用旧目录会因偏好写穿磁盘而假失败 2 项），且窗口被隐藏时自动跳过截图
+- `npm run test:e2e` 需独立 `--user-data-dir`（脚本会复位其中偏好；落在系统默认配置目录时拒跑 exit 3），且窗口被隐藏时自动跳过截图
 - 云端生成质量、粘贴回宿主窗口兼容性仍需真机 + 真实 Key 复核（见 MTask 待办 T01500/T01502）
 
 ## 贡献
@@ -187,7 +188,7 @@ python tools/gen_social_preview.py
 开发约定（提交前请过一遍）：
 
 - 新能力先落 `m1-poc`（Python 参考实现 + pytest 验收），通过后再镜像到 Kotlin / Electron 端，保持三端同构
-- 提交前跑通 `m1-poc` 的 `python -m pytest -q` 与桌面端 `npm test`；渲染层改动需再过 `npm run test:e2e`（用全新 `--user-data-dir`）
+- 提交前跑通 `m1-poc` 的 `python -m pytest -q` 与桌面端 `npm test`；渲染层改动需再过 `npm run test:e2e`（独立 `--user-data-dir`）
 - 不提交任何密钥、安装包产物或真机截图等敏感内容；改 README 顶部图/换品牌色后重跑 `tools/gen_social_preview.py` 并同步 `brand/README.md`
 
 ## 许可证

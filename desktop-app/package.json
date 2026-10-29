@@ -7,7 +7,7 @@
     "start": "electron .",
     "dist": "node scripts/pkg-semver.js --win --x64",
     "dist:mac": "node scripts/pkg-semver.js --mac",
-    "test": "node scripts/generate.smoke.js && node scripts/sanitize.smoke.js && node scripts/llm.smoke.js && node scripts/tone.smoke.js && node scripts/kb.smoke.js && node scripts/ocr.smoke.js && node scripts/settings.smoke.js",
+    "test": "node scripts/generate.smoke.js && node scripts/sanitize.smoke.js && node scripts/llm.smoke.js && node scripts/tone.smoke.js && node scripts/kb.smoke.js && node scripts/ocr.smoke.js && node scripts/settings.smoke.js && node scripts/profile-guard.smoke.js",
     "test:e2e": "node scripts/ui-e2e.js",
     "test:asar": "electron scripts/ocr-asar-check.js"
   },

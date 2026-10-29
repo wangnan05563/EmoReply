@@ -1,10 +1,12 @@
 // PC 端功能×体验 UI 全面 E2E 测试（CDP 驱动，DOM 层断言 + 状态截图）。
 // 前提：electron 以 --remote-debugging-port=9222 启动（env -u ELECTRON_RUN_AS_NODE）。
-// 建议用独立 profile 启动，避免测试写脏真实用户配置（accent/scale/指令/历史开关）：
+// 必须用独立 profile 启动：本套件会清掉向导标志/配置等持久化键（真实用户档案不该被动过），
+// 事实源落在 OS 默认配置目录时脚本直接拒跑（exit 3）：
 //   env -u ELECTRON_RUN_AS_NODE ./node_modules/electron/dist/electron.exe . \
 //     --remote-debugging-port=9222 --user-data-dir=tmp/e2e-profile
 // ⚠ 窗口隐藏（document.hidden）时 Page.captureScreenshot 会永久挂起：脚本已加可见性守卫+10s 超时，
 //   但遇到隐藏请重启 electron 实例（常见于上一轮 hide 过窗口 / 远程会话无桌面）。
+// 退出码：0 全通过 / 2 有断言失败（产品或环境问题）/ 3 前置不满足（档案不安全）/ 1 脚本或连接异常。
 // 用法：node scripts/ui-e2e.js   （输出：逐条 PASS/FAIL 矩阵 + docs/screenshots/e2e-*.png）
 'use strict';
 const fs = require('node:fs');
@@ -105,9 +107,13 @@ const CLICK_GEN = `document.querySelector('#btnGen').click()`;
 const NOTICE = `document.querySelector('#notice').textContent`;
 const CANDS = `Array.from(document.querySelectorAll('#candidates .candidate:not(.streaming)'))`;
 
+// T03639 前置（护栏 + 状态复位）与 ui-shots.js 共用，见 scripts/profile-guard.js
+const guard = require('./profile-guard');
+
 async function main() {
   const wsUrl = await getTarget();
   const cdp = await connect(wsUrl);
+  const evp = (expr) => ev(cdp, expr);
   await cdp.send('Page.enable');
   await sleep(800);
   const preHidden = await ev(cdp, 'document.hidden');
@@ -116,12 +122,19 @@ async function main() {
     console.error('处理：关闭所有 electron 进程后重新启动 `env -u ELECTRON_RUN_AS_NODE electron . --remote-debugging-port=9222`。');
   }
 
+  const cfgFile = await guard.readCfgFile(evp);
+  if (guard.isDefaultProfileFile(cfgFile)) {
+    console.error(guard.guardHint(cfgFile));
+    await cdp.close();
+    process.exit(3);
+  }
+  const resetHint = await guard.resetProfileState(evp, sleep, () => reload(cdp));
+  console.log('  档案事实源：' + cfgFile + (resetHint ? '\n  ⚠ ' + resetHint : ''));
+
   // ============ A. 启动 / 三步向导 ============
   console.log('A. 启动/向导');
-  await ev(cdp, `localStorage.removeItem('emoreply_wizard_done'); localStorage.removeItem('wiz_done');`);
-  await reload(cdp);
-  await sleep(1000);
-  t('A1 向导在未完成时显示', await ev(cdp, `(() => { const w = document.querySelector('#wizard'); return !!w && getComputedStyle(w).display !== 'none'; })()`));
+  const wizShown = await ev(cdp, `(() => { const w = document.querySelector('#wizard'); return !!w && getComputedStyle(w).display !== 'none'; })()`);
+  t('A1 向导在未完成时显示', wizShown, resetHint);
   await shot(cdp, 'e2e-01-wizard');
   // 向导为单面板三步内联（无独立「下一步」）：选「自定义…」应让模型名/接口地址输入框显形
   await ev(cdp, `
