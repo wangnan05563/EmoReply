@@ -194,6 +194,11 @@
     #wizard {
       position: fixed; inset: 0; z-index: 50; display: none;
       background: rgba(15, 23, 42, 0.45);
+      /* T03699：向导层原先整层拖不动窗口（真实鼠标实测窗口 Δ=0）——它自己没声明 app-region，
+         只写 body 的 drag 并不能让这层可拖。声明后实测：遮罩背景与面板内正文块（.step/.status）
+         可拖窗口；但面板自身内边距与标题 h2 仍是拖不动的「洞」（Chromium 拖拽区命中细节，
+         给这些子元素再单独写 drag 也无效）。本层提供的是模态可拖的最低保障，别指望每一像素都能拖。 */
+      -webkit-app-region: drag;
     }
     #wizard .panel {
       position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);

@@ -30,6 +30,11 @@ let isQuitting = false; // T01530：仅托盘菜单「退出应用」/before-qui
 let settings = null; // T01541：设置存储（whenReady 内初始化）
 // T01566：置顶开关状态（悬浮窗默认置顶语义不变；用户可经标题栏按钮取消。winPin 持久化）
 let pinned = true;
+// T03699：验收可见通道。外部编排器/shell 拉起 GUI 时进程继承 STARTUPINFO 的 SW_HIDE，
+// 窗口以隐藏态创建，而 Electron 内部已记 is_visible_=true → win.show() 直接早退；
+// 隐藏 renderer 又会被 Chromium 丢弃全部真实输入（点击/滚轮），自动化验收只能证到 DOM 层。
+// 显式开关走「先 hide 再 show」强制一次原生 ShowWindow(SW_SHOW)，把两边可见态拉平。
+const FORCE_SHOW = process.argv.includes('--force-show') || process.env.EMOREPLY_FORCE_SHOW === '1';
 
 // T01541：单实例锁——实测根因：托盘常驻使旧进程存活，双击图标"重启"会起第二实例，
 // 而 localStorage(leveldb) 被旧实例独占锁定，新实例读到空存储 → 用户看到"设置全部重置"。
@@ -59,6 +64,23 @@ function createWindow() {
     },
   });
   win.loadFile('index.html');
+  // T03699：强制显示（仅显式开关生效；默认启动路径不变，避免每次多一次 show 动画）
+  if (FORCE_SHOW) {
+    let forced = false;
+    const once = (reason) => {
+      if (forced || !win || win.isDestroyed()) return;
+      forced = true;
+      if (win.isMinimized()) win.restore();
+      win.hide(); // 关键：先把 Electron/OS 的可见态拉平，否则随后的 show() 因 is_visible_=true 早退
+      win.show();
+      win.focus();
+      win.moveTop();
+      console.log(`[window] force-show 生效（${reason}）：已强制 ShowWindow(SW_SHOW)`);
+    };
+    win.once('ready-to-show', () => once('ready-to-show'));
+    // 兜底：窗口隐藏时首帧可能被节流，ready-to-show 迟迟不来也要让验收跑得起来
+    setTimeout(() => once('fallback-timeout'), 4000);
+  }
   // T01415：隐藏/显示 → renderer 暂停/恢复动画（常驻低开销）
   win.on('hide', () => { if (!win.isDestroyed()) win.webContents.send('app:visibility', false); });
   win.on('show', () => { if (!win.isDestroyed()) win.webContents.send('app:visibility', true); });
