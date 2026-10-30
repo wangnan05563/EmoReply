@@ -25,6 +25,20 @@ data class PipelineOutcome(
     val suppressed: Boolean = false,
 )
 
+/**
+ * 一次生成请求的可选参数（S107：原先 7 个散参摊在 [ReplyPipeline.handle] 上）。
+ * 字段名/默认值与原形参逐项一致，调用方按名传参即可，语义不变。
+ */
+data class ReplyOptions(
+    val manual: Boolean = false,
+    val tone: Int? = null, // T01158 FR-7.3：语气强度滑杆
+    val exclude: List<String> = emptyList(), // T01158 FR-7.1：换一批（已给候选）
+    val scenario: String = "", // T01244 FR-8.2：三维筛选（场景）
+    val purpose: String = "",  // T01244 FR-8.2：三维筛选（目的）
+    val favorites: List<String> = emptyList(), // T01262 FR-8.8：收藏话术（同类场景优先参考）
+    val multiTone: Boolean = false, // T01349：多风格并行（默认关=旧行为）
+)
+
 class ReplyPipeline(
     private val generator: Generator,
     private val throttle: NoticeThrottle = NoticeThrottle(),
@@ -45,14 +59,9 @@ class ReplyPipeline(
         current: Notification,
         history: List<Notification>,
         now: Long? = null,
-        manual: Boolean = false,
-        tone: Int? = null, // T01158 FR-7.3：语气强度滑杆
-        exclude: List<String> = emptyList(), // T01158 FR-7.1：换一批（已给候选）
-        scenario: String = "", // T01244 FR-8.2：三维筛选（场景）
-        purpose: String = "",  // T01244 FR-8.2：三维筛选（目的）
-        favorites: List<String> = emptyList(), // T01262 FR-8.8：收藏话术（同类场景优先参考）
-        multiTone: Boolean = false, // T01349：多风格并行（默认关=旧行为）
+        opts: ReplyOptions = ReplyOptions(),
     ): PipelineOutcome {
+        val (manual, tone, exclude, scenario, purpose, favorites, multiTone) = opts
         val decision = if (manual) {
             Decision(Action.GENERATE, "手动触发（用户显式要求回复）", current)
         } else {
@@ -96,14 +105,15 @@ class ReplyPipeline(
         val knowledge = kb?.let {
             LexicalRetriever.search(it, current.body, contact = current.sender ?: current.chat)
         }?.map { e -> e.text } ?: emptyList()
-        val prompt = buildPrompt(current, history, me = me, style = style, maxTokens = maxTokens,
+        val prompt = buildPrompt(current, history, PromptContext(
+            me = me, style = style, maxTokens = maxTokens,
             intent = intent, emotion = emotion, urgency = urgency, relation = relation,
             scenario = scenario, purpose = purpose,
             knowledge = knowledge, emoji = emoji, tone = tone,
             // T01349：多风格并行（单请求多语气，RTT 不变）；非空优先于单值 tone
             toneVariants = if (multiTone) MULTI_TONE_VARIANTS else null,
             exclude = exclude,
-            lastTopic = lastTopic, favorites = favorites)
+            lastTopic = lastTopic, favorites = favorites))
         val candidates = collectCandidates(prompt, banned, style, exclude,
             // T01349：多风格并行一次出 3 条，数量契约随之改为档位数
             expected = if (multiTone) MULTI_TONE_VARIANTS.size else expectedCandidates)

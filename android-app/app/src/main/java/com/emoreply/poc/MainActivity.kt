@@ -38,7 +38,6 @@ import com.emoreply.poc.store.PersonaStore
 import com.emoreply.poc.store.ReplyStore
 import com.emoreply.poc.store.UxSettings
 import com.emoreply.poc.update.UpdateManager
-import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference

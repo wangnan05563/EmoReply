@@ -18,7 +18,15 @@ function fakeSafe() {
   return {
     isEncryptionAvailable: () => true,
     encryptString: (s) => Buffer.from('X:' + s, 'utf8'),
-    decryptString: (buf) => { const s = buf.toString('utf8'); if (!s.startsWith('X:')) throw new Error('bad key'); return s.slice(2); },
+    // 前缀不合法 → 抛错（模拟真 safeStorage 的解密失败）；抛错后函数即结束，
+    // 下面的 return 只处理合法前缀，必须留在 if 之外（收进 if 会让合法数据返回 undefined）。
+    decryptString: (buf) => {
+      const s = buf.toString('utf8');
+      if (!s.startsWith('X:')) {
+        throw new Error('bad key');
+      }
+      return s.slice(2);
+    },
   };
 }
 function tmpdir(tag) { return fs.mkdtempSync(path.join(os.tmpdir(), 'set-' + tag + '-')); }

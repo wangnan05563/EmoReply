@@ -82,7 +82,7 @@ async function main() {
   if (PROFILE) {
     try {
       const s = JSON.parse(fs.readFileSync(path.join(PROFILE, 'settings.json'), 'utf8'));
-      t('K4 winPin=0 落盘（OS 级配置目录，重启不丢）', s.values && s.values.winPin === '0', 'winPin=' + (s.values || {}).winPin);
+      t('K4 winPin=0 落盘（OS 级配置目录，重启不丢）', s.values?.winPin === '0', 'winPin=' + s.values?.winPin);
     } catch (e) { t('K4 winPin=0 落盘（OS 级配置目录，重启不丢）', false, e.message); }
   }
 
@@ -97,12 +97,10 @@ async function main() {
   await ev(cdp2, `document.querySelector('#winClose').click()`);
   await sleep(900);
   const k6 = await ev(cdp2, `(async () => ({ hidden: document.hidden, mode: await globalThis.emoReply.closeWindow() }))()`);
-  t('K6 点关闭→窗口隐藏到托盘（进程/页面存活；mode=tray）', k6 && k6.hidden === true && k6.mode === 'tray', JSON.stringify(k6));
+  t('K6 点关闭→窗口隐藏到托盘（进程/页面存活；mode=tray）', k6?.hidden === true && k6?.mode === 'tray', JSON.stringify(k6));
 
   // K7 唤回路径：二次启动同 profile → second-instance → showWindowFromTray（托盘单击同路径）
-  if (!PROFILE) {
-    t('K7 托盘/二次启动唤回', false, '未传 profile 路径，跳过');
-  } else {
+  if (PROFILE) {
     const { spawnSync } = require('node:child_process');
     const exe = path.join(__dirname, '..', 'node_modules', 'electron', 'dist', 'electron.exe');
     spawnSync(exe, ['.', '--user-data-dir=' + PROFILE], {
@@ -113,7 +111,9 @@ async function main() {
     // 第二实例拿到锁失败会立即退出（spawnSync 返回即完成「唤起第一实例」动作）
     await sleep(1500);
     const shown = await ev(cdp2, `(async () => ({ hidden: document.hidden, pin: await globalThis.emoReply.getPin() }))()`);
-    t('K7 托盘/二次启动唤回：窗口恢复可见且置顶态保持', shown && shown.hidden === false && shown.pin === true, JSON.stringify(shown));
+    t('K7 托盘/二次启动唤回：窗口恢复可见且置顶态保持', shown?.hidden === false && shown?.pin === true, JSON.stringify(shown));
+  } else {
+    t('K7 托盘/二次启动唤回', false, '未传 profile 路径，跳过');
   }
 
   await cdp2.close();
@@ -121,4 +121,8 @@ async function main() {
   if (fails.length) fails.forEach((f) => console.log('  FAIL> ' + f));
   process.exit(fail ? 2 : 0);
 }
-main().catch((e) => { console.error('E2E FAILED:', e.message || e); process.exit(1); });
+// CJS 没有顶层 await：入口保持同步，异步失败在函数内兜底
+function start() {
+  main().catch((e) => { console.error('E2E FAILED:', e.message || e); process.exit(1); });
+}
+start();

@@ -75,12 +75,20 @@
     #settingsPage {
       position: fixed; inset: 0; z-index: 70; display: none; flex-direction: column;
       background: var(--c-surface-page); -webkit-app-region: no-drag;
+      /* S6819：改用原生 <dialog> 后清掉 UA 的边框/内边距/自动外边距与尺寸上限，保持整屏覆盖的原有版式 */
+      border: none; padding: 0; margin: 0; max-width: none; max-height: none; color: inherit;
+      width: auto; height: auto;
     }
     #settingsPage.on { display: flex; animation: pop-in .18s ease-out; }
+    /* T03682：整层 no-drag 会让设置中心里没有任何能拖窗口的位置（右上角 .win-ctrl 又被本层盖住），
+       故把标题条做成拖拽把手；条内按钮另置 no-drag 保持可点。
+       .sp-body 必须留 no-drag：drag 区会吞掉滚轮与点击，否则卡片无法滚动、控件无法交互 */
     #settingsPage .sp-head {
       display: flex; align-items: center; gap: 8px; padding: 10px 12px;
       border-bottom: 1px solid var(--c-border); flex: none;
+      -webkit-app-region: drag; cursor: grab;
     }
+    #settingsPage .sp-head button { -webkit-app-region: no-drag; cursor: pointer; }
     #settingsPage .sp-head strong { font-size: 13px; color: var(--c-text-head); flex: 1; }
     #settingsPage .sp-body { flex: 1; overflow-y: auto; padding: 2px 12px 12px; }
     .card {
@@ -97,6 +105,8 @@
     button {
       padding: 7px 12px; border: none; border-radius: 6px; font-size: 12px;
       background: var(--c-accent); color: var(--c-on-accent); cursor: pointer;
+      /* T01531：默认过渡（原与下方 button 规则重复声明，S4666 合并至此；tilt 态见 button.tilt） */
+      transition: transform .18s ease-out, background .15s, box-shadow .15s, color .15s;
     }
     button:disabled { background: var(--c-text-muted); cursor: default; }
     button.ghost { background: var(--c-accent-hover); color: var(--c-text-head); }
@@ -207,8 +217,7 @@
     #wizard .status.ok { color: var(--c-ok); }
     #wizard .status.bad { color: var(--c-warn); }
     /* ---- T01531：全局图标按钮体系（无文字·无边框·大图标 + 悬浮倾斜 Tilt + 文字提示 Tooltip）---- */
-    /* 倾斜：transform 由 renderer 按鼠标坐标实时写入；移动中短过渡、离开回弹用长过渡 */
-    button { transition: transform .18s ease-out, background .15s, box-shadow .15s, color .15s; }
+    /* 倾斜：transform 由 renderer 按鼠标坐标实时写入；移动中短过渡、离开回弹用长过渡（默认过渡见上方 button 基础规则） */
     button.tilt { transition: transform .05s linear, background .15s, box-shadow .15s, color .15s; }
     /* T01531 返工：扁平化——去背景色块/阴影（用户反馈色块看起来像边框），仅图标着色，hover 淡底 */
     button.ibtn {
@@ -350,7 +359,7 @@
   </div>
 
   <!-- T01532：设置中心覆盖层开始（RAG/设置/历史整体从主流程移入，DOM id 不变、逻辑零迁移） -->
-  <div id="settingsPage" role="dialog" aria-label="设置中心">
+  <dialog id="settingsPage" aria-label="设置中心">
     <div class="sp-head">
       <button class="ghost ibtn sm" id="closeSettings" data-tip="返回主界面｜关闭设置中心"><svg class="ic" aria-hidden="true"><use href="#i-arrow-left"/></svg></button>
       <strong>设置中心</strong>
@@ -458,7 +467,7 @@
     <div id="historyList"></div>
   </details>
     </div><!-- /sp-body -->
-  </div><!-- /settingsPage T01532 -->
+  </dialog><!-- /settingsPage T01532 -->
 
   <script src="renderer.js"></script>
 </body>

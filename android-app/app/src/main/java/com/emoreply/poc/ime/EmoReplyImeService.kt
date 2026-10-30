@@ -30,6 +30,7 @@ import com.emoreply.poc.R
 import com.emoreply.poc.capture.EmoReplyReaderService
 import com.emoreply.poc.core.Adaptive
 import com.emoreply.poc.core.PipelineOutcome
+import com.emoreply.poc.core.ReplyOptions
 import com.emoreply.poc.core.ReplyPipeline
 import com.emoreply.poc.core.Tone
 import com.emoreply.poc.core.TextAction
@@ -1005,7 +1006,6 @@ class EmoReplyImeService : InputMethodService() {
         val relationTone = if (contact.isNotBlank()) Tone.toneForRelation(persona.getRelation(contact)) else -1
         val savedTone = if (contact.isNotBlank()) persona.contactTone(contact) else null
 
-        val pad = dp(16)
         val col = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(24), dp(8), dp(24), dp(8))
@@ -1283,15 +1283,15 @@ class EmoReplyImeService : InputMethodService() {
         val favorites = favoriteTexts()
         return try {
             (cloudPipeline(style) ?: stubPipeline(style))
-                .handle(n, history, manual = true, tone = tone, exclude = exclude,
-                    scenario = scenario, purpose = purpose, favorites = favorites,
-                    multiTone = UxSettings.multiTone(this)) // T01349：多风格并行（默认关）
+                .handle(n, history, opts = ReplyOptions(manual = true, tone = tone,
+                    exclude = exclude, scenario = scenario, purpose = purpose, favorites = favorites,
+                    multiTone = UxSettings.multiTone(this))) // T01349：多风格并行（默认关）
         } catch (e: CloudLlmGenerator.CloudLlmException) {
             // C24：明确提示 + 降级为本地模板，不崩溃、不静默失败
             stubPipeline(style)
-                .handle(n, history, manual = true, tone = tone, exclude = exclude,
-                    scenario = scenario, purpose = purpose, favorites = favorites,
-                    multiTone = UxSettings.multiTone(this))
+                .handle(n, history, opts = ReplyOptions(manual = true, tone = tone,
+                    exclude = exclude, scenario = scenario, purpose = purpose, favorites = favorites,
+                    multiTone = UxSettings.multiTone(this)))
                 .copy(notice = e.userMessage)
         }.also { outcome ->
             // T01158 FR-7.1：记住本次请求，供「换一批」重跑（会话上下文不变）

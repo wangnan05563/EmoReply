@@ -16,10 +16,19 @@ if (m) {
   console.log(`[pkg-semver] 临时版本 -> ${pkg.version}`);
 }
 
-const args = process.argv.slice(2).join(' ');
+// 直接以当前 Node 解释器跑 electron-builder 自带的 CLI，参数走数组不过 shell：
+// 拼字符串给 execSync 需要 shell 解析（Sonar S4721 的注入面），数组参数没有这个问题。
+const builderCli = path.join(__dirname, '..', 'node_modules', 'electron-builder', 'out', 'cli', 'cli.js');
+const args = process.argv.slice(2);
 let code = 0;
 try {
-  cp.execSync(`npx electron-builder ${args}`, { stdio: 'inherit', cwd: path.join(__dirname, '..') });
+  const r = cp.spawnSync(process.execPath, [builderCli, ...args], { stdio: 'inherit', cwd: path.join(__dirname, '..') });
+  if (r.error) {
+    console.error('[pkg-semver] 启动 electron-builder 失败：', r.error.message);
+    code = 1;
+  } else {
+    code = r.status ?? 1; // 0 成功原样保留；null（被信号终止）按失败算
+  }
 } catch (e) {
   code = e.status || 1;
 } finally {

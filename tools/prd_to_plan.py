@@ -42,32 +42,110 @@ def parse_frs(prd_text):
 
 
 def parse_milestones(prd_text):
-    """提取里程碑：形如 - **M1 概念验证（约 4 周）**：说明"""
+    """提取里程碑：形如 - **M1 概念验证（约 4 周）**
+
+    S5852：原 `(M\\d)\\s*([^（*(]+)` 让 `\\s*` 与紧随的贪婪类划分同一段空白（多项式回溯）。
+    `[^（*(]+` 本身已接受空白且要求 ≥1 字符，`\\s*` 完全冗余，去掉后判定与取值逐字不变。
+    """
     out = []
-    for m in re.finditer(r"\*\*(M\d)\s*([^（*(]+)[（(]约?\s*([\d~]+)\s*周", prd_text):
+    for m in re.finditer(r"\*\*(M\d)([^（*(]+)[（(]约?\s*([\d~]+)\s*周", prd_text):
         out.append({"id": m.group(1), "name": m.group(2).strip(), "weeks": m.group(3)})
     return out
 
 
 def parse_modules(hld_text):
-    """提取模块表行：形如 | M1 通知捕获 Adapter | 职责 | FR-1.1/1.2 |"""
+    """提取模块表行：形如 | M1 通知捕获 Adapter | 职责 | FR-1.1/1.2 |
+
+    S5852：原 `\\|\\s*(M\\d+)\\s+([^|]+)\\|\\s*([^|]*)\\|\\s*([^|]*)\\|` 里 `\\s+` 与 `[^|]+`
+    争抢同一段空白（多项式回溯）。改为按 `|` 切分后线性判定，口径不变：行首必须是 `|`，
+    第 2 段须以 `M<数字>` 开头且其后再有 ≥1 个空白，名称段至少 1 字符。
+    """
     out = []
     for line in hld_text.splitlines():
-        m = re.match(r"\|\s*(M\d+)\s+([^|]+)\|\s*([^|]*)\|\s*([^|]*)\|", line)
-        if m:
-            out.append({
-                "id": m.group(1).strip(),
-                "name": m.group(2).strip(),
-                "duty": m.group(3).strip(),
-                "fr": m.group(4).strip(),
-            })
+        parts = line.split("|")
+        if len(parts) < 5 or parts[0]:
+            continue
+        body = parts[1].lstrip()
+        m = re.match(r"(M\d+)", body)
+        if not m:
+            continue
+        rest = body[m.end():]
+        ws = len(rest) - len(rest.lstrip())
+        # ws == 0：id 后没有空白；ws == len(rest) == 1：空白全被 `\s+` 吃掉，名称段无字符
+        if ws == 0 or (ws == len(rest) and ws < 2):
+            continue
+        out.append({
+            "id": m.group(1).strip(),
+            "name": rest.strip(),
+            "duty": parts[2].strip(),
+            "fr": parts[3].strip(),
+        })
     return out
 
 
+_LEVEL_CHARS = frozenset("🔴🟠🟡✅高中低")
+_VS16 = "\ufe0f"
+
+
+def _is_level_text(s):
+    """`(?:[🔴🟠🟡✅]|⚠️|[高中低\\s])+` 能否恰好吃下 s"""
+    if not s:
+        return False
+    i, n = 0, len(s)
+    while i < n:
+        ch = s[i]
+        if ch.isspace() or ch in _LEVEL_CHARS:
+            i += 1
+        elif ch == "⚠" and i + 1 < n and s[i + 1] == _VS16:
+            i += 2
+        else:
+            return False
+    return True
+
+
+def _risk_head_ok(s, start, end):
+    """`\\s*([^|]{2,40})\\s*` 能否恰好覆盖 s[start:end]"""
+    if end - start < 2:
+        return False
+    i, j = start, end
+    while i < end and s[i].isspace():
+        i += 1
+    while j > i and s[j - 1].isspace():
+        j -= 1
+    return i == end or j - i <= 40
+
+
 def parse_risks(hld_text):
+    """提取风险表行：| 风险 | 级别 | 缓解 |
+
+    S5852：原 `\\|\\s*([^|]{2,40})\\s*\\|\\s*((?:…)+)\\s*\\|\\s*([^|]+)\\|` 有三处
+    「限定符 + 含空白的贪婪类」重叠，是多项式回溯点。改为沿 `|` 逐段线性判定，
+    段内取值口径与原正则一致（风险段 2~40 字符且去空白后 ≤40，级别段只含级别字符与空白，
+    缓解段非空），三列均 `.strip()` 后返回。
+    """
     out = []
-    for m in re.finditer(r"\|\s*([^|]{2,40})\s*\|\s*((?:[🔴🟠🟡✅]|⚠️|[高中低\s])+)\s*\|\s*([^|]+)\|", hld_text):
-        out.append({"risk": m.group(1).strip(), "level": m.group(2).strip(), "mitigation": m.group(3).strip()})
+    pos, n = 0, len(hld_text)
+    while pos < n:
+        p = hld_text.find("|", pos)
+        if p < 0:
+            break
+        e = hld_text.find("|", p + 1)
+        f = hld_text.find("|", e + 1) if e >= 0 else -1
+        h = hld_text.find("|", f + 1) if f >= 0 else -1
+        if (
+            h >= 0
+            and _risk_head_ok(hld_text, p + 1, e)
+            and _is_level_text(hld_text[e + 1:f])
+            and h > f + 1
+        ):
+            out.append({
+                "risk": hld_text[p + 1:e].strip(),
+                "level": hld_text[e + 1:f].strip(),
+                "mitigation": hld_text[f + 1:h].strip(),
+            })
+            pos = h + 1
+        else:
+            pos = p + 1
     return out
 
 

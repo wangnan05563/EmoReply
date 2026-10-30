@@ -30,7 +30,7 @@ function createSettingsStore({ dir, safeStorage = null, debounceMs = 150, log = 
   // ---- 加解密（safeStorage 缺失/不可用时明文降级 + 标记，读取端两种形态都认）----
   function encryptVal(k, v) {
     if (!SECRET_KEYS.has(k)) return v;
-    if (safeStorage && safeStorage.isEncryptionAvailable()) {
+    if (safeStorage?.isEncryptionAvailable()) {
       return ENC_PREFIX + safeStorage.encryptString(v).toString('base64');
     }
     data.meta.insecureSecrets = true;
@@ -65,7 +65,7 @@ function createSettingsStore({ dir, safeStorage = null, debounceMs = 150, log = 
         // 损坏自愈：备份原件再重建，绝不静默吞掉用户数据
         lastErr = e.message;
         const bak = file + '.corrupt-' + Date.now();
-        try { fs.renameSync(file, bak); log.warn(`[settings] 文件损坏，已备份到 ${bak}`); } catch (e2) { log.warn('[settings] 损坏备份失败：' + e2.message); }
+        try { fs.renameSync(file, bak); log.warn(`[settings] 文件损坏，已备份到 ${bak}`); } catch (err) { log.warn('[settings] 损坏备份失败：' + err.message); }
       }
       data = { schema: SCHEMA, values: {}, meta: {} };
     }

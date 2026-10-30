@@ -186,7 +186,7 @@ def test_group_nickname_falls_back_to_position():
     box, truth = draw_message(img, "light", OTHER, kind="nickname", text_width=180, top=80)
     call = judge(img, box, "light")
     assert call.side == truth          # 昵称行本来就是左侧对方 → 零证据落对方仍正确
-    assert call.by_color is False      # 但必须标记为「非颜色判定」= 存疑
+    assert call.by_color is False      # 但必须标记为非颜色判定，即方向存疑
 
 
 def test_group_chat_messages_by_color():
@@ -243,7 +243,7 @@ def test_position_only_failure_recovered_by_color():
         assert box.left < SCREEN_W * (450 / 1440)  # 位置判定必然误判
         call = judge(img, box, theme)
         assert call.side == truth and call.by_color
-        # 关掉颜色开关（= 非微信平台）时退回位置判定，保留旧行为
+        # 关掉颜色开关（相当于非微信平台）时退回位置判定，保留旧行为
         off = judge(img, box, theme, color_available=False)
         assert off.side == OTHER and off.by_color is False
 
@@ -294,6 +294,50 @@ def _batch(theme, specs):
     return ground
 
 
+def _mixed_specs(count=200):
+    """按真机屏占比造混合消息规格 (side, kind, text_width)。
+
+    每 25 条里固定掺入昵称/图片/语音/位置失效各一条，其余是左右交替的普通正文
+    （宽度按 7 取模抖动，覆盖窄气泡到超长折行）。
+    """
+    specs = []
+    for i in range(count):
+        side = MINE if i % 2 else OTHER
+        if i % 25 == 3:
+            specs.append((OTHER, "nickname", 160))
+        elif i % 25 == 7:
+            specs.append((side, "image", 420))
+        elif i % 25 == 11:
+            specs.append((side, "voice", 240))
+        elif i % 25 == 17:
+            specs.append((MINE, "long_mine_near_threshold", 0))
+        else:
+            specs.append((side, "text", 200 + (i % 7) * 90))
+    return specs
+
+
+def _side_by_position(box):
+    """纯位置判定的结果（折行合并后 left 可能已不可靠）。"""
+    return MINE if box.left >= SCREEN_W * (450 / 1440) else OTHER
+
+
+def _judge_specs(theme, specs):
+    """逐批判侧混合屏，返回 (颜色判对数, 纯位置判对数, 零证据图片行数)。"""
+    correct = pos_correct = zero_evidence = 0
+    for chunk_start in range(0, len(specs), 2):
+        batch = specs[chunk_start:chunk_start + 2]
+        for (_side, kind, _width), (img, box, truth) in zip(
+                batch, _batch(theme, batch)):
+            call = judge(img, box, theme)
+            if kind == "image":
+                assert call.side == OTHER and call.green_votes == 0
+                zero_evidence += 1
+                continue
+            correct += call.side == truth
+            pos_correct += _side_by_position(box) == truth
+    return correct, pos_correct, zero_evidence
+
+
 def test_direction_accuracy_over_mixed_screen():
     """200 条混合消息（单聊正文/群聊昵称/图片/语音/位置失效样本）逐条判侧。
 
@@ -302,33 +346,8 @@ def test_direction_accuracy_over_mixed_screen():
     颜色/位置真能定侧的行。
     """
     for theme in ("light", "dark"):
-        specs = []
-        for i in range(200):
-            side = MINE if i % 2 else OTHER
-            if i % 25 == 3:
-                specs.append((OTHER, "nickname", 160))
-            elif i % 25 == 7:
-                specs.append((side, "image", 420))
-            elif i % 25 == 11:
-                specs.append((side, "voice", 240))
-            elif i % 25 == 17:
-                specs.append((MINE, "long_mine_near_threshold", 0))
-            else:
-                specs.append((side, "text", 200 + (i % 7) * 90))
-        correct = pos_correct = 0
-        zero_evidence = 0
-        for chunk_start in range(0, len(specs), 2):
-            batch = specs[chunk_start:chunk_start + 2]
-            for (_side, kind, _width), (img, box, truth) in zip(
-                    batch, _batch(theme, batch)):
-                call = judge(img, box, theme)
-                if kind == "image":
-                    zero_evidence += 1
-                    assert call.side == OTHER and call.green_votes == 0
-                    continue
-                correct += call.side == truth
-                pos_correct += (MINE if box.left >= SCREEN_W * (450 / 1440)
-                                else OTHER) == truth
+        specs = _mixed_specs()
+        correct, pos_correct, zero_evidence = _judge_specs(theme, specs)
         total = len(specs) - zero_evidence
         assert correct / total >= 0.99, f"{theme}: {correct}/{total}"
         # 颜色信号必须真的优于纯位置（否则这条数据没有意义）

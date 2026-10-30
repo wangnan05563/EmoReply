@@ -15,15 +15,12 @@ because this is Python, not a .ps1 file.
 """
 
 import argparse
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-ADB_CANDIDATES = [
-    r"D:\android\Sdk\platform-tools\adb.exe",
-    r"D:\android\platform-tools\adb.exe",
-]
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 APK = PROJECT_ROOT / "release" / "build" / "app" / "outputs" / "apk" / "debug" / "app-debug.apk"
 SHOT_DIR = PROJECT_ROOT / "tmp" / "recheck"
@@ -32,6 +29,7 @@ PKG = "com.emoreply.poc"
 READER_SVC = f"{PKG}/com.emoreply.poc.capture.EmoReplyReaderService"
 IME_ID = f"{PKG}/.ime.EmoReplyImeService"
 EXPECTED_VERSION = "246301"
+ADB_EXE = "adb.exe"
 
 # (id, title, what-to-verify)  -- full details in docs/t01339-device-recheck-checklist.md
 ITEMS = [
@@ -65,10 +63,27 @@ def find_adb() -> str:
     found = shutil.which("adb")
     if found:
         return found
-    for p in ADB_CANDIDATES:
+    sdk = None
+    lp = PROJECT_ROOT / "android-app" / "local.properties"
+    if lp.is_file():
+        for line in lp.read_text(encoding="utf-8", errors="replace").splitlines():
+            if line.strip().startswith("sdk.dir="):
+                raw = line.split("=", 1)[1].strip()
+                sdk = Path(raw.replace("\\\\", "\\").replace("\\:", ":"))
+                break
+    candidates = []
+    if os.environ.get("ANDROID_HOME"):
+        candidates.append(Path(os.environ["ANDROID_HOME"]) / "platform-tools" / ADB_EXE)
+    if os.environ.get("ANDROID_SDK_ROOT"):
+        candidates.append(Path(os.environ["ANDROID_SDK_ROOT"]) / "platform-tools" / ADB_EXE)
+    if sdk:
+        candidates.append(sdk / "platform-tools" / ADB_EXE)
+    if os.environ.get("LOCALAPPDATA"):
+        candidates.append(Path(os.environ["LOCALAPPDATA"]) / "Android" / "Sdk" / "platform-tools" / ADB_EXE)
+    for p in candidates:
         if Path(p).exists():
-            return p
-    sys.exit("[FAIL] adb.exe not found; edit ADB_CANDIDATES")
+            return str(p)
+    sys.exit("[FAIL] adb.exe not found; set ANDROID_HOME or sdk.dir in android-app/local.properties")
 
 
 def sh(adb: str, *args: str, capture: bool = False) -> str:

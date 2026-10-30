@@ -208,7 +208,7 @@ async function main() {
   await ev(cdp, `
     (function(){
       const ta = document.querySelector('#cfgCommands');
-      ta.value = ta.value + '\\n测试指令E2E|把消息改得更简短';
+      ta.value = ta.value + String.fromCharCode(10) + '测试指令E2E|把消息改得更简短';
       ta.dispatchEvent(new Event('input', {bubbles:true}));
       document.querySelector('#btnSaveCfg').click();
     })()`);
@@ -290,7 +290,7 @@ async function main() {
     (() => {
       const dark = document.documentElement.getAttribute('data-theme') === 'dark';
       const bg = getComputedStyle(document.body).backgroundColor;
-      const m = bg.match(/\\d+/g) || [];
+      const m = bg.match(/[0-9]+/g) || [];
       const lum = m.length >= 3 ? (+m[0] + +m[1] + +m[2]) / 3 : 255;
       return dark && lum < 60;
     })()`), 'bg=' + (await ev(cdp, `getComputedStyle(document.body).backgroundColor`)));
@@ -398,7 +398,8 @@ async function main() {
   await ev(cdp, `
     (function(){
       const ta = document.querySelector('#cfgModels');
-      ta.value = 'Alpha|https://api.example.com/v1|gpt-4o-mini|sk-test-alpha\\nBeta|https://api.example.com/v1|gpt-4o|sk-test-beta';
+      ta.value = 'Alpha|https://api.example.com/v1|gpt-4o-mini|sk-test-alpha' + String.fromCharCode(10)
+        + 'Beta|https://api.example.com/v1|gpt-4o|sk-test-beta';
       ta.dispatchEvent(new Event('input', {bubbles:true}));
       document.querySelector('#btnSaveCfg').click();
     })()`);
@@ -446,7 +447,11 @@ async function main() {
   process.exit(fail ? 2 : 0);
 }
 
-main().catch((e) => {
-  console.error('E2E FAILED:', e.message || e);
-  process.exit(1);
-});
+// CJS 没有顶层 await：入口保持同步，异步失败在函数内兜底
+function start() {
+  main().catch((e) => {
+    console.error('E2E FAILED:', e.message || e);
+    process.exit(1);
+  });
+}
+start();

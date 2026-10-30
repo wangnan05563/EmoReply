@@ -35,13 +35,14 @@ function isGarbledText(line) {
   if (!t) return true;
   // ① 控制字符
   for (const ch of t) {
-    if (/[\u0000-\u001f\u007f-\u009f]/.test(ch) && !'\t\n\r'.includes(ch)) return true;
+    // \p{Cc} 是 Unicode「C0+C1 控制字符」类，与 [\u0000-\u001f\u007f-\u009f] 逐码点等价，且不含被 S6324 判定的控制字符转义
+    if (/\p{Cc}/u.test(ch) && !'\t\n\r'.includes(ch)) return true;
   }
   const chars = [...t].filter((c) => !/\s/.test(c));
   // ② 有意义字符占比
   if (chars.length && chars.filter(isMeaningfulCh).length / chars.length < 0.7) return true;
   // ③ 连续重复的非文字符号（汉字叠字如「好好好」受 isMeaningfulCh 保护，不算乱码）
-  const compact = t.replace(/\s/g, '');
+  const compact = t.replaceAll(/\s/g, '');
   for (const m of compact.matchAll(CONSECUTIVE_REPEAT)) {
     if (!isMeaningfulCh(m[1])) return true;
   }

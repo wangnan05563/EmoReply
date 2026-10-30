@@ -287,6 +287,30 @@ class EmoReplyReaderService : AccessibilityService() {
         private const val IMAGE_CONTENT_RATIO = 0.5f
         private const val IMAGE_GRAY_LUM_SPREAD_MIN = 40
 
+        /**
+         * 环带取样点（仅屏内坐标）：偏移 × 分位 × 四边，按原 (d, f, 边) 扫描序展平。
+         * 存在理由：[ringContentRatio] 与 [clusterWithoutBubble] 两条判据共用同一套
+         * 取样几何（S3776 收敛抽出），展平后两个调用点只剩逐点判定，簇判据顺序不变。
+         */
+        private fun ringSamplePoints(
+            left: Int, right: Int, top: Int, bottom: Int, width: Int, height: Int,
+        ): List<IntArray> {
+            val pts = ArrayList<IntArray>()
+            for (d in IMAGE_RING_OFFSETS) {
+                for (f in floatArrayOf(0.25f, 0.5f, 0.75f)) {
+                    val x = left + ((right - left) * f).toInt()
+                    val y = top + ((bottom - top) * f).toInt()
+                    for (pt in arrayOf(
+                        intArrayOf(x, top - d), intArrayOf(x, bottom + d),
+                        intArrayOf(left - d, y), intArrayOf(right + d, y),
+                    )) {
+                        if (pt[0] in 0 until width && pt[1] in 0 until height) pts.add(pt)
+                    }
+                }
+            }
+            return pts
+        }
+
         /** 环带上「图片内容」样本占比（饱和且判不出气泡底色，见 [BubbleSideJudge.isImageContent]）。 */
         private fun ringContentRatio(
             bmp: Bitmap,
@@ -299,27 +323,17 @@ class EmoReplyReaderService : AccessibilityService() {
             val bottom = cluster.maxOf { it.bottom }
             var hits = 0
             var total = 0
-            for (d in IMAGE_RING_OFFSETS) {
-                for (f in floatArrayOf(0.25f, 0.5f, 0.75f)) {
-                    val x = left + ((right - left) * f).toInt()
-                    val y = top + ((bottom - top) * f).toInt()
-                    for (pt in arrayOf(
-                        intArrayOf(x, top - d), intArrayOf(x, bottom + d),
-                        intArrayOf(left - d, y), intArrayOf(right + d, y),
-                    )) {
-                        val px = pt[0]
-                        val py = pt[1]
-                        if (px !in 0 until bmp.width || py !in 0 until bmp.height) continue
-                        total++
-                        val pages = pageCache.getOrPut(py / 16) {  // 页底沿 y 缓变，按 16px 分桶
-                            BubbleSideJudge.pageColors(
-                                { x2, y2 -> bmp.getPixel(x2, y2) }, py, bmp.width, bmp.height)
-                        }
-                        if (BubbleSideJudge.isImageContent(
-                                bmp.getPixel(px, py), pages[0], pages[1])
-                        ) hits++
-                    }
+            for (pt in ringSamplePoints(left, right, top, bottom, bmp.width, bmp.height)) {
+                val px = pt[0]
+                val py = pt[1]
+                total++
+                val pages = pageCache.getOrPut(py / 16) {  // 页底沿 y 缓变，按 16px 分桶
+                    BubbleSideJudge.pageColors(
+                        { x2, y2 -> bmp.getPixel(x2, y2) }, py, bmp.width, bmp.height)
                 }
+                if (BubbleSideJudge.isImageContent(
+                        bmp.getPixel(px, py), pages[0], pages[1])
+                ) hits++
             }
             return if (total == 0) 0f else hits.toFloat() / total
         }
@@ -348,24 +362,12 @@ class EmoReplyReaderService : AccessibilityService() {
             val top = cluster.minOf { it.top }
             val bottom = cluster.maxOf { it.bottom }
             val lums = ArrayList<Int>()
-            for (d in IMAGE_RING_OFFSETS) {
-                for (f in floatArrayOf(0.25f, 0.5f, 0.75f)) {
-                    val x = left + ((right - left) * f).toInt()
-                    val y = top + ((bottom - top) * f).toInt()
-                    for (pt in arrayOf(
-                        intArrayOf(x, top - d), intArrayOf(x, bottom + d),
-                        intArrayOf(left - d, y), intArrayOf(right + d, y),
-                    )) {
-                        val px = pt[0]
-                        val py = pt[1]
-                        if (px !in 0 until bmp.width || py !in 0 until bmp.height) continue
-                        val rgb = bmp.getPixel(px, py)
-                        if (BubbleSideJudge.spanOf(rgb) >= BubbleSideJudge.CONTENT_MIN_SPAN) {
-                            return false // 有饱和样本：属第一条判据的射程，不在此重复判
-                        }
-                        lums.add(BubbleSideJudge.lumOf(rgb))
-                    }
+            for (pt in ringSamplePoints(left, right, top, bottom, bmp.width, bmp.height)) {
+                val rgb = bmp.getPixel(pt[0], pt[1])
+                if (BubbleSideJudge.spanOf(rgb) >= BubbleSideJudge.CONTENT_MIN_SPAN) {
+                    return false // 有饱和样本：属第一条判据的射程，不在此重复判
                 }
+                lums.add(BubbleSideJudge.lumOf(rgb))
             }
             val hi = lums.maxOrNull() ?: return false
             val lo = lums.minOrNull() ?: return false
@@ -732,16 +734,18 @@ class EmoReplyReaderService : AccessibilityService() {
             val sides = judgeSides(cropped, groupFiltered, sw)
             // T01129：全部保留并加侧别标注（自己行「我：」、对方行「对方：」）；
             // 频次过滤按侧别分组（同一文本对方发 3 次才滤，双方不互算）
-            val freqMine = groupFiltered.filter { sides[it]!!.side == BubbleSideJudge.SIDE_MINE }
+            // 侧别读取用 getValue：[judgeSides] 对传入的每一行无条件写入（键为行对象引用，
+            // 必然命中），缺键属不可达路径——与旧 `!!` 一致按异常暴露，绝不静默换侧。
+            val freqMine = groupFiltered.filter { sides.getValue(it).side == BubbleSideJudge.SIDE_MINE }
                 .groupingBy { it.text }.eachCount()
-            val freqOther = groupFiltered.filter { sides[it]!!.side != BubbleSideJudge.SIDE_MINE }
+            val freqOther = groupFiltered.filter { sides.getValue(it).side != BubbleSideJudge.SIDE_MINE }
                 .groupingBy { it.text }.eachCount()
             val result = groupFiltered.asSequence()
                 // T01343：时间行转「话题分段标记」保留（与节点路径同构）
                 // T02224：居中门槛——气泡里的「通话时长10:52」不是分隔行，不该抢走方向标注
                 .filter { l -> isMessageText(l.text) || isTimeMark(l.text.trim(), l.cx, sw) }
                 .filter { l ->
-                    val mine = sides[l]!!.side == BubbleSideJudge.SIDE_MINE
+                    val mine = sides.getValue(l).side == BubbleSideJudge.SIDE_MINE
                     val n = (if (mine) freqMine else freqOther)[l.text] ?: 0
                     !(l.text.length <= 10 && n >= 3)
                 }
@@ -750,7 +754,7 @@ class EmoReplyReaderService : AccessibilityService() {
                     val v = it.text.trim()
                     val prefix = when {
                         isTimeMark(v, it.cx, sw) -> TIME_MARK_PREFIX
-                        sides[it]!!.side == BubbleSideJudge.SIDE_MINE -> SPEAKER_ME_PREFIX
+                        sides.getValue(it).side == BubbleSideJudge.SIDE_MINE -> SPEAKER_ME_PREFIX
                         else -> SPEAKER_OTHER_PREFIX
                     }
                     prefix + v
@@ -803,9 +807,9 @@ class EmoReplyReaderService : AccessibilityService() {
                 sides[l] = call
             }
             val dirLines = lines.filterNot { isTimeMark(it.text.trim(), it.cx, sw) }
-            val byColor = dirLines.count { sides[it]!!.byColor }
+            val byColor = dirLines.count { sides.getValue(it).byColor }
             val noEvidence = dirLines.count {
-                val c = sides[it]!!
+                val c = sides.getValue(it)
                 !c.byColor && c.greenVotes == 0 && c.otherVotes == 0
             }
             // 多屏读屏按屏累计（captureMultiScreen 开始时清零），单屏读屏即本次结果。

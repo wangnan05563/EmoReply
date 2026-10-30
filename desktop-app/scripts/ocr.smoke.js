@@ -9,7 +9,7 @@ const { isGarbledText, isNoiseLine } = require('../ocr');
 // ---- T01554：乱码行判据（与 Android isGarbledText、m1-poc is_garbled_text 三端同构）----
 // ① 控制字符
 assert.equal(isGarbledText('你好\u0007世界'), true, '控制字符判为乱码');
-assert.equal(isGarbledText('你好\t可以的'), false, '\\t 属正常空白不判乱码');
+assert.equal(isGarbledText('你好\t可以的'), false, String.raw`\t 属正常空白不判乱码`);
 // ② 有意义字符占比
 assert.equal(isGarbledText('■□▲△■□▲△'), true, '低意义字符占比判为乱码');
 assert.equal(isGarbledText('周末一起去爬山好吗'), false, '正常中文不判乱码');
@@ -70,7 +70,11 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((e) => {
-  console.error('OCR SMOKE FAILED:', e.message || e);
-  process.exit(1);
-});
+// CJS 没有顶层 await：入口保持同步，异步失败在函数内兜底
+function start() {
+  main().catch((e) => {
+    console.error('OCR SMOKE FAILED:', e.message || e);
+    process.exit(1);
+  });
+}
+start();

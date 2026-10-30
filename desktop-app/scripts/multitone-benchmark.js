@@ -1,17 +1,24 @@
 /**
  * T01540：multiTone 延迟基线实测脚本（修正版：添加重试机制）。
  *
- * 用法：node scripts/multitone-benchmark.js [N]
+ * 用法：AGNES_API_KEY=… node scripts/multitone-benchmark.js [N]
  *   N = 样本量（默认 20）
+ *   Key 走环境变量 AGNES_API_KEY（或 API_KEY），缺失时打印中文报错并以退出码 2 停止。
  *
  * 输出：开/关 multiTone 各 N 次调用的 P50/P95 对比表 + 候选条数统计。
  */
-const https = require('https');
-const { performance } = require('perf_hooks');
+const https = require('node:https');
+const { performance } = require('node:perf_hooks');
 
 const API_BASE = 'https://apihub.agnes-ai.com/v1';
-const API_KEY = 'REDACTED_AGNES_KEY';
+// Key 只从环境变量读取：AGNES_API_KEY 优先，兼容通用 API_KEY；源码里不得出现任何真实 Key。
+const API_KEY = process.env.AGNES_API_KEY || process.env.API_KEY || '';
 const MODEL = 'agnes-3.0-flash';
+
+if (!API_KEY) {
+  console.error('缺少 AGNES_API_KEY 环境变量');
+  process.exit(2);
+}
 
 const SYSTEM_TEMPLATE = `你是聊天回复助手，为「我」起草一条可直接发送的回复。
 约束：
@@ -29,6 +36,11 @@ const MULTI_TONE_VARIANTS = [
 function toneVariantsHint(tones) {
   const parts = tones.map((v, i) => `${i + 1}) ${v.hint}`).join('\n');
   return `\n语气强度（多风格并行）：本次必须按以下语气从上到下各生成一条候选，顺序与上列一致，不得打乱，不得合并成同一语气：\n${parts}`;
+}
+
+// 过滤空行：提到模块级，避免在 callLLM 的多层回调里再嵌一层函数（嵌套过深）
+function isNonBlankLine(line) {
+  return line.trim() !== '';
 }
 
 async function callLLM(systemBase, userText, multiTone = false, i = 0, maxRetries = 3) {
@@ -82,7 +94,7 @@ async function callLLM(systemBase, userText, multiTone = false, i = 0, maxRetrie
               if (i < 3 && attempt === 0) {
                 console.log(`\n  [DEBUG] Raw response: ${content.slice(0, 300)}`);
               }
-              const candidates = content.split('\n').filter(l => l.trim());
+              const candidates = content.split('\n').filter(isNonBlankLine);
               resolve({ elapsed, candidates, status: res.statusCode });
             } catch (e) {
               reject(new Error(`Parse error: ${e.message}, raw: ${data.slice(0, 200)}`));
@@ -205,8 +217,13 @@ async function runBenchmark(N = 20) {
   }
 }
 
-const N = parseInt(process.argv[2]) || 20;
-runBenchmark(N).catch(e => {
-  console.error('Benchmark failed:', e);
-  process.exit(1);
-});
+const N = Number.parseInt(process.argv[2]) || 20;
+
+// CJS 没有顶层 await：入口保持同步，异步失败在函数内兜底
+function start() {
+  runBenchmark(N).catch((e) => {
+    console.error('Benchmark failed:', e);
+    process.exit(1);
+  });
+}
+start();

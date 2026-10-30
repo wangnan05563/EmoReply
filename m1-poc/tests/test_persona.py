@@ -3,6 +3,7 @@
 加密存储的正确性与「静态不可读」、关系默认「陌生」不影响生成、
 人设（自称/禁语/默认风格）与 pipeline 的集成、一键清除。
 """
+import secrets
 import sqlite3
 
 import pytest
@@ -11,10 +12,16 @@ from emoreply.models import Notification
 from emoreply.persona import PersonaStore
 from emoreply.pipeline import ReplyPipeline
 
+# 夹具口令一律运行时生成：源码里不留任何口令字面量（Sonar S2068 / 泄漏面为零）。
+# 同一模块内取值稳定，「不同口令互不可见」「错口令解密失败」这两条断言的口径不变。
+_PASSPHRASE = secrets.token_urlsafe(12)
+_PASSPHRASE_B = secrets.token_urlsafe(12)
+_WRONG_PASSPHRASE = secrets.token_urlsafe(12)
+
 
 @pytest.fixture()
 def store(tmp_path):
-    s = PersonaStore(str(tmp_path / "persona.db"), passphrase="test-passphrase")
+    s = PersonaStore(str(tmp_path / "persona.db"), passphrase=_PASSPHRASE)
     yield s
     s.close()
 
@@ -45,8 +52,8 @@ def test_history_encrypted_at_rest(store, tmp_path):
 
 
 def test_roundtrip_and_isolation(tmp_path):
-    a = PersonaStore(str(tmp_path / "a.db"), passphrase="k1")
-    b = PersonaStore(str(tmp_path / "b.db"), passphrase="k2")
+    a = PersonaStore(str(tmp_path / "a.db"), passphrase=_PASSPHRASE)
+    b = PersonaStore(str(tmp_path / "b.db"), passphrase=_PASSPHRASE_B)
     a.set_persona(me="小王")
     assert a.get_persona()["me"] == "小王"
     b.set_persona(me="小张")
@@ -56,10 +63,10 @@ def test_roundtrip_and_isolation(tmp_path):
 
 
 def test_wrong_passphrase_fails(tmp_path):
-    s1 = PersonaStore(str(tmp_path / "p.db"), passphrase="right")
+    s1 = PersonaStore(str(tmp_path / "p.db"), passphrase=_PASSPHRASE)
     s1.set_persona(me="秘密自称")
     s1.close()
-    s2 = PersonaStore(str(tmp_path / "p.db"), passphrase="wrong")
+    s2 = PersonaStore(str(tmp_path / "p.db"), passphrase=_WRONG_PASSPHRASE)
     with pytest.raises(ValueError, match="解密失败"):
         s2.get_persona()
     s2.close()

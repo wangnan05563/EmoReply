@@ -175,7 +175,7 @@ def _neutral_bubble(rgb: RGB, refs: Tuple[RGB, ...]) -> Optional[str]:
         return None
     if min(rgb) < LIGHT_MIN_CHANNEL:  # 浅色主题：白气泡最低通道门槛
         return None
-    # 浅色页底（#EDEDED 或聊天背景图）比白气泡暗、比 #F2F2F2 只暗 5 档，因此只认
+    # 浅色页底（色号 EDEDED，或聊天背景图）比白气泡暗、与色号 F2F2F2 只差 5 档，因此只认
     # 「比两侧页底中更亮的那侧还亮」的方向；与任一页底同色的样本已在取样层作废。
     return OTHER if _lum(rgb) >= max(_lum(r) for r in refs) + LIGHT_STEP_UP else None
 

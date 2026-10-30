@@ -179,9 +179,16 @@ function cosine(a, b) {
 }
 
 function entryCacheKey(e) {
-  // id + 文本摘要哈希：编辑条目（文本变）自动失效
-  const h = crypto.createHash('sha1').update(e.text, 'utf8').digest('hex').slice(0, 12);
+  // id + 文本摘要哈希：编辑条目（文本变）自动失效。仅内存缓存键，无跨端互通，取 sha256（S4790：sha1 属弱摘要）
+  const h = crypto.createHash('sha256').update(e.text, 'utf8').digest('hex').slice(0, 12);
   return `${e.id}:${h}`;
+}
+
+// 与安卓侧 baseUrl.trimEnd('/') 同口径；不用 /\/+$/（S5852 判回溯超线性）
+function trimTrailingSlashes(url) {
+  let s = url;
+  while (s.endsWith('/')) s = s.slice(0, -1);
+  return s;
 }
 
 function postJson(url, apiKey, body, timeoutMs = 15000) {
@@ -236,7 +243,7 @@ class EmbeddingRetriever {
   }
 
   async embedQueries(config, embeddingModel, texts) {
-    const endpoint = config.baseUrl.replace(/\/+$/, '') + '/embeddings';
+    const endpoint = trimTrailingSlashes(config.baseUrl) + '/embeddings';
     const res = await postJson(endpoint, config.apiKey, {
       model: embeddingModel,
       input: texts,

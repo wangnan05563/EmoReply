@@ -33,6 +33,8 @@ Pods/
 
 # ---------- 本机配置（机器相关，不入库） ----------
 local.properties
+# 一键发布的机器级覆盖（JDK / Gradle / 解释器路径），叠加在 scripts/config.json 之上
+scripts/config.local.json
 *.properties.bak
 *.jks
 *.keystore

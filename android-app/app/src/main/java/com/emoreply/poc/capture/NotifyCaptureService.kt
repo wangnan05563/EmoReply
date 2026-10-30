@@ -4,6 +4,7 @@ import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import com.emoreply.poc.core.ReplyOptions
 import com.emoreply.poc.core.ReplyPipeline
 import com.emoreply.poc.core.ScenarioParser
 import com.emoreply.poc.core.Tone
@@ -71,14 +72,16 @@ class NotifyCaptureService : NotificationListenerService() {
 
         val outcome = try {
             (cloud ?: stubPipeline(style)).handle(
-                n, past.toList(), manual = false, tone = tone,
-                scenario = scenario, purpose = purpose, favorites = favorites,
+                n, past.toList(),
+                opts = ReplyOptions(manual = false, tone = tone,
+                    scenario = scenario, purpose = purpose, favorites = favorites),
             )
         } catch (e: CloudLlmGenerator.CloudLlmException) {
             // C24：明确提示 + 降级为本地模板；同会话历史仍由本条维护
             val fallback = stubPipeline(style).handle(
-                n, past.toList(), manual = false, tone = tone,
-                scenario = scenario, purpose = purpose, favorites = favorites,
+                n, past.toList(),
+                opts = ReplyOptions(manual = false, tone = tone,
+                    scenario = scenario, purpose = purpose, favorites = favorites),
             )
             fallback.copy(notice = e.userMessage).also {
                 Log.w(TAG, "云端生成降级 code=${e.code}: ${e.message}")

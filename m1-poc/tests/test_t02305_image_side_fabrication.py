@@ -42,20 +42,24 @@ def line(text, top, bottom=None, left=470, right=900):
     return OcrLine(text, left, right, top, bottom if bottom else top + 40, 0)
 
 
+def _page_band(page_l, page_r, x):
+    """取样器越界到画面左右边缘带时读到的页底色（左半页底/右半页底）。"""
+    return page_l if x < W // 2 else page_r
+
+
 def scene(image=None, page_l=PAGE_LIGHT, page_r=PAGE_LIGHT):
     """「对方白气泡坐在页底上」的场景；[image]=闭包 (x,y)->RGB|None 时把图贴进气泡。"""
     bx0, by0, bx1, by1 = BUB
 
     def get_rgb(x, y):
         if x < 4 or x > W - 5:
-            return page_l if x < W // 2 else page_r
-        if image is not None:
-            inside = image(x, y)
-            if inside is not None:
-                return inside
+            return _page_band(page_l, page_r, x)
+        inside = image(x, y) if image is not None else None
+        if inside is not None:
+            return inside
         if bx0 <= x < bx1 and by0 <= y < by1:
             return BUBBLE_OTHER
-        return page_l if x < W // 2 else page_r
+        return _page_band(page_l, page_r, x)
     return get_rgb
 
 
@@ -192,8 +196,7 @@ class TestZeroEvidenceNeverClaimsMine:
         box = LineBox(900, 1300, 1200, 1240)
 
         def get_rgb(x, y):
-            if x < 4 or x > W - 5:
-                return PAGE_LIGHT if x < W // 2 else PAGE_LIGHT
+            # 浅色主题左右页底同色，边缘带无需再按左右分侧取色
             if 862 <= x < 1338 and 1162 <= y < 1278:
                 return (149, 236, 105)
             return PAGE_LIGHT

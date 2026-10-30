@@ -126,15 +126,26 @@ class MediaPipeOnDeviceGenerator private constructor(private val llm: LlmInferen
             return try {
                 download(first, target, onProgress)
             } catch (e: Exception) {
-                target.delete()
+                discardPartial(target)
                 Log.w(TAG, "端侧模型下载异常: ${e.message}")
                 DownloadOutcome.Failure("下载中断：${e.message ?: e.javaClass.simpleName}")
             }
         }
 
+        /**
+         * 删除半下载的残留文件（S899：显式消费 delete() 返回值）。
+         * 删除失败不改变本次结论——DownloadOutcome 早已定死，残留文件至多让
+         * 下次复用判据（isFile && length>0）误认成品，记一条日志便于排查。
+         */
+        private fun discardPartial(target: File) {
+            if (!target.delete()) {
+                Log.w(TAG, "端侧模型残留文件删除失败: ${target.absolutePath}")
+            }
+        }
+
         /** 跟随重定向（含 http↔https，`HttpURLConnection` 默认不跟）完成下载并校验内容。 */
         private fun download(
-            start: java.net.URL,
+            start: URL,
             target: File,
             onProgress: (Long) -> Unit,
         ): DownloadOutcome {
@@ -160,7 +171,9 @@ class MediaPipeOnDeviceGenerator private constructor(private val llm: LlmInferen
                         if (location.isNullOrBlank() || ++hops > MAX_REDIRECTS) {
                             return DownloadOutcome.Failure("地址重定向异常（次数过多或缺少跳转目标）")
                         }
-                        current = URL(current, location)
+                        // URL(URL, spec) 构造器已被 JDK 标记废弃（S1874）；改走 URI.resolve，
+                        // 相对/绝对 Location 的解析语义与原构造器等价，异常仍落 ensureDownloaded 的 catch。
+                        current = URI(current.toString()).resolve(location).toURL()
                         continue
                     }
                     return readBody(conn, code, target, onProgress)
@@ -170,38 +183,35 @@ class MediaPipeOnDeviceGenerator private constructor(private val llm: LlmInferen
             }
         }
 
-        /** 状态码判因 → 内容类型判因 → 落盘 → 体积兜底校验。 */
-        private fun readBody(
-            conn: HttpURLConnection,
-            code: Int,
-            target: File,
-            onProgress: (Long) -> Unit,
-        ): DownloadOutcome {
-            if (code in listOf(401, 403)) {
-                return DownloadOutcome.Failure(AUTH_REQUIRED_HINT)
-            }
-            if (code == 404 || code == 410) {
-                return DownloadOutcome.Failure(
-                    "地址不存在（HTTP $code）：这多半是网页或「下载」按钮的链接，不是文件直链。" +
-                        "Kaggle 模型文件需登录才能取，建议在电脑上下载后 adb push（用「常用模型」按钮填的路径）"
-                )
-            }
-            if (code !in 200..299) {
-                return DownloadOutcome.Failure("服务端返回 HTTP $code，无法下载")
-            }
-            val contentType = conn.contentType.orEmpty().lowercase()
-            if (contentType.startsWith("text/html") || contentType.startsWith("text/xml")) {
-                return DownloadOutcome.Failure(
+        /**
+         * 状态码判因（S3776 收敛抽出）；null=无失败结论，继续内容检查。
+         * 分支顺序与原文一致：401/403 → 404/410 → 非 2xx。
+         */
+        private fun statusFailure(code: Int): DownloadOutcome? = when {
+            code in listOf(401, 403) -> DownloadOutcome.Failure(AUTH_REQUIRED_HINT)
+            code == 404 || code == 410 -> DownloadOutcome.Failure(
+                "地址不存在（HTTP $code）：这多半是网页或「下载」按钮的链接，不是文件直链。" +
+                    "Kaggle 模型文件需登录才能取，建议在电脑上下载后 adb push（用「常用模型」按钮填的路径）"
+            )
+            code !in 200..299 -> DownloadOutcome.Failure("服务端返回 HTTP $code，无法下载")
+            else -> null
+        }
+
+        /** 内容类型/声明体积判因（S3776 收敛抽出）；null=放行进入落盘。 */
+        private fun contentFailure(contentType: String, declared: Long): DownloadOutcome? = when {
+            contentType.startsWith("text/html") || contentType.startsWith("text/xml") ->
+                DownloadOutcome.Failure(
                     "该地址返回的是网页（$contentType）而非模型文件，通常是登录页或未授权的跳转。" +
                         "请改用文件直链，或在电脑上下载后 adb push"
                 )
-            }
-            val declared = conn.contentLengthLong
-            if (declared in 1 until MIN_MODEL_BYTES) {
-                return DownloadOutcome.Failure(
-                    "地址内容仅 ${declared}B，不像模型文件（Gemma 3 270M 约 300MB）。请确认链接指向 .task 文件本身"
-                )
-            }
+            declared in 1 until MIN_MODEL_BYTES -> DownloadOutcome.Failure(
+                "地址内容仅 ${declared}B，不像模型文件（Gemma 3 270M 约 300MB）。请确认链接指向 .task 文件本身"
+            )
+            else -> null
+        }
+
+        /** 响应体落盘（每 ~2MB 回调一次进度），返回实写字节数；异常由 ensureDownloaded 统一兜底。 */
+        private fun copyBody(conn: HttpURLConnection, target: File, onProgress: (Long) -> Unit): Long {
             var written = 0L
             var reported = 0L
             conn.inputStream.use { input ->
@@ -220,8 +230,22 @@ class MediaPipeOnDeviceGenerator private constructor(private val llm: LlmInferen
                     output.flush()
                 }
             }
+            return written
+        }
+
+        /** 状态码判因 → 内容类型判因 → 落盘 → 体积兜底校验。 */
+        private fun readBody(
+            conn: HttpURLConnection,
+            code: Int,
+            target: File,
+            onProgress: (Long) -> Unit,
+        ): DownloadOutcome {
+            statusFailure(code)?.let { return it }
+            val contentType = conn.contentType.orEmpty().lowercase()
+            contentFailure(contentType, conn.contentLengthLong)?.let { return it }
+            val written = copyBody(conn, target, onProgress)
             if (written < MIN_MODEL_BYTES) {
-                target.delete()
+                discardPartial(target)
                 return DownloadOutcome.Failure(
                     "实际下载 ${written / 1024}KB，远小于模型体积，判定为无效内容已删除。请改用文件直链或 adb push"
                 )

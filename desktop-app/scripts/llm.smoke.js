@@ -157,12 +157,11 @@ async function fanoutSmoke() {
   console.log(`  (fanout 新增 2 例，累计 ${pass})`);
 }
 
-(async () => {
-  try {
-    await main();
-    await fanoutSmoke();
-  } catch (e) {
+// CJS 没有顶层 await：入口保持同步，异步失败在函数内兜底
+function start() {
+  main().then(fanoutSmoke).catch((e) => {
     console.error('SMOKE FAILED:', e);
     process.exit(1);
-  }
-})();
+  });
+}
+start();

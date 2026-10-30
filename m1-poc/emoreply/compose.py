@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import math
 import re
-from dataclasses import dataclass, field
-from typing import List, Optional, Union
+from dataclasses import dataclass, field, fields, replace
+from typing import Any, Dict, List, Optional, Union
 
 from .models import Notification
 
@@ -232,62 +232,105 @@ def _history_window(history: List[Notification], history_limit: int,
     return kept, len(lines) - len(kept), used
 
 
+@dataclass
+class PromptContext:
+    """一次生成请求的全部可选上下文（默认值即 M1 行为）。
+
+    这些字段原本摊在 [build_prompt] 的 15 个形参上，聚合成一个对象只为收拢 Python
+    侧的形参个数；字段名、默认值、注入顺序一字未改——与 Kotlin `core/Compose.kt`
+    的 buildPrompt 仍逐字段同名（JS `desktop-app/llm.js` 的 buildPrompt 只取其中
+    5 个字段，不受影响）：跨语言同构对齐的是字段语义，不是某一语言的形参表。
+    """
+
+    me: str = "我"
+    style: str = "亲切"
+    max_tokens: int = 4096
+    history_limit: int = 5
+    intent: str = ""
+    emotion: str = ""
+    urgency: str = ""
+    relation: str = ""
+    scenario: str = ""   # T01244 FR-8.2：三维筛选（场景）
+    purpose: str = ""    # T01244 FR-8.2：三维筛选（目的）
+    knowledge: Optional[List[str]] = None
+    emoji: bool = True
+    tone: Optional[int] = None
+    tone_variants: Optional[List[int]] = None   # T01349：多风格并行（优先于单值 tone）
+    exclude: Optional[List[str]] = None
+
+
+_CONTEXT_FIELDS = frozenset(f.name for f in fields(PromptContext))
+
+
+def _resolve_context(ctx: Optional[PromptContext],
+                     legacy: Dict[str, Any]) -> PromptContext:
+    """旧散参写法的兼容层：关键字并入 ctx（同名以散参为准），未知键按原签名报错。"""
+    unknown = sorted(set(legacy) - _CONTEXT_FIELDS)
+    if unknown:
+        raise TypeError(
+            f"build_prompt() got unexpected keyword argument(s): {', '.join(unknown)}")
+    if ctx is None:
+        return PromptContext(**legacy)
+    return replace(ctx, **legacy) if legacy else ctx
+
+
 def build_prompt(current: Notification,
                  history: List[Notification],
-                 me: str = "我",
-                 style: str = "亲切",
-                 max_tokens: int = 4096,
-                 history_limit: int = 5,
-                 intent: str = "",
-                 emotion: str = "",
-                 urgency: str = "",
-                 relation: str = "",
-                 scenario: str = "",   # T01244 FR-8.2：三维筛选（场景）
-                 purpose: str = "",    # T01244 FR-8.2：三维筛选（目的）
-                 knowledge: Optional[List[str]] = None,
-                 emoji: bool = True,
-                 tone: Optional[int] = None,
-                 tone_variants: Optional[List[int]] = None,   # T01349：多风格并行（优先于单值 tone）
-                 exclude: Optional[List[str]] = None) -> PromptBundle:
-    """组装提示词，并把伪历史压到 token 预算内。
+                 ctx: Optional[PromptContext] = None,
+                 **context_fields: Any) -> PromptBundle:
+    """组装提示词（可选上下文见 [PromptContext]），并把伪历史压到 token 预算内。
 
     history 需按时间升序且不含 current；超预算时从**最旧**开始丢弃——
     越近的对话对语气判断越关键，system 与当前消息则永不丢弃。
     intent/emotion/urgency 由 classify.py 产出（REQ-006），非空时并入 system
     提示词增强生成（FR-2.1/2.2 → FR-3.1）；缺省不注入，保持 M1 行为不变。
+
+    上下文既可传 [PromptContext] 对象，也可继续按旧写法把 me/style/tone/… 作
+    关键字直接传给本函数（[_resolve_context] 负责并入），两种写法取值完全一致；
+    未知关键字仍按原签名抛 TypeError。唯一差别：第 3 个**位置**参数现在是
+    PromptContext 对象，散参请继续用关键字传。
     """
-    system = SYSTEM_TEMPLATE.format(me=me, style=style)
-    system += _intent_section(intent, emotion, urgency, relation, knowledge or [])
+    return _assemble_prompt(current, history, _resolve_context(ctx, context_fields))
+
+
+def _assemble_prompt(current: Notification, history: List[Notification],
+                     ctx: PromptContext) -> PromptBundle:
+    """按 [PromptContext] 渲染 system 与压预算后的伪历史（纯执行，无默认值判断）。"""
+    system = SYSTEM_TEMPLATE.format(me=ctx.me, style=ctx.style)
+    system += _intent_section(ctx.intent, ctx.emotion, ctx.urgency, ctx.relation,
+                              ctx.knowledge or [])
     # T01244 FR-8.2：三维筛选独立注入，与 intent 分支解耦——intent/emotion 缺失时
     # 三维约束仍生效。relation 仅在 intent 分支的 emotion 子分支注入过（即 intent 与
     # emotion 同时非空时）——此时不再由 filter_hint 重复注入；其余情况交 filter_hint。
-    relation_hint = relation if not (intent and emotion) else ""
-    filter_hint = build_filter_hint(relation=relation_hint, scenario=scenario, purpose=purpose)
+    relation_hint = ctx.relation if not (ctx.intent and ctx.emotion) else ""
+    filter_hint = build_filter_hint(relation=relation_hint, scenario=ctx.scenario,
+                                    purpose=ctx.purpose)
     if filter_hint:
         system += filter_hint
     # T01159：表情约束（emoji=False 时不注入，输出侧再剥掉，保证「关=无表情」）
-    if emoji:
+    if ctx.emoji:
         system += EMOJI_HINT
     # T01158 FR-7.3：语气强度（None 表示沿用旧行为，仅风格生效）
     # T01349：tone_variants 非空时优先（多风格并行一次出多档），单值 tone 忽略
-    if tone_variants:
-        system += tone_variants_hint(tone_variants)
-    elif tone is not None:
-        system += f"\n语气强度：{tone_hint(tone)}"
+    if ctx.tone_variants:
+        system += tone_variants_hint(ctx.tone_variants)
+    elif ctx.tone is not None:
+        system += f"\n语气强度：{tone_hint(ctx.tone)}"
     # T01158 FR-7.1：换一批——把已给候选作为排除项注入
-    exclude_hint = build_exclude_hint(exclude)
+    exclude_hint = build_exclude_hint(ctx.exclude)
     if exclude_hint:
         system += exclude_hint
     current_line = _render(current)
     # 预留回复本身的空间，避免「输入刚好压线、输出直接撞顶」
-    budget = max_tokens - estimate_tokens(system) - estimate_tokens(current_line) - 512
+    budget = (ctx.max_tokens - estimate_tokens(system)
+              - estimate_tokens(current_line) - 512)
 
-    kept, dropped, used = _history_window(history, history_limit, budget)
+    kept, dropped, used = _history_window(history, ctx.history_limit, budget)
     return PromptBundle(
         system=system,
         history=kept,
         current=current_line,
-        style=style,
+        style=ctx.style,
         estimated_tokens=estimate_tokens(system) + used + estimate_tokens(current_line),
         dropped_history=dropped,
         truncated=dropped > 0,

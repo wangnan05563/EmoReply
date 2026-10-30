@@ -98,7 +98,7 @@ eq(splitRationale('请把说明书递给我'), ['请把说明书递给我', null
 eq(splitRationale('你这个理由我接受不了'), ['你这个理由我接受不了', null], '误伤锁：「理由」后无冒号视为正文');
 
 // ---- TRAIL_PIPE 正则修复回归锁（py \Z → JS $ 移植陷阱）----
-eq(cleanCandidate('厦门旅行时光。|'), '厦门旅行时光。', '悬空管道符被剥除（此前因 \Z 退化为字面 Z 而失效）');
+eq(cleanCandidate('厦门旅行时光。|'), '厦门旅行时光。', String.raw`悬空管道符被剥除（此前因 \Z 退化为字面 Z 而失效）`);
 eq(cleanCandidate('请把材料送到 Z 区前台'), '请把材料送到 Z 区前台', '含 Z 正文不得被误删（此前会吞掉「 Z」）');
 eq(cleanCandidate('走 Z 通道'), '走 Z 通道', '单个 Z 前空白不被 stripping');
 

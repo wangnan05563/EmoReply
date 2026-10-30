@@ -40,12 +40,23 @@ function sseParser(onFrame) {
 }
 
 /**
+ * 去掉 baseUrl 尾部的所有 `/`，与安卓侧 `baseUrl.trimEnd('/')` 同口径。
+ * 不用 `.replace(/\/+$/, '')`：该形态被 Sonar S5852 判为回溯超线性；非字符串入参
+ * 依旧在 `.endsWith` 处抛出，与原实现（`.replace` 缺失）的失败路径一致。
+ */
+function trimTrailingSlashes(url) {
+  let s = url;
+  while (s.endsWith('/')) s = s.slice(0, -1);
+  return s;
+}
+
+/**
  * 流式生成。resolve({ text, nonStream })；拒绝原因为 rejectLlm 构造的 Error。
  * onDelta(delta, full) 每个 content 增量回调一次（full 为累积全文）。
  */
 function callLlmStream({ baseUrl, apiKey, model }, system, user, onDelta) {
   return new Promise((resolve, reject) => {
-    const endpoint = baseUrl.replace(/\/+$/, '') + '/chat/completions';
+    const endpoint = trimTrailingSlashes(baseUrl) + '/chat/completions';
     const body = JSON.stringify({
       model,
       temperature: 0.7,

@@ -6,7 +6,7 @@
 from dataclasses import dataclass
 import re
 import unicodedata
-from typing import Callable, List, Optional, Tuple, TYPE_CHECKING
+from typing import Callable, Iterator, List, Optional, Tuple, TYPE_CHECKING
 
 from .bubble_side import (
     CONTENT_MIN_SPAN, RGB, LineBox, classify_sample, judge_line, page_colors_at,
@@ -282,8 +282,22 @@ def split_into_columns(lines: List[str], columns: int = 2) -> List[List[str]]:
 
 # ===== 群聊读屏噪声过滤（用户反馈 2026-09-27：群消息解析对象错误）=====
 
-# 微信群聊 UI 悬浮条（「23条新消息」），OCR 读出后被右侧坐标误判为自己消息
-_GROUP_NEW_MSG = re.compile(r"\d+\s*条新消息")
+# 微信群聊 UI 悬浮条（「23条新消息」），OCR 读出后被右侧坐标误判为自己消息。
+# S5852：原 `\d+\s*条新消息` 配 search 在长数字串上可被多项式回溯拖垮，改线性扫描；
+# 判定口径不变——标记前须有 ≥1 个 Nd 数字、数字与标记之间只允许空白。
+_NEW_MSG_MARK = "条新消息"
+
+
+def _is_group_new_msg(s: str) -> bool:
+    start = 0
+    while (idx := s.find(_NEW_MSG_MARK, start)) >= 0:
+        j = idx - 1
+        while j >= 0 and s[j].isspace():
+            j -= 1
+        if j >= 0 and unicodedata.category(s[j]) == "Nd":
+            return True
+        start = idx + 1
+    return False
 # 表情/图标 OCR 误读特征：整行为括号包裹的短内容，如「(田+0)」
 _BRACKET_ICON = re.compile(r"^\s*[（(].{0,6}[）)]\s*$")
 # 昵称行不含标点（正文行几乎必有）
@@ -318,7 +332,7 @@ def strip_group_noise(lines: List[str]) -> List[str]:
         if not cur:
             i += 1
             continue
-        if _GROUP_NEW_MSG.search(cur) or _BRACKET_ICON.match(cur) or _CALL_NOTICE.match(cur):
+        if _is_group_new_msg(cur) or _BRACKET_ICON.match(cur) or _CALL_NOTICE.match(cur):
             i += 1
             continue
         if (len(cur) <= 12 and nxt and not _HAS_PUNCT.search(cur)
@@ -432,6 +446,40 @@ def filter_image_text_clusters(
     return out
 
 
+_GRAY_RING_OFFSETS = (12, 28, 48)  # 灰阶极差判据的环带偏移（与环带占比判据同点位）
+
+
+def _cluster_frame(cluster: List[OcrLine]) -> Tuple[int, int, int, int]:
+    """簇并集框 (left, right, top, bottom)。"""
+    return (min(l.left for l in cluster), max(l.right for l in cluster),
+            min(l.top for l in cluster), max(l.bottom for l in cluster))
+
+
+def _in_screen(x: int, y: int, width: int, height: int) -> bool:
+    return 0 <= x < width and 0 <= y < height
+
+
+def _ring_sample_points(
+    cluster: List[OcrLine],
+    offsets: Tuple[int, ...],
+    width: int,
+    height: int,
+) -> Iterator[Tuple[int, int]]:
+    """簇并集框四周环带的屏内取样点，按 offsets → 分位 → 四边同序产出。
+
+    两条图内判据（环带「图片内容」占比、灰阶亮度极差）共用这一套点位：真机回归
+    用例是按点位逐点对齐的，任一侧单独改取样布局都会让它失准。越界点直接丢弃。
+    """
+    left, right, top, bottom = _cluster_frame(cluster)
+    for d in offsets:
+        for f in (0.25, 0.5, 0.75):
+            x = left + int((right - left) * f)
+            y = top + int((bottom - top) * f)
+            for px, py in ((x, top - d), (x, bottom + d), (left - d, y), (right + d, y)):
+                if _in_screen(px, py, width, height):
+                    yield px, py
+
+
 def _ring_content_ratio(
     cluster: List[OcrLine],
     get_rgb: Callable[[int, int], RGB],
@@ -440,12 +488,7 @@ def _ring_content_ratio(
     offsets: Tuple[int, ...],
 ) -> float:
     """簇并集框四周环带上的「图片内容」样本占比。"""
-    left = min(l.left for l in cluster)
-    right = max(l.right for l in cluster)
-    top = min(l.top for l in cluster)
-    bottom = max(l.bottom for l in cluster)
     page_cache: dict = {}
-    hits = total = 0
 
     def page_at(y: int) -> Tuple[Optional[RGB], Optional[RGB]]:
         bucket = y // 16  # 页底沿 y 缓变（渐变背景图），按 16px 分桶复用
@@ -453,21 +496,30 @@ def _ring_content_ratio(
             page_cache[bucket] = page_colors_at(get_rgb, y, width, height)
         return page_cache[bucket]
 
-    for d in offsets:
-        for f in (0.25, 0.5, 0.75):
-            x = left + int((right - left) * f)
-            y = top + int((bottom - top) * f)
-            for px, py in ((x, top - d), (x, bottom + d), (left - d, y), (right + d, y)):
-                if not (0 <= px < width and 0 <= py < height):
-                    continue
-                total += 1
-                rgb = get_rgb(px, py)
-                if max(rgb) - min(rgb) < CONTENT_MIN_SPAN:
-                    continue          # 近中性：页底、白/灰气泡、字形都归此类
-                pl, pr = page_at(py)
-                if classify_sample(rgb, pl, pr) is None:
-                    hits += 1         # 饱和且判不出气泡底色 → 图片内容
+    hits = total = 0
+    for px, py in _ring_sample_points(cluster, offsets, width, height):
+        total += 1
+        rgb = get_rgb(px, py)
+        if max(rgb) - min(rgb) < CONTENT_MIN_SPAN:
+            continue          # 近中性：页底、白/灰气泡、字形都归此类
+        pl, pr = page_at(py)
+        if classify_sample(rgb, pl, pr) is None:
+            hits += 1         # 饱和且判不出气泡底色 → 图片内容
     return (hits / total) if total else 0.0
+
+
+def _zero_bubble_votes(
+    cluster: List[OcrLine],
+    get_rgb: Callable[[int, int], RGB],
+    width: int,
+    height: int,
+) -> bool:
+    """每行 30 点环带的绿票/白票双 0 → 整簇零气泡证据（真气泡必然给得出票数）。"""
+    return all(
+        judge_line(get_rgb, LineBox(l.left, l.right, l.top, l.bottom), width,
+                   height)[1:] == (0, 0)
+        for l in cluster
+    )
 
 
 def _cluster_without_bubble(
@@ -492,28 +544,14 @@ def _cluster_without_bubble(
 
     只在 ≥3 行的紧凑簇上生效，单行（群聊昵称行、时间行、悬浮条）一律不剔。
     """
-    if not all(
-        judge_line(get_rgb, LineBox(l.left, l.right, l.top, l.bottom), width,
-                   height)[1:] == (0, 0)
-        for l in cluster
-    ):
-        return False
-    left = min(l.left for l in cluster)
-    right = max(l.right for l in cluster)
-    top = min(l.top for l in cluster)
-    bottom = max(l.bottom for l in cluster)
+    if not _zero_bubble_votes(cluster, get_rgb, width, height):
+        return False  # 有一行能落进气泡底色：不是这一型
     lums: List[int] = []
-    for d in (12, 28, 48):
-        for f in (0.25, 0.5, 0.75):
-            x = left + int((right - left) * f)
-            y = top + int((bottom - top) * f)
-            for px_, py_ in ((x, top - d), (x, bottom + d), (left - d, y), (right + d, y)):
-                if not (0 <= px_ < width and 0 <= py_ < height):
-                    continue
-                rgb = get_rgb(px_, py_)
-                if max(rgb) - min(rgb) >= CONTENT_MIN_SPAN:
-                    return False  # 有饱和样本：不是「灰阶照片」这一型，交给环带占比判据
-                lums.append(sum(rgb) // 3)
+    for px, py in _ring_sample_points(cluster, _GRAY_RING_OFFSETS, width, height):
+        rgb = get_rgb(px, py)
+        if max(rgb) - min(rgb) >= CONTENT_MIN_SPAN:
+            return False  # 有饱和样本：不是「灰阶照片」这一型，交给环带占比判据
+        lums.append(sum(rgb) // 3)
     return bool(lums) and max(lums) - min(lums) >= lum_spread_min
 
 

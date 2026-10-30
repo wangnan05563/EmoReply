@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-10-30 — docs 目录文档精简（人工整理）
+
+按"保留规格/设计/PRD/环境类持久文档、删除一次性过程文档、相关文档合并"原则整理 `docs/`：
+
+- **删除一次性过程文档（9 个）**：`t01055-*`×3（RAG 验证）、`t01081-fix-result`、`t01082-multiturn-result`、`t01099-tsf-proto`、`t01163-followup-icon-integration`、`t01339-device-recheck-checklist`、`t01362-sonar-fix-report`。
+- **合并 8 → 2**：
+  - `品牌图标与接入.md` ← `t01163-logo-result` + `t01164-icon-integration-result`（原 2 个源文件删除）。
+  - `设计决策记录.md` ← `t01083-settings-redesign` + `t01097-multiplatform-ingress-assessment` + `t01343-readscreen-optimization` + `t01345-dingtalk-smart-reply-analysis` + `T02222-气泡颜色判方向`（原 5 个源文件删除）。
+- **删除 36 张细粒度任务卡** `plan-cards/W001–W036.md`，仅保留 `plan-cards/INDEX.md` 作为模块级路线图概览（清理失效链接）。
+- **删除 `sonar-reports/` 目录**（Sonar 增量修复报告，属过程快照）。
+- **同步更新** `README.md`（索引去死链、补两合并文档）与 `plan-cards/INDEX.md`。
+
+效果：`docs/` 由 **74 个文件 → 23 个**（精简约 69%）。
+
 ## 2026-10-03 — 工作空间清理（workspace-cleanup 技能，第 1 轮）
 
 配置驱动（`cleanup-config.yaml`），无 git 仓库 → 非可再生目标一律隔离（S1 门）。

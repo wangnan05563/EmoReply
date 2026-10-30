@@ -43,7 +43,7 @@ DINGTALK_HINTS = ["钉邮", "日程", "待办", "审批流", "考勤打卡", "�
 WECHAT_HINTS = ["朋友圈", "视频号", "小程序", "公众号", "红包", "转账"]
 
 
-def parse_scenario(body: str, source: str = "") -> str:
+def parse_scenario(body: Optional[str], source: str = "") -> str:
     """从消息正文推断场景（闲聊/工作），未知返回空串。
 
     策略：
@@ -72,7 +72,7 @@ def parse_scenario(body: str, source: str = "") -> str:
     return ""
 
 
-def parse_purpose(body: str) -> str:
+def parse_purpose(body: Optional[str]) -> str:
     """从消息正文推断目的（安抚/拒绝/推进/闲聊），未知返回空串。
 
     策略：最高频关键词对应的目的；平局或无命中 → 空串。
@@ -102,13 +102,14 @@ def parse_purpose(body: str) -> str:
     return max_purpose
 
 
-def parse_dimensions(
-    body: str, source: str = "", chat: str = ""
-) -> Tuple[str, str]:
+def parse_dimensions(body: Optional[str], source: str = "") -> Tuple[str, str]:
     """一次性解析场景+目的，返回 (scenario, purpose)。
 
     调用方（NotifyCaptureService / pipeline）拿到后可直接传给 ReplyPipeline.handle()。
     两者皆空时调用方应跳过闭环统计（宁缺勿错）。
+
+    会话名（原 chat 形参）已从签名移除：两个解析器都只看正文与平台，会话名从不
+    参与判定（Kotlin 侧 ScenarioParser.parseDimensions 的同名形参同样是死参）。
     """
     scenario = parse_scenario(body, source)
     purpose = parse_purpose(body)

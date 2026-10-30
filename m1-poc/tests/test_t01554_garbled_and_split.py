@@ -90,7 +90,7 @@ def test_normal_pipe_not_swapped():
 
 def test_long_text_short_rationale_not_swapped():
     # text > 3 字符：不满足错位条件
-    text, rationale = split_rationale("好的我看看|短")
+    text, _ = split_rationale("好的我看看|短")
     assert text == "好的我看看"
 
 

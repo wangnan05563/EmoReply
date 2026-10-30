@@ -31,19 +31,22 @@ async function main() {
 
   // 断言：两句测试文本都应被识别。tesseract 中文 PSM=6 会按字输出并用空格分隔
   //（"周 未 一 起 爬 山 好 吗"），故断言前先剥所有空白，否则关键词匹配必然失败。
-  const flat = text.replace(/\s+/g, '');
+  const flat = text.replaceAll(/\s+/g, '');
   const expect = ['爬山', '开会'];
   const miss = expect.filter((k) => !flat.includes(k));
   if (miss.length) throw new Error(`未识别到关键词 ${JSON.stringify(miss)}；实际: ${JSON.stringify(flat)}`);
   console.log('ASAR OCR CHECK PASSED');
 }
 
-app.whenReady().then(async () => {
+// CJS 没有顶层 await：就绪逻辑走 ready 事件，失败在函数内兜底
+async function check() {
   try {
     await main();
     process.exit(0);
   } catch (e) {
-    console.error('ASAR OCR CHECK FAILED:', (e && e.message) || e);
+    console.error('ASAR OCR CHECK FAILED:', e?.message || e);
     process.exit(1);
   }
-});
+}
+
+app.on('ready', check);

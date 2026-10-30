@@ -88,17 +88,16 @@ object BubbleSideJudge {
         if (span(color) > NEUTRAL_MAX_SPAN) return SIDE_UNKNOWN
         val darkest = minOf(lum(pageLeft), lum(pageRight))
         val brightest = maxOf(lum(pageLeft), lum(pageRight))
-        return if (darkest < LIGHT_PAGE_LUM) {
+        return when {
             // 深色主题：以最暗页底为基准，气泡亮一档但不得亮过上限（否则是近白字形）
-            val step = lum(color) - darkest
-            if (step in DARK_STEP_UP..DARK_STEP_CAP && lum(color) <= DARK_MAX_LUM) SIDE_OTHER
-            else SIDE_UNKNOWN
-        } else if (minOf(red(color), green(color), blue(color)) < LIGHT_MIN_CHANNEL) {
-            SIDE_UNKNOWN
-        } else if (lum(color) >= brightest + LIGHT_STEP_UP) {
-            SIDE_OTHER
-        } else {
-            SIDE_UNKNOWN
+            darkest < LIGHT_PAGE_LUM -> {
+                val step = lum(color) - darkest
+                if (step in DARK_STEP_UP..DARK_STEP_CAP && lum(color) <= DARK_MAX_LUM) SIDE_OTHER
+                else SIDE_UNKNOWN
+            }
+            minOf(red(color), green(color), blue(color)) < LIGHT_MIN_CHANNEL -> SIDE_UNKNOWN
+            lum(color) >= brightest + LIGHT_STEP_UP -> SIDE_OTHER
+            else -> SIDE_UNKNOWN
         }
     }
 

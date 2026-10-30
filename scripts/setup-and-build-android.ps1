@@ -21,8 +21,8 @@
 #>
 [CmdletBinding()]
 param(
-    # 环境安装根目录：其下平铺 jdk17 / gradle-8.9 / sdk / downloads
-    [string]$AndroidRoot = 'D:\android',
+    # 环境安装根目录：其下平铺 jdk17 / gradle-8.9 / sdk / downloads；默认取 ANDROID_ROOT 或工程内 local.properties
+    [string]$AndroidRoot,
     # 离线包目录，默认 <AndroidRoot>\downloads
     [string]$CacheDir,
     # 工程根目录，默认脚本所在目录的上一级
@@ -40,6 +40,8 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
 if (-not $ProjectRoot) { $ProjectRoot = Split-Path -Parent $PSScriptRoot }
+. (Join-Path $PSScriptRoot 'common-paths.ps1')
+$AndroidRoot = Resolve-AndroidRoot -ProjectRoot $ProjectRoot -Override $AndroidRoot
 if (-not $CacheDir) { $CacheDir = Join-Path $AndroidRoot 'downloads' }
 if (-not $ReleaseDir) { $ReleaseDir = Join-Path $ProjectRoot 'release' }
 

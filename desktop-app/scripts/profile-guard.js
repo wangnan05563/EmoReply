@@ -44,7 +44,13 @@ const STATS_EXPR = `(async () => {
 async function readCfgFile(ev, retry = () => new Promise((r) => setTimeout(r, 500))) {
   for (let i = 0; i < 3; i++) {
     let file = '';
-    try { file = String(await ev(STATS_EXPR) || ''); } catch (e) { file = ''; }
+    try {
+      file = String(await ev(STATS_EXPR) || '');
+    } catch (e) {
+      // 可忽略：CDP 求值失败（桥未就绪/页面导航中）本就由下面的 retry 再取一轮，
+      // 最终取不到时由 isDefaultProfileFile('')「无法证明安全就不清键」兜底拒绝。
+      console.warn('[profile-guard] 读取 settings.file 失败，将重试：', e?.message || e);
+    }
     if (file) return file;
     await retry();
   }
@@ -72,9 +78,15 @@ async function resetProfileState(ev, sleep, reload) {
     apiKey: (() => { try { return !!JSON.parse(localStorage.getItem('emoreply_config') || '{}').apiKey; } catch (e) { return false; } })(),
   })`);
   let r = null;
-  try { r = JSON.parse(String(raw)); } catch (e) { r = null; }
-  const left = (r && r.left) || RESIDUE_KEYS;
-  const apiKey = !!(r && r.apiKey);
+  try {
+    r = JSON.parse(String(raw));
+  } catch (e) {
+    // 可忽略：解析失败即按「有残留」保守处理（下面 left 回落 RESIDUE_KEYS → 拒绝继续跑），
+    // 不需要向上抛出打断前置检查；这里只留痕便于排查 CDP 取值异常。
+    console.warn('[profile-guard] 回读状态解析失败，按残留处理：', e?.message || e);
+  }
+  const left = r?.left || RESIDUE_KEYS;
+  const apiKey = !!r?.apiKey;
   if (!left.length && !apiKey) return '';
   return '状态复位未生效（残留 ' + (left.join(',') || '-') + (apiKey ? ' +已配置apiKey' : '') + '）：'
     + '疑似复用了生产 profile 或写穿层未生效，请 `rm -rf` 后换全新 --user-data-dir 重跑';

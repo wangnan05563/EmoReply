@@ -8,6 +8,7 @@
 const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu, nativeImage, safeStorage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const https = require('node:https');
 const http = require('node:http');
 const { URL } = require('node:url');
@@ -33,11 +34,11 @@ let pinned = true;
 // T01541：单实例锁——实测根因：托盘常驻使旧进程存活，双击图标"重启"会起第二实例，
 // 而 localStorage(leveldb) 被旧实例独占锁定，新实例读到空存储 → 用户看到"设置全部重置"。
 // 二次启动改为唤起既有窗口；设置本身另有文件层兜底（见 settings-store.js）。
-if (!app.requestSingleInstanceLock()) {
+if (app.requestSingleInstanceLock()) {
+  app.on('second-instance', () => { console.log('[single-instance] 收到 second-instance → 唤回窗口'); showWindowFromTray(); });
+} else {
   console.log('[single-instance] 锁未获得：唤起既有实例窗口后退出');
   app.quit();
-} else {
-  app.on('second-instance', () => { console.log('[single-instance] 收到 second-instance → 唤回窗口'); showWindowFromTray(); });
 }
 
 function createWindow() {
@@ -166,7 +167,8 @@ function toggleWindow() {
   }
 }
 
-app.whenReady().then(() => {
+// CJS 主进程没有顶层 await，就绪逻辑走事件而非 promise 链
+function onAppReady() {
   // T01541：设置存储先于窗口就绪——渲染层首帧同步水合（settings:get-all）依赖它
   settings = createSettingsStore({ dir: app.getPath('userData'), safeStorage });
   // T01566：置顶状态须在 createWindow 前恢复（alwaysOnTop 是构造项）
@@ -183,7 +185,8 @@ app.whenReady().then(() => {
   startHttpApi(); // T01407：本地 HTTP 接口（127.0.0.1）
   installWindowAnchoring(); // T01409：吸附+位置记忆+失焦收纳
   ocr.initOcr(path.join(__dirname, 'assets', 'ocr')); // T01400：离线 OCR（chi_sim best）
-});
+}
+app.on('ready', onAppReady);
 // T01530：托盘常驻后窗口关闭走「隐藏」，此事件仅在真退出（isQuitting）或托盘降级时触发；
 // 托盘初始化失败（降级）保持原「关窗即退」语义，避免无托盘时进程幽灵常驻。
 app.on('window-all-closed', () => {
@@ -247,7 +250,13 @@ ipcMain.handle('clipboard:undoDepth', () => clipboardStack.length);
 // 流程：写剪贴板 → 隐藏悬浮窗（让出焦点）→ 200ms 后对宿主窗口合成 Ctrl+V。
 // Windows 零依赖路径：WScript.Shell SendKeys '^v'（子进程，独立于 Electron）。
 // ⚠ 绝不自动发送（FR-4.2）——只粘贴，发送永远由用户完成。
-const { exec } = require('node:child_process');
+const { execFile } = require('node:child_process');
+
+// 绝对路径调用 PowerShell：不经 PATH 查找（Sonar S4036），也不经 cmd 二次解析（少一层转义面）。
+const SEND_KEYS_V = "(New-Object -ComObject WScript.Shell).SendKeys('^v')";
+function powershellExe() {
+  return path.join(process.env.SystemRoot || String.raw`C:\Windows`, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+}
 
 ipcMain.handle('paste:back', async (_e, text) => {
   const s = String(text || '');
@@ -256,8 +265,7 @@ ipcMain.handle('paste:back', async (_e, text) => {
   if (win?.isVisible()) win.hide();
   if (process.platform !== 'win32') return false; // macOS/Linux 后续单
   setTimeout(() => {
-    exec(
-      "powershell -NoProfile -Command \"(New-Object -ComObject WScript.Shell).SendKeys('^v')\"",
+    execFile(powershellExe(), ['-NoProfile', '-Command', SEND_KEYS_V],
       { windowsHide: true },
       (err) => {
         if (err) console.warn('[paste-back] 合成 Ctrl+V 失败：', err.message);
@@ -343,10 +351,15 @@ function persistHistory(entries) {
   fs.writeFileSync(historyPath, encrypt(historyKey, JSON.stringify({ entries })), 'utf8');
 }
 
+// 历史条目 id：时间戳 base36 + CSPRNG 6 位十六进制（Math.random 只做伪随机，同毫秒碰撞不保证互斥）
+function newHistoryId() {
+  return Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
+}
+
 function recordHistory(entry) {
   if (!historyPath) return false; // 未开启（renderer 传 historyEnabled 才会调）
   const entries = loadHistory();
-  entries.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ts: Date.now(), ...entry });
+  entries.push({ id: newHistoryId(), ts: Date.now(), ...entry });
   persistHistory(entries.slice(-HISTORY_MAX));
   return true;
 }

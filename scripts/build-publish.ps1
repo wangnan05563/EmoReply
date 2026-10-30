@@ -25,6 +25,26 @@ try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
 if (-not (Test-Path $ConfigPath)) { Write-Error "config not found: $ConfigPath"; exit 1 }
 $cfg = Get-Content -Raw -Encoding UTF8 $ConfigPath | ConvertFrom-Json
 
+# ---- merge machine-local overrides (gitignored, lives next to the config) ----
+function Merge-Config($base, $over) {
+    foreach ($p in $over.PSObject.Properties) {
+        $cur = $base.PSObject.Properties[$p.Name]
+        if ($cur -and $cur.Value -is [pscustomobject] -and $p.Value -is [pscustomobject]) {
+            Merge-Config $cur.Value $p.Value | Out-Null
+        } else {
+            $base | Add-Member -NotePropertyName $p.Name -NotePropertyValue $p.Value -Force
+        }
+    }
+    return $base
+}
+$localName = if ($cfg.runtime -and $cfg.runtime.local_config) { $cfg.runtime.local_config } else { 'config.local.json' }
+$configDir = Split-Path -Parent (Resolve-Path $ConfigPath).Path
+$localCfg = Join-Path $configDir $localName
+if (Test-Path $localCfg) {
+    $cfg = Merge-Config $cfg (Get-Content -Raw -Encoding UTF8 $localCfg | ConvertFrom-Json)
+    Write-Host "[build-publish] local overrides: $localCfg"
+}
+
 $rel = $cfg.github_release
 if (-not $rel -or $rel.enabled -ne $true) {
     Write-Host "[build-publish] github_release disabled, skip" -ForegroundColor Yellow
@@ -48,9 +68,29 @@ $py = Resolve-Python
 if (-not $py) { Write-Error "[build-publish] python not found (set github_release.python.candidates or install python)"; exit 1 }
 Write-Host "[build-publish] python: $py"
 
-# ---- runtime paths from config (no hardcoding) ----
-$javaHome = if ($cfg.runtime -and $cfg.runtime.java_home) { [System.Environment]::ExpandEnvironmentVariables($cfg.runtime.java_home) } else { $env:JAVA_HOME }
-$gradle = if ($cfg.runtime -and $cfg.runtime.gradle) { [System.Environment]::ExpandEnvironmentVariables($cfg.runtime.gradle) } else { "gradle" }
+# ---- runtime paths: config (env-expandable) -> environment -> PATH, never hardcoded ----
+$javaHome = $null
+if ($cfg.runtime -and $cfg.runtime.java_home) { $javaHome = [System.Environment]::ExpandEnvironmentVariables($cfg.runtime.java_home) }
+if (-not $javaHome -or $javaHome -match '%') { $javaHome = $env:JAVA_HOME }
+if (-not $javaHome -or -not (Test-Path (Join-Path $javaHome 'bin\java.exe'))) {
+    Write-Error "[build-publish] JAVA_HOME unresolved: set runtime.java_home in $localName or the JAVA_HOME env var (expects <jdk>\bin\java.exe)"
+    exit 1
+}
+
+$gradle = $null
+$gradleCfg = if ($cfg.runtime -and $cfg.runtime.gradle) { [System.Environment]::ExpandEnvironmentVariables($cfg.runtime.gradle) } else { 'gradle' }
+if ($gradleCfg -match '[\\/]') {
+    if (Test-Path $gradleCfg) { $gradle = $gradleCfg }
+} else {
+    $cmd = Get-Command $gradleCfg -ErrorAction SilentlyContinue
+    if ($cmd) { $gradle = $cmd.Source }
+}
+if (-not $gradle) {
+    Write-Error "[build-publish] gradle not found: set runtime.gradle in $localName or put gradle on PATH"
+    exit 1
+}
+Write-Host "[build-publish] java_home: $javaHome"
+Write-Host "[build-publish] gradle: $gradle"
 
 Push-Location $RepoRoot
 try {
@@ -113,20 +153,24 @@ try {
 
     # ---- 4) collect assets (primary + additional) ----
     $assets = @()
-    function Add-Asset([string]$dir, [string]$glob, [string]$display) {
+    function Add-Asset([string]$dir, [string]$glob, [string]$display, [string[]]$exclude) {
         $d = Join-Path $RepoRoot $dir
         if (-not (Test-Path $d)) { Write-Warning ("[build-publish] asset dir missing: " + $d); return }
-        $m = Get-ChildItem -Path $d -File | Where-Object { $_.Name -like $glob } | Sort-Object LastWriteTime -Descending
+        $glob = $glob -replace '<VER>', $ver
+        $m = Get-ChildItem -Path $d -File | Where-Object { $_.Name -like $glob } | Where-Object {
+            $n = $_.Name
+            -not ($exclude | Where-Object { $n -like ("*" + $_ + "*") })
+        } | Sort-Object LastWriteTime -Descending
         if (-not $m -or $m.Count -eq 0) { Write-Warning ("[build-publish] no asset matching '" + $glob + "' in " + $d); return }
         $f = $m[0].FullName
         $disp = if ($display) { $display -replace '<VER>', $ver } else { $m[0].Name }
         $script:assets += @{ path = $f; display = $disp }
         Write-Host ("[build-publish] asset: " + $f + "  (display: " + $disp + ")") -ForegroundColor Green
     }
-    Add-Asset $rel.asset.dir $rel.asset.glob $null
+    Add-Asset $rel.asset.dir $rel.asset.glob $rel.asset.display_name $rel.asset.exclude_patterns
     if ($rel.additional_assets) {
         foreach ($a in $rel.additional_assets) {
-            Add-Asset $a.dir $a.glob $a.display_name
+            Add-Asset $a.dir $a.glob $a.display_name $a.exclude_patterns
         }
     }
     if ($assets.Count -eq 0) { Write-Error '[build-publish] no assets located, abort'; exit 1 }
@@ -135,6 +179,7 @@ try {
     $pub = Join-Path $RepoRoot $rel.publish_script
     if (-not (Test-Path $pub)) { Write-Error ("[build-publish] publish script missing: " + $pub); exit 1 }
     $env:GH_TAG = $ver
+    if ($rel.name_template) { $env:GH_RELEASE_NAME = $rel.name_template -replace '<VER>', $ver }
     if ($rel.repo) { $env:GH_REPO = $rel.repo }
     if ($rel.draft) { $env:GH_DRAFT = '1' }
     if ($rel.prerelease) { $env:GH_PRERELEASE = '1' }

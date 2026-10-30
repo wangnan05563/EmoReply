@@ -12,11 +12,16 @@
     'emoreply_history', 'emoreply_wizard_done', 'emoreply_ui_scale', 'emoreply_theme', 'emoreply_accent',
   ]);
   const er = globalThis.emoReply;
-  if (!er || !er.settingsSync || !er.settings) return;
+  if (!er?.settingsSync || !er?.settings) return;
   const _set = Storage.prototype.setItem;
   const _remove = Storage.prototype.removeItem;
   let snap = {};
-  try { snap = er.settingsSync.get() || {}; } catch (e) { /* 水合失败维持旧行为 */ }
+  try {
+    snap = er.settingsSync.get() || {};
+  } catch (e) {
+    // 水合失败维持旧行为（继续用镜像里的值），但留痕：桥异常时这层静默降级最容易被误判成「设置丢失」
+    console.warn('[renderer] 设置水合失败，沿用本地镜像：', e?.message || e);
+  }
   const all = snap.values || {};
   for (const [k, v] of Object.entries(all)) _set.call(localStorage, k, v);
   for (const k of SYNC_KEYS) {
@@ -374,7 +379,7 @@ $('kbCategory').onchange = () => {
   if (!isRelation) $('kbContact').value = '';
 };
 
-async function refreshKb() {
+async function loadKb() {
   const entries = await globalThis.emoReply.kbList();
   $('kbCount').textContent = `共 ${entries.length} 条`;
   const list = $('kbList');
@@ -402,6 +407,11 @@ async function refreshKb() {
   });
 }
 
+// 经典脚本没有顶层 await：入口设为同步函数，内部挂失败日志，避免未处理拒绝静默消失。
+function refreshKb() {
+  loadKb().catch(kbRefreshFailed);
+}
+
 $('btnKbSave').onclick = async () => {
   try {
     await globalThis.emoReply.kbAdd(
@@ -424,6 +434,12 @@ $('btnKbWipe').onclick = async () => {
   await globalThis.emoReply.kbWipe();
   refreshKb();
 };
+
+// 顶层调用一律挂上失败日志：本文件是经典脚本（非 module），没有顶层 await，
+// 未处理的 Promise 拒绝会静默消失，查问题时无从下手。
+function kbRefreshFailed(e) {
+  console.warn('[renderer] 知识库刷新失败：', e?.message || e);
+}
 
 fillCfg();
 fillModelsTextarea(); // T01398：多模型套件回填
@@ -660,7 +676,50 @@ $('btnCheckOllama').onclick = async () => {
 };
 
 // ---- T01404：本地历史列表（加密读取；复制/回填即用）----
-async function refreshHistory() {
+function historyCopyButton(text, index) {
+  const b = document.createElement('button');
+  b.className = 'del ibtn sm';
+  b.style.background = '#e0e7ff';
+  b.style.color = '#3730a3';
+  setIcon(b, 'i-copy');
+  b.dataset.tip = '复制候选' + (index + 1) + '｜' + String(text).slice(0, 40);
+  b.onclick = async () => {
+    await globalThis.emoReply.writeClipboard(text);
+    setIcon(b, 'i-check'); // 成功反馈：图标短暂换勾
+    setTimeout(() => setIcon(b, 'i-copy'), 1000);
+  };
+  return b;
+}
+
+function historyPasteButton(candidates) {
+  const pb = document.createElement('button');
+  pb.className = 'del ibtn sm';
+  pb.style.background = '#dcfce7';
+  pb.style.color = '#166534';
+  setIcon(pb, 'i-paste-in');
+  pb.dataset.tip = '回填候选1｜隐藏本窗并粘贴到原窗口（自行发送）';
+  pb.onclick = async () => {
+    if (candidates[0]) await globalThis.emoReply.pasteBack(candidates[0]);
+  };
+  return pb;
+}
+
+function historyItem(entry) {
+  const div = document.createElement('div');
+  div.className = 'kb-item';
+  const time = new Date(entry.ts).toLocaleString('zh-CN', { hour12: false });
+  const span = document.createElement('span');
+  span.textContent = time + ' · ' + (entry.message || '').slice(0, 20) + ' · ' + entry.candidates.length + '条候选';
+  span.title = entry.message || '';
+  div.appendChild(span);
+  const actions = document.createElement('span');
+  entry.candidates.forEach((c, i) => actions.appendChild(historyCopyButton(c, i)));
+  actions.appendChild(historyPasteButton(entry.candidates));
+  div.appendChild(actions);
+  return div;
+}
+
+async function loadHistory() {
   if (localStorage.getItem('emoreply_history') !== '1') {
     $('historyList').textContent = '未开启（在设置里勾选「启用本地历史」后开始记录）';
     return;
@@ -672,42 +731,11 @@ async function refreshHistory() {
     list.textContent = '暂无记录（开启后新生成的回复会记录在此）';
     return;
   }
-  entries.forEach((h) => {
-    const div = document.createElement('div');
-    div.className = 'kb-item';
-    const time = new Date(h.ts).toLocaleString('zh-CN', { hour12: false });
-    const span = document.createElement('span');
-    span.textContent = time + ' · ' + (h.message || '').slice(0, 20) + ' · ' + h.candidates.length + '条候选';
-    span.title = h.message || '';
-    div.appendChild(span);
-    const actions = document.createElement('span');
-    h.candidates.forEach((c, i) => {
-      const b = document.createElement('button');
-      b.className = 'del ibtn sm';
-      b.style.background = '#e0e7ff';
-      b.style.color = '#3730a3';
-      setIcon(b, 'i-copy');
-      b.dataset.tip = '复制候选' + (i + 1) + '｜' + String(c).slice(0, 40);
-      b.onclick = async () => {
-        await globalThis.emoReply.writeClipboard(c);
-        setIcon(b, 'i-check'); // 成功反馈：图标短暂换勾
-        setTimeout(() => setIcon(b, 'i-copy'), 1000);
-      };
-      actions.appendChild(b);
-    });
-    const pb = document.createElement('button');
-    pb.className = 'del ibtn sm';
-    pb.style.background = '#dcfce7';
-    pb.style.color = '#166534';
-    setIcon(pb, 'i-paste-in');
-    pb.dataset.tip = '回填候选1｜隐藏本窗并粘贴到原窗口（自行发送）';
-    pb.onclick = async () => {
-      if (h.candidates[0]) await globalThis.emoReply.pasteBack(h.candidates[0]);
-    };
-    actions.appendChild(pb);
-    div.appendChild(actions);
-    list.appendChild(div);
-  });
+  entries.forEach((h) => list.appendChild(historyItem(h)));
+}
+
+function refreshHistory() {
+  loadHistory().catch(historyRefreshFailed);
 }
 $('btnHistoryRefresh').onclick = refreshHistory;
 $('btnHistoryClear').onclick = async () => {
@@ -715,6 +743,11 @@ $('btnHistoryClear').onclick = async () => {
   await globalThis.emoReply.historyClear();
   refreshHistory();
 };
+
+function historyRefreshFailed(e) {
+  console.warn('[renderer] 历史列表刷新失败：', e?.message || e);
+}
+
 refreshHistory();
 
 // ---- T01408：语气学习 UI ----
@@ -916,19 +949,32 @@ function renderPinState(on) {
     : '未置顶｜点击置顶（窗口始终显示在其他窗口之上）';
   pinBtn.setAttribute('aria-label', on ? '取消置顶' : '置顶');
 }
-globalThis.emoReply.getPin().then(renderPinState); // 首帧水合主进程事实源（含 winPin 持久化值）
+// 首帧水合主进程事实源（含 winPin 持久化值）
+function hydratePin() {
+  globalThis.emoReply.getPin().then(renderPinState, (e) =>
+    console.warn('[renderer] 置顶态水合失败：', e?.message || e));
+}
+hydratePin();
 pinBtn.onclick = async () => renderPinState(await globalThis.emoReply.setPin(!pinBtn.classList.contains('on')));
 
 // ---- T01532：设置中心覆盖层（RAG/设置/历史统一入口；右上角齿轮开，返回键/Esc 关）----
 function openSettingsPage(sectionSummary) {
-  $('settingsPage').classList.add('on');
+  const page = $('settingsPage');
+  page.classList.add('on');
+  // 原生 <dialog>：open 属性与 .on 同步维护，避免「看得见但状态是关的」。
+  // 用 show() 而非 showModal()：本页是整屏覆盖层，不要遮罩与焦点陷阱（与改造前行为一致）。
+  if (!page.open) page.show();
   if (sectionSummary) { // 降级引导等场景：直达并展开指定区块
     const det = $(sectionSummary)?.closest('details');
     if (det) det.open = true;
     setTimeout(() => det?.scrollIntoView({ behavior: 'smooth' }), 60);
   }
 }
-function closeSettingsPage() { $('settingsPage').classList.remove('on'); }
+function closeSettingsPage() {
+  const page = $('settingsPage');
+  page.classList.remove('on');
+  if (page.open) page.close();
+}
 $('openSettings').onclick = () => openSettingsPage();
 $('closeSettings').onclick = closeSettingsPage;
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSettingsPage(); });

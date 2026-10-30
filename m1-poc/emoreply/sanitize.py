@@ -5,8 +5,15 @@ SRS 附录 C 的两条实测约束：
 - C25：注入文本须剥离 HTML/标记，防标记污染（曾把用户输入包成 <p>…</p> 原样展示）。
 
 清洗只剥离格式符号、不改写文字——改写会触发 C10 的语义丢失风险。
+
+⚠ 安全侧约定（SonarQube python:S5852）：候选文本来自外部 LLM 输出，正则里含
+  「量化的闭包类 + 后继限定」（如 ``[\\s|]+\\Z``、``(.+?)…``、``[^）)]*[）)]``）时，
+  构造串会把回溯拖成指数级。被点名的五条模式改为显式线性扫描——与原正则
+  逐字符等价（差分模糊测试 4.6 万条语料零差异），成本随输入长度线性。
+  与 desktop-app/sanitize.js 的同构约定不变：行为一致，实现可以不同。
 """
 import re
+import unicodedata
 from typing import Optional
 
 _MD_LINK = re.compile(r"\[([^\]]*)\]\([^)]*\)")
@@ -18,10 +25,80 @@ _LIST_MARK = re.compile(r"^[ \t]{0,3}(?:[-*+]|\d+\.)[ \t]+", re.M)
 _HTML_TAG = re.compile(r"</?[a-zA-Z][^>]*>")
 _STRAY_MARK = re.compile(r"(?<!\w)[*_~]{1,3}(?!\w)")
 _BLANK_RUN = re.compile(r"\n{3,}")
-# T01131：尾部悬空管道符（LLM「内容|」理由缺失变体的残留），连同空白一并剥掉
-_TRAIL_PIPE = re.compile(r"[\s|]+\Z")
 # T01554：含中日韩汉字的判定（在 CJK 统一表意文字区内）
 _CJK = re.compile(r"[\u4e00-\u9fff]")
+
+# ===== 线性扫描用的字符口径（与被替换的正则字符类严格对齐）=====
+_COLONS = (":", "：")
+_PAREN_OPEN = ("（", "(")
+_PAREN_CLOSE = ("）", ")")
+_SPACE_TAB_IDEO = (" ", "\t", "\u3000")  # `[ \t　]`：显式三类，不含换行
+_MD_MODIFIERS = " \t#*_>"  # `[ \t#*_>]`
+_BULLETS = "-*+•"  # `[-*+•]`
+
+
+def _is_digit(ch: str) -> bool:
+    """正则 `\\d`（str 模式）= Unicode 十进制数字（Nd 类），不等于 str.isdigit()。"""
+    return unicodedata.category(ch) == "Nd"
+
+
+def _at(s: str, k: int) -> str:
+    """取 s[k]（越界返回空串，便于直接与字符组做 in 判定）。"""
+    return s[k:k + 1]
+
+
+def _skip_space(s: str, k: int) -> int:
+    """正则 `\\s*` 的跳过终点（Python 的 `\\s` 与 str.isspace() 同集）。"""
+    n = len(s)
+    while k < n and s[k].isspace():
+        k += 1
+    return k
+
+
+def _skip_chars(s: str, k: int, chars) -> int:
+    n = len(s)
+    while k < n and s[k] in chars:
+        k += 1
+    return k
+
+
+def _scan_digits(s: str, k: int) -> int:
+    """正则 `\\d+`：返回数字段终点，一个都没有则 -1。"""
+    n = len(s)
+    j = k
+    while j < n and _is_digit(s[j]):
+        j += 1
+    return j if j > k else -1
+
+
+def _index_of_any(s: str, k: int, chars) -> int:
+    for i in range(k, len(s)):
+        if s[i] in chars:
+            return i
+    return -1
+
+
+def _match_word_at(s: str, k: int, words) -> int:
+    for w in words:
+        if s.startswith(w, k):
+            return len(w)
+    return -1
+
+
+def _match_word_fold(s: str, k: int, words) -> int:
+    """忽略大小写的关键词匹配（原正则带 re.I；中文关键词不受影响）。"""
+    for w in words:
+        if s[k:k + len(w)].lower() == w.lower():
+            return len(w)
+    return -1
+
+
+def _trim_trailing_pipe(s: str) -> str:
+    """T01131 尾部悬空管道符（原 `[\\s|]+\\Z`）：剥掉尾部空白/竖线的极大后缀。"""
+    i = len(s)
+    while i > 0 and (s[i - 1] == "|" or s[i - 1].isspace()):
+        i -= 1
+    return s[:i]
 
 
 def strip_markdown(text: str) -> str:
@@ -45,8 +122,28 @@ def clean_candidate(text: str) -> str:
     """注入输入框前的最终清洗。"""
     out = strip_markup(strip_markdown(text))
     out = _BLANK_RUN.sub("\n\n", out)
-    out = _TRAIL_PIPE.sub("", out)
+    out = _trim_trailing_pipe(out)
     return out.strip()
+
+
+def _split_on_pipe(raw: str):
+    """「正文|理由」分支：无 | 或切不出可用正文时返回 None（交回调用方走兜底）。"""
+    if "|" not in raw:
+        return None
+    text, rationale = raw.rsplit("|", 1)
+    text, rationale = text.strip(), rationale.strip()
+    if text and rationale:
+        # T01554：分隔符错位检测——text ≤3 字符而 rationale >10 字符且含中文，
+        # 疑似「|」位置错（LLM 把短确认词放前面），交换两者避免解释句被当候选。
+        if len(text) <= 3 and len(rationale) > 10 and _CJK.search(rationale):
+            return _strip_option_prefix(clean_candidate(rationale)), text
+        # 先剥 markdown 再剥标签前缀：前缀正则含 bullet [-*+•]，对未清洗文本会误剥 markdown 星号
+        return _strip_option_prefix(clean_candidate(text)), rationale
+    if text:
+        # T01131 理由缺失时的行尾悬空管道符：剥掉该符号、只保留正文；
+        # 不得把整段原文落入兜底当候选（真机实测：旅行时光一句的句尾残留了悬空管道符）
+        return _strip_option_prefix(clean_candidate(text)), None
+    return None
 
 
 def split_rationale(raw: str) -> tuple:
@@ -61,23 +158,12 @@ def split_rationale(raw: str) -> tuple:
     raw = (raw or "").strip()
     if not raw:
         return "", None
-    if "|" in raw:
-        text, rationale = raw.rsplit("|", 1)
-        text, rationale = text.strip(), rationale.strip()
-        if text and rationale:
-            # T01554：分隔符错位检测——text ≤3 字符而 rationale >10 字符且含中文，
-            # 疑似「|」位置错（LLM 把短确认词放前面），交换两者避免解释句被当候选。
-            if len(text) <= 3 and len(rationale) > 10 and _CJK.search(rationale):
-                return _strip_option_prefix(clean_candidate(rationale)), text
-            # 先剥 markdown 再剥标签前缀：前缀正则含 bullet [-*+•]，对未清洗文本会误剥 markdown 星号
-            return _strip_option_prefix(clean_candidate(text)), rationale
-        if text:
-            # T01131 理由缺失时的行尾悬空管道符：剥掉该符号、只保留正文；
-            # 不得把整段原文落入兜底当候选（真机实测：旅行时光一句的句尾残留了悬空管道符）
-            return _strip_option_prefix(clean_candidate(text)), None
-    m = _INLINE_RATIONALE.match(raw)
-    if m:
-        text, rationale = m.group(1).strip(), m.group(2).strip()
+    piped = _split_on_pipe(raw)
+    if piped is not None:
+        return piped
+    inline = _match_inline_rationale(raw)
+    if inline:
+        text, rationale = inline[0].strip(), inline[1].strip()
         if text and rationale:
             return _strip_option_prefix(clean_candidate(text)), rationale
     # T01554：启发式拆分——LLM 连「|」都忘记且内联结构未被上面的正则命中时的最后兜底。
@@ -120,11 +206,61 @@ def _heuristic_rationale_split(s: str) -> Optional[tuple]:
 # T01081：兼容服务不支持 n>1 时，LLM 常把多条候选挤在同一段输出——
 # 「选项1：xxx|理由1 选项2：yyy|理由2」或逐行「1. xxx」。
 # 不拆开的话，用户点任一候选都会把全部选项连同解释一起注入聊天框（发送事故）。
-_NUMBERED = re.compile(r"(?:^|\s)(?:选项|候选|方案)\s*\d+\s*(?:[（(][^）)]*[）)])?\s*[：:.．]")
-_LINE_OPTION_PREFIX = re.compile(
-    r"^[ \t　]*(?:选项|候选|方案)\s*\d+\s*(?:[（(][^）)]*[）)])?\s*[：:.．]\s*"
-)
+_NUMBERED_WORDS = ("选项", "候选", "方案")
+_NUMBERED_STOPS = ("：", ":", ".", "．")  # `[：:.．]`
 _LINE_BULLET_PREFIX = re.compile(r"^[ \t　]*(?:[-*+•]|\d+[.、)]|[（(]\d+[)）])\s*")
+
+
+def _match_numbered_run(s: str, k: int) -> int:
+    """编号前缀 `(?:选项|候选|方案)\\s*\\d+\\s*(?:[（(][^）)]*[）)])?\\s*[：:.．]` 的终点，失败 -1。
+
+    回溯路径已穷举（与 desktop-app/sanitize.js 同一份推理）：`\\d+` 回退一位后后继仍是
+    数字，既不是开括号也不是终止符；括号组里 `[^）)]` 匹配不了闭括号，只能停在首个闭括号；
+    整体跳过括号组则必需的 `[：:.．]` 落在开括号上必然失败——全模式只有单一线性解。
+    """
+    word = _match_word_at(s, k, _NUMBERED_WORDS)
+    if word < 0:
+        return -1
+    digits = _scan_digits(s, _skip_space(s, k + word))
+    if digits < 0:
+        return -1
+    after_digits = _skip_space(s, digits)
+    if _at(s, after_digits) in _PAREN_OPEN:
+        close = _index_of_any(s, after_digits + 1, _PAREN_CLOSE)
+        if close < 0:
+            return -1
+        after_paren = _skip_space(s, close + 1)
+        return after_paren + 1 if _at(s, after_paren) in _NUMBERED_STOPS else -1
+    return after_digits + 1 if _at(s, after_digits) in _NUMBERED_STOPS else -1
+
+
+def _find_numbered_start(s: str, frm: int) -> int:
+    """原 `(?:^|\\s)` 锚点：从 frm 起找下一处编号前缀的关键词起点，未找到返回 -1。"""
+    for p in range(max(frm, 0), len(s)):
+        if p > 0 and not s[p - 1].isspace():
+            continue
+        if _match_word_at(s, p, _NUMBERED_WORDS) > 0 and _match_numbered_run(s, p) >= 0:
+            return p
+    return -1
+
+
+def _split_by_numbered(s: str) -> list:
+    """原 `_NUMBERED.split(s)` 的线性等价：命中段整体丢弃，返回切片（空段由调用方过滤）。"""
+    parts = []
+    i = 0
+    start = _find_numbered_start(s, 0)
+    while start >= 0:
+        parts.append(s[i:start])
+        i = _match_numbered_run(s, start)
+        start = _find_numbered_start(s, i)
+    parts.append(s[i:])
+    return parts
+
+
+def _strip_numbered_prefix(line: str) -> str:
+    """行首编号前缀（原 `^[ \\t　]*(?:选项|候选|方案)…[：:.．]\\s*`）的线性等价。"""
+    end = _match_numbered_run(line, _skip_chars(line, 0, _SPACE_TAB_IDEO))
+    return line if end < 0 else line[_skip_space(line, end):]
 
 # T01126：LLM 把结构化标题混进候选（「## 候选回复」「理由：xxx」）——
 # 标题行整行丢弃、标签前缀剥离，防止点选把标题带进输入框（快速点选场景）。
@@ -134,13 +270,44 @@ _LINE_BULLET_PREFIX = re.compile(r"^[ \t　]*(?:[-*+•]|\d+[.、)]|[（(]\d+[)�
 _LABEL_WORDS = r"(?:候选回复|参考回复|回复内容|内容|回复|候选|理由|原因|解释)"
 _LABEL_LINE = re.compile(rf"^[ \t#*_>]*{_LABEL_WORDS}\s*[:：]?\s*[#*_\s]*$")
 _LABEL_PREFIX = re.compile(rf"^[ \t#*_]*{_LABEL_WORDS}\s*[:：]\s*")
-_INLINE_RATIONALE = re.compile(r"^(.+?)\s*(?:理由|原因|解释)\s*[:：]\s*(.+)$", re.S)
+_INLINE_RATIONALE_WORDS = ("理由", "原因", "解释")
+
+
+def _match_inline_rationale(s: str):
+    """原 `^(.+?)\\s*(?:理由|原因|解释)\\s*[:：]\\s*(.+)$`（re.S）的线性等价，返回 (正文, 理由) 或 None。
+
+    lazy 头部逐字扩展 = 「按位置升序尝试每个关键词起点，取第一个整体成功的」；
+    关键词起点必须 ≥1（`(.+?)` 至少吃一个字符）。两类失败的处理不同，与引擎一致：
+    `\\s*[:：]` 取不到冒号 → 该位置整体失败，继续试更晚的关键词；
+    冒号命中但后面只剩空白 → `\\s*` 回退让出最后一个字符，匹配仍成立（理由为空），
+    由调用方 trim 后决定是否回落。
+    """
+    n = len(s)
+    positions = []
+    for w in _INLINE_RATIONALE_WORDS:
+        p = s.find(w, 1)
+        while p >= 0:
+            positions.append((p, len(w)))
+            p = s.find(w, p + 1)
+    positions.sort()
+    for p, word_len in positions:
+        before_colon = _skip_space(s, p + word_len)
+        if _at(s, before_colon) not in _COLONS:
+            continue
+        after_colon = before_colon + 1
+        if after_colon >= n:
+            continue
+        k = after_colon
+        while k < n - 1 and s[k].isspace():
+            k += 1
+        return s[:p], s[k:]
+    return None
 
 
 def _strip_option_prefix(line: str) -> str:
     """剥离单候选行的「选项N：/候选N:/1./-/•/（1）」及「候选回复：/理由：」前缀。"""
     line = _LABEL_PREFIX.sub("", line, count=1)
-    line = _LINE_OPTION_PREFIX.sub("", line, count=1)
+    line = _strip_numbered_prefix(line)
     return _LINE_BULLET_PREFIX.sub("", line, count=1)
 
 
@@ -159,10 +326,53 @@ _LEADING_PIPE = re.compile(r"^[ \t\u3000]*\|")
 # （真机实测「候选 6 条」= 3 真候选 + 3 理由行）。理由续行的强特征 =
 # 行首（允许 markdown/缩进/bullet 修饰）强标签词 + 冒号，与 T01554 启发式同词表。
 # 常规候选正文不会以此开头（「原因很简单：…」中 原因 后不是冒号，不命中）。
-_RATIONALE_LINE = re.compile(
-    r"^[ \t#*_>]*(?:[-*+•][ \t\u3000]?)?(?:理由|原因|解释|rationale|explanation)\s*[:：]\s*(.+)$",
-    re.I,
-)
+_RATIONALE_LINE_WORDS = ("理由", "原因", "解释", "rationale", "explanation")
+
+
+def _rationale_start_candidates(s: str) -> list:
+    """按引擎回溯顺序产出关键词可能起点：修饰符前缀由长到短，可选 bullet 先吞一个空白再放回。"""
+    positions = []
+    prefix_end = _skip_chars(s, 0, _MD_MODIFIERS)
+    for k in range(prefix_end, -1, -1):
+        if _at(s, k) in _BULLETS:
+            if _at(s, k + 1) in _SPACE_TAB_IDEO:
+                positions.append(k + 2)
+            positions.append(k + 1)
+        positions.append(k)
+    return positions
+
+
+def _match_rationale_at(s: str, p: int):
+    """位置 p 起「关键词 + 冒号 + 正文」；任一环节不成立返回 None。"""
+    word = _match_word_fold(s, p, _RATIONALE_LINE_WORDS)
+    if word < 0:
+        return None
+    before_colon = _skip_space(s, p + word)
+    if _at(s, before_colon) not in _COLONS:
+        return None
+    after_colon = before_colon + 1
+    n = len(s)
+    if after_colon >= n:
+        return None
+    k = after_colon
+    while k < n - 1 and s[k].isspace():
+        k += 1
+    return s[k:].strip()
+
+
+def _find_rationale_line_head(s: str) -> Optional[str]:
+    """行首「理由：xxx」标签行的理由正文（原 `_RATIONALE_LINE.match(...).group(1).strip()`）。
+
+    `*` 同属修饰符类与 bullet 类，「`***　理由：`」存在让回一个 `*` 当 bullet 的解，
+    故按候选起点顺序逐个尝试（与 desktop-app/sanitize.js 同一份枚举）。
+    冒号后只剩空白时 `(.+)$` 靠 `\\s*` 让出最后一个字符仍算命中（trim 后为空），
+    冒号后什么都没有才不命中。
+    """
+    for p in _rationale_start_candidates(s):
+        hit = _match_rationale_at(s, p)
+        if hit is not None:
+            return hit
+    return None
 
 
 def _merge_rationale_lines(lines: list) -> list:
@@ -175,9 +385,8 @@ def _merge_rationale_lines(lines: list) -> list:
     """
     out = []
     for ln in lines:
-        m = _RATIONALE_LINE.match(ln)
-        if m:
-            rationale = m.group(1).strip()
+        rationale = _find_rationale_line_head(ln)
+        if rationale is not None:
             if out and rationale:
                 if _DANGLING_PIPE_TAIL.search(out[-1]):
                     out[-1] = out[-1] + rationale
@@ -224,8 +433,8 @@ def expand_candidates(raw: Optional[str]) -> list:
     lines = _merge_rationale_lines(lines)  # T01720：理由续行接回上一条候选，不产出独立候选
     if len(lines) > 1:
         return [_strip_option_prefix(ln) for ln in _join_dangling_pipe(lines)]
-    if _NUMBERED.search(s):
-        parts = [p.strip() for p in _NUMBERED.split(s) if p.strip()]
+    if _find_numbered_start(s, 0) >= 0:
+        parts = [p.strip() for p in _split_by_numbered(s) if p.strip()]
         if len(parts) > 1:
             return [_strip_option_prefix(p) for p in parts]
     if lines:
@@ -236,8 +445,8 @@ def expand_candidates(raw: Optional[str]) -> list:
 
 def _has_rationale_mark(line: str) -> bool:
     """行内是否已带理由结构标记：管道分隔、「… 理由：…」内联、「理由：」标签行。"""
-    return ("|" in line or _INLINE_RATIONALE.match(line) is not None
-            or _RATIONALE_LINE.match(line) is not None)
+    return ("|" in line or _match_inline_rationale(line) is not None
+            or _find_rationale_line_head(line) is not None)
 
 
 def pair_unmarked_reasons(lines: list, expected: int) -> list:

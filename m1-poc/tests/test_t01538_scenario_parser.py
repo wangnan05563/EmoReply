@@ -34,7 +34,7 @@ class TestParseScenario:
 
     def test_empty_body(self):
         assert parse_scenario("") == ""
-        assert parse_scenario(None) == ""  # type: ignore
+        assert parse_scenario(None) == "", "正文整体缺失（键在值为空）须返回空串，不得抛错"
 
     def test_emoji_only(self):
         assert parse_scenario("😂🤣😂") == ""
@@ -62,7 +62,7 @@ class TestParsePurpose:
 
     def test_empty_body(self):
         assert parse_purpose("") == ""
-        assert parse_purpose(None) == ""  # type: ignore
+        assert parse_purpose(None) == "", "正文整体缺失时须返回空串，不得抛错，也不得写出维度统计"
 
 
 class TestParseDimensions:

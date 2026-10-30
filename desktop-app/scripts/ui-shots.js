@@ -157,7 +157,11 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((e) => {
-  console.error('SHOTS FAILED:', e.message || e);
-  process.exit(1);
-});
+// CJS 没有顶层 await：入口保持同步，异步失败在函数内兜底
+function start() {
+  main().catch((e) => {
+    console.error('SHOTS FAILED:', e.message || e);
+    process.exit(1);
+  });
+}
+start();

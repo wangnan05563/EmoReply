@@ -28,8 +28,8 @@
 #>
 [CmdletBinding()]
 param(
-    # 环境安装根目录：其下平铺 node-v22.22.2-win-x64 / downloads
-    [string]$NodeRoot = 'D:\nodejs',
+    # 环境安装根目录：其下平铺 node-v22.22.2-win-x64 / downloads；默认取 NODE_ROOT 或 <工程根>\release\toolchain\node
+    [string]$NodeRoot,
     # 离线包目录，默认 <NodeRoot>\downloads
     [string]$CacheDir,
     # 工程根目录，默认脚本所在目录的上一级
@@ -49,6 +49,8 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
 if (-not $ProjectRoot) { $ProjectRoot = Split-Path -Parent $PSScriptRoot }
+. (Join-Path $PSScriptRoot 'common-paths.ps1')
+$NodeRoot = Resolve-NodeRoot -ProjectRoot $ProjectRoot -Override $NodeRoot
 if (-not $CacheDir) { $CacheDir = Join-Path $NodeRoot 'downloads' }
 if (-not $ReleaseDir) { $ReleaseDir = Join-Path $ProjectRoot 'release' }
 
@@ -152,7 +154,7 @@ function Find-ExistingNode {
         $candidates = @()
         $cmd = Get-Command node.exe -ErrorAction SilentlyContinue
         if ($cmd) { $candidates += $cmd.Source }
-        $managed = 'C:\Users\{0}\.workbuddy\binaries\node\versions\22.22.2-3\node.exe' -f $env:USERNAME
+        $managed = Join-Path $env:USERPROFILE '.workbuddy\binaries\node\versions\22.22.2-3\node.exe'
         $candidates += $managed
         foreach ($c in $candidates) {
             if (Test-Path $c) {

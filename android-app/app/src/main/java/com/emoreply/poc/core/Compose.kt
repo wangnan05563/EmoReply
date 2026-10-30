@@ -208,64 +208,75 @@ private fun historyWindow(
     return Triple(kept.toList(), lines.size - kept.size, used)
 }
 
+/**
+ * 一次生成请求的全部可选上下文（默认值即 M1 行为）。
+ *
+ * S107 收敛：这些字段原本摊在 [buildPrompt] 的 19 个形参上，聚合成对象只为
+ * 收拢形参个数；字段名、默认值、注入顺序一字未改——与 m1-poc compose.PromptContext
+ * 逐字段同名（lastTopic/favorites 为安卓端 FR-8.5/8.8 增量，py 侧无对应请求路径）。
+ */
+data class PromptContext(
+    val me: String = "我",
+    val style: String = "亲切",
+    val maxTokens: Int = DEFAULT_MAX_TOKENS,
+    val historyLimit: Int = 5,
+    val intent: String = "",
+    val emotion: String = "",
+    val urgency: String = "",
+    val relation: String = "",
+    val scenario: String = "", // T01244 FR-8.2：三维筛选（场景）
+    val purpose: String = "",  // T01244 FR-8.2：三维筛选（目的）
+    val knowledge: List<String> = emptyList(),
+    val emoji: Boolean = true,
+    val tone: Int? = null, // T01158 FR-7.3：null=沿用旧行为（仅风格生效）
+    val toneVariants: List<Int>? = null, // T01349：多风格并行（非空优先于单值 tone）
+    val exclude: List<String> = emptyList(), // T01158 FR-7.1：换一批排除项
+    val lastTopic: String = "", // T01259 FR-8.5：上次聊到（跨会话记忆，仅话题参考）
+    val favorites: List<String> = emptyList(), // T01262 FR-8.8：收藏话术（同类场景优先参考）
+)
+
 fun buildPrompt(
     current: Notification,
     history: List<Notification>,
-    me: String = "我",
-    style: String = "亲切",
-    maxTokens: Int = DEFAULT_MAX_TOKENS,
-    historyLimit: Int = 5,
-    intent: String = "",
-    emotion: String = "",
-    urgency: String = "",
-    relation: String = "",
-    scenario: String = "", // T01244 FR-8.2：三维筛选（场景）
-    purpose: String = "",  // T01244 FR-8.2：三维筛选（目的）
-    knowledge: List<String> = emptyList(),
-    emoji: Boolean = true,
-    tone: Int? = null, // T01158 FR-7.3：null=沿用旧行为（仅风格生效）
-    toneVariants: List<Int>? = null, // T01349：多风格并行（非空优先于单值 tone）
-    exclude: List<String> = emptyList(), // T01158 FR-7.1：换一批排除项
-    lastTopic: String = "", // T01259 FR-8.5：上次聊到（跨会话记忆，仅话题参考）
-    favorites: List<String> = emptyList(), // T01262 FR-8.8：收藏话术（同类场景优先参考）
+    ctx: PromptContext = PromptContext(),
 ): PromptBundle {
-    var system = String.format(SYSTEM_TEMPLATE, me, style)
-    system += intentSection(intent, emotion, urgency, relation, knowledge)
+    var system = String.format(SYSTEM_TEMPLATE, ctx.me, ctx.style)
+    system += intentSection(ctx.intent, ctx.emotion, ctx.urgency, ctx.relation, ctx.knowledge)
     // T01244 FR-8.2：三维筛选独立注入。relation 已由 intent 分支注入（第 139 行，
     // 只要 intent 非空即注入），此处跳过避免重复；场景/目的恒由这里补。
-    val relationHint = if (intent.isEmpty()) relation else ""
-    val filterHint = buildFilterHint(relationHint, scenario, purpose)
+    val relationHint = if (ctx.intent.isEmpty()) ctx.relation else ""
+    val filterHint = buildFilterHint(relationHint, ctx.scenario, ctx.purpose)
     if (filterHint.isNotEmpty()) system += filterHint
     // T01259 FR-8.5：上次聊到——只注入真实历史摘要，且明确「不得据此编造」，防止跨会话记忆被幻觉放大
-    if (lastTopic.isNotBlank()) {
-        system += "\n4) 上次聊到：$lastTopic（作为话题衔接参考，不得据此编造对方未提及的事实）。"
+    if (ctx.lastTopic.isNotBlank()) {
+        system += "\n4) 上次聊到：${ctx.lastTopic}（作为话题衔接参考，不得据此编造对方未提及的事实）。"
     }
     // T01262 FR-8.8：收藏话术（同类场景优先）——仅作语气/角度参考，禁止原样复制
-    if (favorites.isNotEmpty()) {
-        system += "\n4) 收藏话术（同类场景优先参考其语气与角度，禁止原样复制）：${favorites.joinToString("；")}。"
+    if (ctx.favorites.isNotEmpty()) {
+        system += "\n4) 收藏话术（同类场景优先参考其语气与角度，禁止原样复制）：${ctx.favorites.joinToString("；")}。"
     }
     // T01159：表情约束（emoji=false 时不注入，输出侧再剥掉，保证「关=无表情」）
-    if (emoji) system += EMOJI_HINT
+    if (ctx.emoji) system += EMOJI_HINT
     // T01158 FR-7.3：语气强度
     // T01349：toneVariants 非空时优先（多风格并行一次出多档），单值 tone 忽略
-    if (!toneVariants.isNullOrEmpty()) {
-        system += toneVariantsHint(toneVariants)
-    } else if (tone != null) {
-        system += "\n语气强度：${toneHint(tone)}"
+    if (!ctx.toneVariants.isNullOrEmpty()) {
+        system += toneVariantsHint(ctx.toneVariants)
+    } else if (ctx.tone != null) {
+        system += "\n语气强度：${toneHint(ctx.tone)}"
     }
     // T01158 FR-7.1：换一批排除项
-    val excludeHint = buildExcludeHint(exclude)
+    val excludeHint = buildExcludeHint(ctx.exclude)
     if (excludeHint.isNotEmpty()) system += excludeHint
     val currentLine = render(current)
     // 预留回复本身的空间，避免「输入刚好压线、输出直接撞顶」
-    val budget = maxTokens - estimateTokens(system) - estimateTokens(currentLine) - 512
+    val budget = ctx.maxTokens - estimateTokens(system) - estimateTokens(currentLine) - 512
 
-    val (kept, dropped, used) = historyWindow(history, historyLimit, budget)
+    val (kept, dropped, used) = historyWindow(history, ctx.historyLimit, budget)
     return PromptBundle(
         system = system,
         history = kept,
         current = currentLine,
-        style = style,
+        style = ctx.style,
         estimatedTokens = estimateTokens(system) + used + estimateTokens(currentLine),
         droppedHistory = dropped,
         truncated = dropped > 0,

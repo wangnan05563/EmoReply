@@ -12,8 +12,9 @@
     "line_ending": "crlf"
   },
   "runtime": {
-    "java_home": "D:\\android\\jdk17\\jdk-17.0.20.1+1",
-    "gradle": "D:\\android\\gradle-8.9\\bin\\gradle.bat"
+    "local_config": "config.local.json",
+    "java_home": "%JAVA_HOME%",
+    "gradle": "gradle"
   },
   "build_pipeline": {
     "steps": [
@@ -24,34 +25,39 @@
       },
       {
         "name": "build desktop Electron NSIS + portable (npm run dist)",
-        "command": "pushd \"<REPO_ROOT>\\desktop-app\" && set ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/ && set ELECTRON_BUILDER_BINARIES_MIRROR=https://registry.npmmirror.com/-/binary/electron-builder-binaries/ && npm run dist && popd",
+        "command": "pushd \"<REPO_ROOT>\\desktop-app\" && set \"ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/\" && set \"ELECTRON_BUILDER_BINARIES_MIRROR=https://registry.npmmirror.com/-/binary/electron-builder-binaries/\" && npm run dist && popd",
         "on_fail": "stop"
       },
       {
         "name": "build Android APK (assembleDebug, offline)",
-        "command": "set JAVA_HOME=<JAVA_HOME> && \"<GRADLE>\" -p \"<REPO_ROOT>\\android-app\" assembleDebug --offline",
+        "command": "set \"JAVA_HOME=<JAVA_HOME>\" && \"<GRADLE>\" -p \"<REPO_ROOT>\\android-app\" assembleDebug --offline",
         "on_fail": "stop"
       }
     ]
   },
   "github_release": {
     "enabled": true,
-    "repo": "wangnan05563/aimsg",
+    "repo": "wangnan05563/EmoReply",
     "tag_source": "package_json",
     "version_file_path": "desktop-app/package.json",
+    "name_template": "EmoReply <VER>",
     "asset": {
       "dir": "desktop-app/dist",
-      "glob": "EmoReply-*-setup.exe",
-      "exclude_patterns": ["arm64"]
+      "glob": "EmoReply-*<VER>-x64.exe",
+      "exclude_patterns": [
+        "arm64",
+        "portable"
+      ],
+      "display_name": "EmoReply-<VER>-windows-setup.exe"
     },
     "additional_assets": [
       {
         "dir": "desktop-app/dist",
-        "glob": "EmoReply-*-portable.exe",
-        "display_name": "EmoReply-<VER>-portable.exe"
+        "glob": "EmoReply-*<VER>-x64-portable.exe",
+        "display_name": "EmoReply-<VER>-windows-portable.exe"
       },
       {
-        "dir": "android-app/app/build/outputs/apk/debug",
+        "dir": "release/build/app/outputs/apk/debug",
         "glob": "app-debug.apk",
         "display_name": "EmoReply-<VER>-android.apk"
       }
@@ -64,7 +70,6 @@
     "publish_script": "scripts/publish-release.py",
     "python": {
       "candidates": [
-        "%USERPROFILE%\\.workbuddy\\binaries\\python\\envs\\default\\Scripts\\python.exe",
         "python",
         "python3"
       ]

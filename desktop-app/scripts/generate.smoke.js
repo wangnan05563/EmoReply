@@ -96,7 +96,11 @@ async function main() {
   process.exit(0); // keep-alive 空闲套接字会挂住事件循环，显式退出
 }
 
-main().catch((e) => {
-  console.error('SMOKE FAILED:', e);
-  process.exit(1);
-});
+// CJS 没有顶层 await：入口保持同步，异步失败在函数内兜底
+function start() {
+  main().catch((e) => {
+    console.error('SMOKE FAILED:', e);
+    process.exit(1);
+  });
+}
+start();

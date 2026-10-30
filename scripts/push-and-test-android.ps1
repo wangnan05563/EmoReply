@@ -18,8 +18,8 @@
 #>
 [CmdletBinding()]
 param(
-    # 环境安装根目录，其下含 sdk\platform-tools\adb.exe
-    [string]$AndroidRoot = 'D:\android',
+    # 环境安装根目录，其下含 sdk\platform-tools\adb.exe；默认取 ANDROID_ROOT 或工程内 local.properties
+    [string]$AndroidRoot,
     # 待安装的 APK，默认 <ProjectRoot>\release\EmoReply-poc-debug.apk
     [string]$ApkPath,
     # 安装完成后不自动启动应用
@@ -32,6 +32,8 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot 'common-paths.ps1')
+$AndroidRoot = Resolve-AndroidRoot -ProjectRoot $ProjectRoot -Override $AndroidRoot
 if (-not $ApkPath) { $ApkPath = Join-Path $ProjectRoot 'release\EmoReply-poc-debug.apk' }
 
 $AdbExe = Join-Path $AndroidRoot 'sdk\platform-tools\adb.exe'

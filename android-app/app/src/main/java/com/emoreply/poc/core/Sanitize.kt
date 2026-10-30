@@ -52,49 +52,70 @@ fun cleanCandidate(text: String): String {
  * T01554 增强：二次校验确保 rationale 不会混入 text——若 text 很短而
  * rationale 很长且含中文，疑似分隔符位置错误则交换两者；无 | 时尝试
  * 启发式检测「理由/rationale/explanation」关键词进行拆分。
+ *
+ * S3776 收敛：三条判据路径各抽为私有函数，返回 null 表示本路径不产出结果、
+ * 落入下一条路径——与原 if 链的落空/提前 return 语义逐分支一致。
  */
 fun splitRationale(raw: String?): Pair<String, String?> {
     val s = raw?.trim() ?: return "" to null
     if (s.isEmpty()) return "" to null
-    if ("|" in s) {
-        val idx = s.lastIndexOf('|')
-        val text = s.substring(0, idx).trim()
-        val rationale = s.substring(idx + 1).trim()
-        if (text.isNotEmpty() && rationale.isNotEmpty()) {
-            // T01554：二次校验——若 rationale 看起来像候选文本（含汉字/完整句子），
-            // 而 text 很短（≤3 字符），可能是分隔符位置错误，交换两者
-            if (text.length <= 3 && rationale.length > 10 && rationale.any { it in '\u4e00'..'\u9fff' }) {
-                // 疑似错位：短文本在前、长中文在后 → 交换
-                return stripOptionPrefix(cleanCandidate(rationale)) to text
-            }
-            // 先剥 markdown 再剥标签前缀：前缀正则含 bullet [-*+•]，对未清洗文本会误剥 markdown 星号
-            return stripOptionPrefix(cleanCandidate(text)) to rationale
-        }
-        if (text.isNotEmpty()) {
-            // T01131：理由缺失的悬空管道符（「文本|」）——剥掉 | 只保留正文，
-            // 不得把整段含 | 原文落入兜底当候选（真机实测残留「…旅行时光。|」）
-            return stripOptionPrefix(cleanCandidate(text)) to null
-        }
-    }
+    splitOnLastPipe(s)?.let { return it }
     // T01126：无 | 时兜底「正文 理由：xxx」内联结构（LLM 忘带管道符的常见变体）
-    INLINE_RATIONALE.matchEntire(s)?.let { m ->
-        val text = m.groupValues[1].trim()
-        val rationale = m.groupValues[2].trim()
-        if (text.isNotEmpty() && rationale.isNotEmpty()) {
-            return stripOptionPrefix(cleanCandidate(text)) to rationale
-        }
-    }
+    inlineRationalePair(s)?.let { return it }
+    keywordRationalePair(s)?.let { return it }
+    return cleanCandidate(s) to null
+}
 
-    // T01554：启发式检测——text 中是否混入了 rationale 内容。
-    // 相对初版做了两点收紧（由 m1-poc 同构镜像时实测发现的误伤）：
-    // 初版的「说明」弱词 + 不要求关键词后紧跟冒号，会把「好的，我说明一下情况」
-    // 误砍成候选「好的，我」+理由「说明一下情况」——把完整句子拦腰截断，
-    // 比「理由混入候选」这个原 bug 更糟。故：
-    //   1) 只保留强标签词，去掉口语动词「说明」；
-    //   2) 关键词后必须紧跟冒号（：/:），排除「说明一下」「说明书」等句中用法。
-    // 注：中文「理由：」多数已被 INLINE_RATIONALE（T01126）先行命中，此处的实际
-    // 增量是英文关键词（rationale/explanation）。返回值剥掉标签词前缀，
-    // 与 INLINE_RATIONALE 的 group(2) 口径保持一致。
+/** 按最后一个 | 切分（原 if ("|" in s) 分支）；无 | 或 text 为空时返回 null 落入后续路径。 */
+private fun splitOnLastPipe(s: String): Pair<String, String?>? {
+    if ("|" !in s) return null
+    val idx = s.lastIndexOf('|')
+    val text = s.substring(0, idx).trim()
+    val rationale = s.substring(idx + 1).trim()
+    if (text.isNotEmpty() && rationale.isNotEmpty()) {
+        // T01554：二次校验——若 rationale 看起来像候选文本（含汉字/完整句子），
+        // 而 text 很短（≤3 字符），可能是分隔符位置错误，交换两者
+        if (text.length <= 3 && rationale.length > 10 && rationale.any { it in '一'..'鿿' }) {
+            // 疑似错位：短文本在前、长中文在后 → 交换
+            return stripOptionPrefix(cleanCandidate(rationale)) to text
+        }
+        // 先剥 markdown 再剥标签前缀：前缀正则含 bullet [-*+•]，对未清洗文本会误剥 markdown 星号
+        return stripOptionPrefix(cleanCandidate(text)) to rationale
+    }
+    if (text.isNotEmpty()) {
+        // T01131：理由缺失的悬空管道符（「文本|」）——剥掉 | 只保留正文，
+        // 不得把整段含 | 原文落入兜底当候选（真机实测残留「…旅行时光。|」）
+        return stripOptionPrefix(cleanCandidate(text)) to null
+    }
+    return null
+}
+
+/** 「正文 理由：xxx」内联结构（T01126，原 INLINE_RATIONALE 分支）；不匹配或任一半空返回 null。 */
+private fun inlineRationalePair(s: String): Pair<String, String?>? {
+    val m = INLINE_RATIONALE.matchEntire(s) ?: return null
+    val text = m.groupValues[1].trim()
+    val rationale = m.groupValues[2].trim()
+    if (text.isNotEmpty() && rationale.isNotEmpty()) {
+        return stripOptionPrefix(cleanCandidate(text)) to rationale
+    }
+    return null
+}
+
+/**
+ * 关键词启发式拆分（T01554，原 for 循环）；全部关键词不满足长度判据时返回 null。
+ *
+ * T01554：启发式检测——text 中是否混入了 rationale 内容。
+ * 相对初版做了两点收紧（由 m1-poc 同构镜像时实测发现的误伤）：
+ * 初版的「说明」弱词 + 不要求关键词后紧跟冒号，会把「好的，我说明一下情况」
+ * 误砍成候选「好的，我」+理由「说明一下情况」——把完整句子拦腰截断，
+ * 比「理由混入候选」这个原 bug 更糟。故：
+ *   1) 只保留强标签词，去掉口语动词「说明」；
+ *   2) 关键词后必须紧跟冒号（：/:），排除「说明一下」「说明书」等句中用法。
+ * 注：中文「理由：」多数已被 INLINE_RATIONALE（T01126）先行命中，此处的实际
+ * 增量是英文关键词（rationale/explanation）。返回值剥掉标签词前缀，
+ * 与 INLINE_RATIONALE 的 group(2) 口径保持一致。
+ */
+private fun keywordRationalePair(s: String): Pair<String, String?>? {
     val rationaleKeywords = listOf("理由", "rationale", "explanation", "原因", "解释")
     for (keyword in rationaleKeywords) {
         val kwPattern = Regex(Regex.escape(keyword) + "\\s*[:：]", RegexOption.IGNORE_CASE)
@@ -109,8 +130,7 @@ fun splitRationale(raw: String?): Pair<String, String?> {
             return stripOptionPrefix(cleanCandidate(potentialText)) to potentialRationale
         }
     }
-
-    return cleanCandidate(s) to null
+    return null
 }
 
 // T01081：兼容服务不支持 n>1 时，LLM 常把多条候选挤在同一段输出——

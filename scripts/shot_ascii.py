@@ -21,10 +21,11 @@ except Exception:  # pragma: no cover
 
 RAMP = " .:-=+*#%@"
 
+CHANNELS_BY_COLOR_TYPE = {0: 1, 2: 3, 4: 2, 6: 4}
 
-def load_png_gray(path: Path):
-    """Minimal PNG loader fallback when PIL is unavailable (RGB/RGBA 8-bit)."""
-    data = path.read_bytes()
+
+def _png_chunks(data: bytes):
+    """切 PNG 数据块，返回 (宽, 高, color_type, 拼接后的 IDAT)。"""
     pos = 8
     w = h = None
     idat = b""
@@ -34,14 +35,79 @@ def load_png_gray(path: Path):
         ctype = data[pos + 4:pos + 8]
         chunk = data[pos + 8:pos + 8 + ln]
         if ctype == b"IHDR":
-            w, h, depth, color_type = struct.unpack(">IIBB", chunk[:10])
+            w, h, _, color_type = struct.unpack(">IIBB", chunk[:10])
         elif ctype == b"IDAT":
             idat += chunk
         elif ctype == b"IEND":
             break
         pos += 12 + ln
+    return w, h, color_type, idat
+
+
+def _paeth(a: int, b: int, c: int) -> int:
+    """Paeth 预测器：取与 p 最接近的邻居（等价于原嵌套三元）。"""
+    p = a + b - c
+    pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
+    if pa <= pb and pa <= pc:
+        return a
+    if pb <= pc:
+        return b
+    return c
+
+
+def _filter_sub(line: bytearray, ch: int, stride: int) -> None:
+    """filter type 1 (Sub)。"""
+    for x in range(ch, stride):
+        line[x] = (line[x] + line[x - ch]) & 0xFF
+
+
+def _filter_up(line: bytearray, prev: bytearray, stride: int) -> None:
+    """filter type 2 (Up)。"""
+    for x in range(stride):
+        line[x] = (line[x] + prev[x]) & 0xFF
+
+
+def _filter_avg(line: bytearray, prev: bytearray, ch: int, stride: int) -> None:
+    """filter type 3 (Average)。"""
+    for x in range(stride):
+        a = line[x - ch] if x >= ch else 0
+        line[x] = (line[x] + ((a + prev[x]) >> 1)) & 0xFF
+
+
+def _filter_paeth(line: bytearray, prev: bytearray, ch: int, stride: int) -> None:
+    """filter type 4 (Paeth)。"""
+    for x in range(stride):
+        a = line[x - ch] if x >= ch else 0
+        c = prev[x - ch] if x >= ch else 0
+        line[x] = (line[x] + _paeth(a, prev[x], c)) & 0xFF
+
+
+def _apply_filter(f: int, line: bytearray, prev: bytearray, ch: int, stride: int) -> None:
+    """按 filter type 还原一行扫描线（0 与未知类型不处理）。"""
+    if f == 1:
+        _filter_sub(line, ch, stride)
+    elif f == 2:
+        _filter_up(line, prev, stride)
+    elif f == 3:
+        _filter_avg(line, prev, ch, stride)
+    elif f == 4:
+        _filter_paeth(line, prev, ch, stride)
+
+
+def _gray_row(line: bytearray, w: int, ch: int):
+    """一行像素转灰度（RGB/RGBA 用 601 亮度系数，灰度直接取值）。"""
+    row = []
+    for x in range(w):
+        px = line[x * ch:(x + 1) * ch]
+        row.append((px[0] * 299 + px[1] * 587 + px[2] * 114) // 1000 if ch >= 3 else px[0])
+    return row
+
+
+def load_png_gray(path: Path):
+    """Minimal PNG loader fallback when PIL is unavailable (RGB/RGBA 8-bit)."""
+    w, h, color_type, idat = _png_chunks(path.read_bytes())
     raw = zlib.decompress(idat)
-    ch = {0: 1, 2: 3, 4: 2, 6: 4}[color_type]
+    ch = CHANNELS_BY_COLOR_TYPE[color_type]
     stride = w * ch
     prev = bytearray(stride)
     out = []
@@ -51,30 +117,8 @@ def load_png_gray(path: Path):
         i += 1
         line = bytearray(raw[i:i + stride])
         i += stride
-        if f == 1:
-            for x in range(ch, stride):
-                line[x] = (line[x] + line[x - ch]) & 0xFF
-        elif f == 2:
-            for x in range(stride):
-                line[x] = (line[x] + prev[x]) & 0xFF
-        elif f == 3:
-            for x in range(stride):
-                a = line[x - ch] if x >= ch else 0
-                line[x] = (line[x] + ((a + prev[x]) >> 1)) & 0xFF
-        elif f == 4:
-            for x in range(stride):
-                a = line[x - ch] if x >= ch else 0
-                b = prev[x]
-                c = prev[x - ch] if x >= ch else 0
-                p = a + b - c
-                pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
-                pr = a if (pa <= pb and pa <= pc) else (b if pb <= pc else c)
-                line[x] = (line[x] + pr) & 0xFF
-        row = []
-        for x in range(w):
-            px = line[x * ch:(x + 1) * ch]
-            row.append((px[0] * 299 + px[1] * 587 + px[2] * 114) // 1000 if ch >= 3 else px[0])
-        out.append(row)
+        _apply_filter(f, line, prev, ch, stride)
+        out.append(_gray_row(line, w, ch))
         prev = line
     return w, h, out
 

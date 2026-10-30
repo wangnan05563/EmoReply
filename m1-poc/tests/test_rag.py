@@ -4,6 +4,7 @@
 加权、top_k、pipeline 注入与无命中不注入、EmbeddingRetriever 契约（离线模拟）。
 """
 import json
+import secrets
 import sqlite3  # noqa: F401  (仅 tmp 路径习惯对齐)
 
 import pytest
@@ -13,10 +14,14 @@ from emoreply.pipeline import ReplyPipeline
 from emoreply.rag import (CATEGORY_PERSONA, CATEGORY_PLATFORM, CATEGORY_RELATION,
                           EmbeddingRetriever, KnowledgeBase, LexicalRetriever)
 
+# 夹具口令运行时生成（同 test_persona）：源码不留口令字面量；同/异口令的断言语义不变。
+_PASSPHRASE = secrets.token_urlsafe(12)
+_WRONG_PASSPHRASE = secrets.token_urlsafe(12)
+
 
 @pytest.fixture()
 def kb(tmp_path):
-    k = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase="pw")
+    k = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase=_PASSPHRASE)
     yield k
     # 文件加密校验后自动清理由 tmp_path 承担
 
@@ -26,7 +31,7 @@ def notif(body, sender="对方", timestamp=1000):
 
 
 def seeded_kb(tmp_path):
-    k = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase="pw")
+    k = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase=_PASSPHRASE)
     k.add(CATEGORY_PLATFORM, "给老板发生日祝福，语气正式一点，别开过分玩笑")
     k.add(CATEGORY_PLATFORM, "微信里给长辈发长语音前，先发文字问一句方便吗")
     k.add(CATEGORY_PERSONA, "我养了两只猫，叫团子和年糕")
@@ -45,14 +50,14 @@ def test_kb_encrypted_at_rest(tmp_path):
 
 def test_kb_roundtrip_and_wrong_passphrase(tmp_path):
     seeded_kb(tmp_path)
-    k2 = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase="pw")
+    k2 = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase=_PASSPHRASE)
     assert len(k2) == 4
-    k3 = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase="bad")
+    k3 = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase=_WRONG_PASSPHRASE)
     assert len(k3) == 0  # 口令不匹配 → 初始态，不崩溃
 
 
 def test_kb_add_validation_and_remove(tmp_path):
-    k = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase="pw")
+    k = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase=_PASSPHRASE)
     with pytest.raises(ValueError):
         k.add("八卦", "不在枚举内")
     with pytest.raises(ValueError):
@@ -64,7 +69,7 @@ def test_kb_add_validation_and_remove(tmp_path):
 
 
 def test_kb_relation_contact_only_for_relation(tmp_path):
-    k = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase="pw")
+    k = KnowledgeBase(str(tmp_path / "kb.enc"), passphrase=_PASSPHRASE)
     k.add(CATEGORY_PERSONA, "个人事实不该绑联系人", contact="老板")
     assert k.entries()[0].contact is None  # 非 relation 类强制忽略 contact
     k.add(CATEGORY_RELATION, "老板专属话术", contact="老板")
