@@ -242,8 +242,8 @@ cleanup-logs/   工作空间清理的审计与报告
 cd desktop-app
 npm install
 npm start          # 启动悬浮窗
-npm test           # 7 套冒烟（generate/sanitize/llm/tone/kb/ocr/settings，99 项断言）
-npm run dist       # 生产构建（NSIS 安装包 + portable，各约 104MB，产物在 dist/）
+npm test           # 8 套冒烟（generate/sanitize/llm/tone/kb/ocr/settings/profile-guard，117 项断言）
+npm run dist       # 生产构建（NSIS 安装包 + portable，各约 100MB，产物在 dist/）
 npm run test:asar  # 打包态 OCR 回归（需先 npm run dist，验 asar 内 OCR 可用）
 ```
 
