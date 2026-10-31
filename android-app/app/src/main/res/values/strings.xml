@@ -81,4 +81,17 @@
     <!-- T01336：通知渠道（小图标用单色白剪影 ic_stat_emoreply，系统会着色，彩色图会变灰块） -->
     <string name="notif_channel_default_name">EmoReply 提示</string>
     <string name="notif_channel_default_desc">读屏完成、候选已生成等轻量状态提示</string>
+
+    <!-- T03722：首启走马灯功能介绍页 -->
+    <string name="intro_skip">跳过</string>
+    <string name="intro_next">下一步</string>
+    <string name="intro_start">开始使用</string>
+    <string name="intro_p1_title">看到消息，就知道怎么回</string>
+    <string name="intro_p1_body">复制对方的话，或按一次读屏——EmoReply 读懂语境与情绪，给出可直接发送的候选回复。</string>
+    <string name="intro_p2_title">每条都写「为什么这样回」</string>
+    <string name="intro_p2_body">候选附理由与语气标签，帮你自己判断而不是盲选；是否发送，始终由你决定。</string>
+    <string name="intro_p3_title">语气、人设、话术随你调</string>
+    <string name="intro_p3_body">语气滑杆从理性到活泼，人设与关系、常用话术可入库，越用越像你本人。</string>
+    <string name="intro_p4_title">看着舒服，用着顺手</string>
+    <string name="intro_p4_body">浅色／深色／AMOLED 纯黑三档主题；点选即注入输入框，误操作还能一键撤回。</string>
 </resources>

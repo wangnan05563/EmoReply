@@ -47,6 +47,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tvLast: TextView
 
+    // T03722：介绍页返回后会再次 onResume，授权向导只弹一次
+    private var wizardShown = false
+
     // 更新状态：pendingUpdate 非 null 表示已检查到新版本、待下载安装
     private val pendingUpdate = AtomicReference<UpdateManager.Manifest?>(null)
     private val updateExecutor = Executors.newSingleThreadExecutor()
@@ -81,11 +84,19 @@ class MainActivity : AppCompatActivity() {
         setupPersonaSection()
         setupKnowledgeSection()
         setupUpdateSection()
-        showOnboardingIfNeeded() // FR-7.5:全新安装首次启动才弹三步引导
     }
 
     override fun onResume() {
         super.onResume()
+        // T03722：首启先展示走马灯介绍页；看过之后再弹 FR-7.5 三步授权引导，避免两层叠加
+        if (!UxSettings.introSeen(this)) {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+            return
+        }
+        if (!wizardShown && !UxSettings.onboardingDone(this)) {
+            wizardShown = true
+            showOnboardingFlow(0)
+        }
         renderConnectionCard()
         tvLast.text = renderLastCapture()
         renderLlmStatus()
@@ -965,11 +976,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ---------- FR-7.5 首次引导向导 ----------
-
-    /** 尚未完成引导才弹窗；已完成直接进入主界面（持久化于 UxSettings.ime_ui_settings）。 */
-    private fun showOnboardingIfNeeded() {
-        if (!UxSettings.onboardingDone(this)) showOnboardingFlow(0)
-    }
 
     /** 三步引导：①启用键盘 ②授权通知 ③第一次生成。每步给直达入口，可任意点「跳过」。 */
     private fun showOnboardingFlow(step: Int) {

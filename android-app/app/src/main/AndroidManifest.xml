@@ -38,6 +38,12 @@
             </intent-filter>
         </activity>
 
+        <!-- T03722：首启走马灯功能介绍页（仅应用内部拉起，不对外暴露） -->
+        <activity
+            android:name=".OnboardingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.EmoReplyPoc" />
+
         <service
             android:name=".capture.NotifyCaptureService"
             android:exported="true"

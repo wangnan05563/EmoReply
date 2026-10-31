@@ -67,4 +67,6 @@ dependencies {
     // T01243 FR-8.1：端侧离线 LLM（MediaPipe LlmInference）。0.10.35 完整版 AAR 自带
     // arm64 .so（我们的 ndk abiFilters 目标），模型 .task 不打包、首次下载，故体积可控。
     implementation("com.google.mediapipe:tasks-genai:${property("depMediapipeGenaiVersion")}")
+    // T03722：首启走马灯介绍页轮播容器
+    implementation("androidx.viewpager2:viewpager2:${property("depViewpager2Version")}")
 }

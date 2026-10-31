@@ -35,6 +35,8 @@ object UxSettings {
     private const val KEY_PURPOSE = "filter_purpose"
     // FR-7.5：首次引导已完成标记——默认 false，完成/跳过即置 true，重启不再弹
     private const val KEY_ONBOARDING_DONE = "onboarding_done"
+    // T03722：首启走马灯介绍页已看标记（与授权向导分开落盘，两者互不覆盖）
+    private const val KEY_INTRO_SEEN = "intro_seen"
     // T01258 FR-7.7：触觉反馈——总开关（默认开）+ 强度档位（0=关 1=轻 2=中）
     private const val KEY_HAPTIC_ENABLED = "haptic_enabled"
     private const val KEY_HAPTIC_LEVEL = "haptic_level"
@@ -190,6 +192,17 @@ object UxSettings {
     /** 完成或跳过引导即落盘，重启不再弹。 */
     fun setOnboardingDone(context: Context, done: Boolean) {
         prefs(context).edit().putBoolean(KEY_ONBOARDING_DONE, done).apply()
+    }
+
+    // ===== T03722：首启走马灯介绍页 =====
+
+    /** 介绍页是否已看过（全新安装/清数据后默认 false → 首启展示一次）。 */
+    fun introSeen(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_INTRO_SEEN, false)
+
+    /** 走完或跳过介绍页即落盘，之后任何启动都不再展示。 */
+    fun setIntroSeen(context: Context, seen: Boolean) {
+        prefs(context).edit().putBoolean(KEY_INTRO_SEEN, seen).apply()
     }
 
     // ===== T01258 FR-7.7：触觉反馈（总开关 + 强度档位）=====
