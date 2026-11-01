@@ -96,7 +96,12 @@ function createWindow() {
       askBeforeClose();
       return;
     }
-    if (pick === 'exit_app') return; // 记住的是退出：让关闭正常走完 → window-all-closed → quit
+    if (pick === 'exit_app') {
+      // 原生关闭（Alt+F4 / WM_CLOSE）不会经过 exitApp()，isQuitting 得在这里补上：
+      // 否则窗口销毁后 window-all-closed 见 tray 仍在就不退，留下「托盘点不动、进程还活着」的僵尸态
+      isQuitting = true;
+      return; // 放行 → window-all-closed → app.quit()
+    }
     e.preventDefault(); // 记住的是收进托盘
     hideToTray();
   });

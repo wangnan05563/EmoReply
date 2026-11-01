@@ -5,6 +5,7 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
+const guard = require('./profile-guard');
 
 const PORT = 9222;
 const PROFILE = process.argv[2] || ''; // 独立 profile 目录（用于 winPin 落盘断言）
@@ -50,9 +51,22 @@ async function ev(cdp, expr) {
 }
 
 async function main() {
+  // 护栏（本套件真会改 winPin / 关闭两枚配置）：事实源必须落在显式传入的独立 profile。
+  // 踩过的坑：--user-data-dir 传了个畸形路径（如 D::/x），Chromium 静默回落 OS 默认目录，
+  // 脚本照跑不误，把用户真实档案的置顶状态改掉了。这里证明不了安全就不跑。
+  if (!PROFILE) {
+    console.error('用法：node scripts/win-ctrl-e2e.js <e2e 专用 profile 绝对路径>\n（必须显式传入，护栏要拿它比对事实源）');
+    process.exit(3);
+  }
   const cdp = await connect(await getTarget());
   await cdp.send('Page.enable');
   await sleep(600);
+  const cfgFile = await guard.readCfgFile((expr) => ev(cdp, expr));
+  if (guard.isDefaultProfileFile(cfgFile)
+    || !path.resolve(cfgFile).startsWith(path.resolve(PROFILE) + path.sep)) {
+    console.error(guard.guardHint(cfgFile));
+    process.exit(3);
+  }
   // ⚠ 不改写 wizard_done：T01541 写穿会污染 settings.json（ui-e2e A 段依赖干净首启态）。
   //   win-ctrl 在 z=60、向导遮罩 z=50，按钮点击不受遮挡影响，无需关向导。
   const cdp2 = cdp;
