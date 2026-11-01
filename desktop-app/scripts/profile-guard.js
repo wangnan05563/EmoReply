@@ -13,8 +13,11 @@ const os = require('node:os');
 const path = require('node:path');
 
 // 与 renderer.js 的 SYNC_KEYS 一致（写穿层的键集）
+// T03777：关闭行为两键也必须一起清——否则上一轮「记住退出应用」会留在 profile 里，
+// 下一轮首条断言（未记住 → 询问）直接假失败。
 const RESET_KEYS = ['emoreply_wizard_done', 'emoreply_config', 'emoreply_models', 'emoreply_commands',
-  'emoreply_commands_seeded', 'emoreply_history', 'emoreply_ui_scale', 'emoreply_theme', 'emoreply_accent'];
+  'emoreply_commands_seeded', 'emoreply_history', 'emoreply_ui_scale', 'emoreply_theme', 'emoreply_accent',
+  'emoreply_close_action', 'emoreply_close_remember'];
 
 // 复位后回读时不检这两条：清空它们正是为了触发内置指令播种，产品启动即写回——
 // 属预期行为，不是残留（C4/C5 要求内置包在场）。

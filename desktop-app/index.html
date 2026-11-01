@@ -225,6 +225,26 @@
     #wizard .status { font-size: 12px; margin-top: 8px; min-height: 1.2em; }
     #wizard .status.ok { color: var(--c-ok); }
     #wizard .status.bad { color: var(--c-warn); }
+    /* T03777：关闭询问弹层。z-index 卡在设置中心(70)与控制条(80)之间——
+       开着设置中心点关闭时弹层必须看得见，同时右上角四个按钮不能被封死（T03698 的教训）。 */
+    #closeAsk {
+      position: fixed; inset: 0; z-index: 75; display: none;
+      background: rgba(15, 23, 42, 0.45);
+      -webkit-app-region: drag; /* 同 #wizard：整层可拖窗口，面板另置 no-drag 保证可点 */
+    }
+    #closeAsk .panel {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: 92%; max-width: 340px; background: var(--c-surface); border-radius: 12px;
+      padding: 14px 16px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+      -webkit-app-region: no-drag;
+    }
+    #closeAsk h2 { margin: 0 0 6px; font-size: 14px; color: var(--c-text-head); }
+    #closeAsk .step { font-size: 12px; color: var(--c-text); line-height: 1.6; }
+    #closeAsk .remember { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 12px; }
+    #closeAsk .remember input { width: auto; margin: 0; flex: none; }
+    #closeAsk .actions { margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; }
+    #closeAsk .actions button.ghost { background: var(--c-accent-hover); color: var(--c-text-head); }
+    #closeAsk .actions button#closeAskExit { background: var(--c-danger-bg); color: var(--c-danger); }
     /* ---- T01531：全局图标按钮体系（无文字·无边框·大图标 + 悬浮倾斜 Tilt + 文字提示 Tooltip）---- */
     /* 倾斜：transform 由 renderer 按鼠标坐标实时写入；移动中短过渡、离开回弹用长过渡（默认过渡见上方 button 基础规则） */
     button.tilt { transition: transform .05s linear, background .15s, box-shadow .15s, color .15s; }
@@ -326,6 +346,25 @@
     </div>
   </div>
 
+  <!-- T03777：关闭询问弹层。这里刻意用「带文字按钮」而非全局图标按钮体系（T01531）：
+       两个选项一个是收进托盘、一个是结束进程，误点代价不对称，文字比图标更难按错。
+       必须排在 .win-ctrl 之前（同 #wizard 的 DOM 顺序铁律，否则控制条按钮的 no-drag 会被整层 drag 盖掉）。 -->
+  <div id="closeAsk" role="dialog" aria-modal="true" aria-labelledby="closeAskTitle">
+    <div class="panel">
+      <h2 id="closeAskTitle">关闭窗口时要做什么？</h2>
+      <div class="step">收进托盘：程序继续运行，单击托盘图标或按 Alt+Shift+E 唤回。<br>退出应用：结束进程，需要重新打开程序。</div>
+      <label class="remember">
+        <input type="checkbox" id="closeAskRemember" />
+        记住此选择，下次不再提示
+      </label>
+      <div class="actions">
+        <button class="ghost" id="closeAskCancel" data-tip="取消｜暂不关闭，窗口保持打开">取消</button>
+        <button id="closeAskExit" data-tip="直接退出｜销毁窗口并结束应用进程">直接退出</button>
+        <button id="closeAskTray" data-tip="最小化到托盘｜窗口收起，程序不退出">最小化到托盘</button>
+      </div>
+    </div>
+  </div>
+
   <h1>EmoReply 桌面端 <small>悬浮窗 · 剪贴板交付（不自动发送）</small></h1>
 
   <div class="card">
@@ -420,6 +459,19 @@
         <option value="auto">跟随系统</option>
       </select>
     </label>
+    <!-- T03777：关闭窗口行为。选具体行为即「记住」，此后不再弹询问框；选回「每次询问」= 取消记住 -->
+    <div style="margin-top:6px;font-size:12px;">
+      <span style="color:var(--c-text-muted);">关闭窗口时</span>
+      <label style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+        <input type="radio" name="cfgCloseMode" value="ask" style="width:auto;margin:0;flex:none;" />每次询问（默认）
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;">
+        <input type="radio" name="cfgCloseMode" value="minimize_to_tray" style="width:auto;margin:0;flex:none;" />最小化到托盘（程序不退出）
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;">
+        <input type="radio" name="cfgCloseMode" value="exit_app" style="width:auto;margin:0;flex:none;" />直接退出应用
+      </label>
+    </div>
     <div class="row">
       <button class="ibtn" id="btnSaveCfg" data-tip="保存设置｜将接口/模型/密钥等配置写入本机"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg></button>
       <button class="ghost ibtn" id="btnCheck" data-tip="检查当前配置｜向已配置接口发送测试请求验证连通"><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg></button>
@@ -477,8 +529,9 @@
         <path d="M2.5 8.5h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
       </svg>
     </button>
-    <!-- T01566：关闭＝隐藏到系统托盘（进程不退出，托盘单击唤回）；托盘不可用时降级收进任务栏 -->
-    <button id="winClose" aria-label="关闭到托盘" data-tip="关闭｜收起窗口到系统托盘（程序不退出，托盘图标可唤回）"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+    <!-- T01566：关闭＝隐藏到系统托盘（进程不退出，托盘单击唤回）；托盘不可用时降级收进任务栏
+         T03777：默认改为「每次询问」，实际文案与无障碍名由 renderer.renderCloseHint() 按当前策略覆盖 -->
+    <button id="winClose" aria-label="关闭（每次询问）" data-tip="关闭｜询问收进托盘还是退出应用（可在设置中心固定）"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
   </div>
 
   <script src="renderer.js"></script>

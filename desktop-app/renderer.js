@@ -10,6 +10,7 @@
   const SYNC_KEYS = new Set([
     'emoreply_config', 'emoreply_models', 'emoreply_commands', 'emoreply_commands_seeded',
     'emoreply_history', 'emoreply_wizard_done', 'emoreply_ui_scale', 'emoreply_theme', 'emoreply_accent',
+    'emoreply_close_action', 'emoreply_close_remember', // T03777：关闭行为（主进程 closePolicy 也读这两个键）
   ]);
   const er = globalThis.emoReply;
   if (!er?.settingsSync || !er?.settings) return;
@@ -930,14 +931,77 @@ $('btnOcr').onclick = async () => {
 // ---- T01530：窗口控制栏——最小化（主进程 win.minimize；任务栏/Alt+Tab/托盘单击可唤回）----
 $('winMin').onclick = () => globalThis.emoReply.minimizeWindow();
 
-// ---- T01566：关闭按钮＝隐藏到托盘（进程不退出）；托盘不可用时主进程降级最小化并提示 ----
-$('winClose').onclick = async () => {
-  const mode = await globalThis.emoReply.closeWindow();
-  if (mode === 'degraded') {
-    $('notice').textContent = '系统托盘不可用：窗口已收进任务栏（程序未退出）';
-    $('notice').classList.remove('ok');
+// ---- T03777：关闭交互——未记住先问一次，记住后按策略直接执行 ----
+const CLOSE_ACTION_KEY = 'emoreply_close_action';
+const CLOSE_REMEMBER_KEY = 'emoreply_close_remember';
+const CLOSE_TRAY = 'minimize_to_tray';
+const CLOSE_EXIT = 'exit_app';
+
+/** 当前生效的关闭模式：'ask'（每次都问）| CLOSE_TRAY | CLOSE_EXIT —— 与主进程 closePolicy 同口径。 */
+function closeMode() {
+  if (localStorage.getItem(CLOSE_REMEMBER_KEY) !== '1') return 'ask';
+  return localStorage.getItem(CLOSE_ACTION_KEY) === CLOSE_EXIT ? CLOSE_EXIT : CLOSE_TRAY;
+}
+
+/** 关闭按钮的提示语/无障碍名 + 设置页单选组，都跟着当前模式走，避免文案与实际行为分家。 */
+function renderCloseHint() {
+  const mode = closeMode();
+  const btn = $('winClose');
+  btn.dataset.tip = mode === CLOSE_EXIT
+    ? '关闭｜退出应用（想改回「每次询问」或「最小化到托盘」进设置中心）'
+    : mode === CLOSE_TRAY
+      ? '关闭｜收起窗口到系统托盘（程序不退出，托盘图标可唤回）'
+      : '关闭｜每次询问（收进托盘还是退出应用；可在设置中心固定下来）';
+  btn.setAttribute('aria-label', mode === CLOSE_EXIT ? '关闭并退出应用'
+    : mode === CLOSE_TRAY ? '关闭到托盘' : '关闭（每次询问）');
+  const radio = document.querySelector(`input[name="cfgCloseMode"][value="${mode}"]`);
+  if (radio) radio.checked = true;
+}
+
+function openCloseAsk() {
+  $('closeAsk').style.display = 'block';
+  $('closeAskRemember').checked = false; // 「记住」默认不勾：只有用户主动勾才改配置
+  $('closeAskTray').focus();
+}
+function hideCloseAsk() { $('closeAsk').style.display = 'none'; }
+
+/** 托盘不可用时主进程降级最小化——绝不静默退出，界面上说明清楚（T01566 口径不变）。 */
+function reportCloseMode(mode) {
+  if (mode !== 'degraded') return;
+  $('notice').textContent = '系统托盘不可用：窗口已收进任务栏（程序未退出）';
+  $('notice').classList.remove('ok');
+}
+
+// 选项框里的一次决策：勾了「记住」才落配置；没勾就只做这一次动作、下次照旧询问
+async function pickCloseAction(action) {
+  const remember = $('closeAskRemember').checked;
+  hideCloseAsk();
+  if (remember) {
+    localStorage.setItem(CLOSE_ACTION_KEY, action);
+    localStorage.setItem(CLOSE_REMEMBER_KEY, '1');
+    renderCloseHint();
   }
-};
+  reportCloseMode(await globalThis.emoReply.closeWindow(action));
+}
+
+$('winClose').onclick = async () => reportCloseMode(await globalThis.emoReply.closeWindow());
+$('closeAskTray').onclick = () => pickCloseAction(CLOSE_TRAY);
+$('closeAskExit').onclick = () => pickCloseAction(CLOSE_EXIT);
+$('closeAskCancel').onclick = hideCloseAsk;
+// 原生关闭（Alt+F4 等）由主进程拦下后推到这里；弹层已开着就不重复弹
+globalThis.emoReply.onAskClose(() => { if ($('closeAsk').style.display !== 'block') openCloseAsk(); });
+// 设置中心「关闭窗口时」单选组：选具体行为=记住，选「每次询问」=取消记住。即时写穿，无需点保存。
+document.querySelectorAll('input[name="cfgCloseMode"]').forEach((radio) => {
+  radio.onchange = () => {
+    if (radio.value === 'ask') localStorage.setItem(CLOSE_REMEMBER_KEY, '0');
+    else {
+      localStorage.setItem(CLOSE_ACTION_KEY, radio.value);
+      localStorage.setItem(CLOSE_REMEMBER_KEY, '1');
+    }
+    renderCloseHint();
+  };
+});
+renderCloseHint();
 
 // ---- T01566：置顶切换（图钉态=已置顶：窗口恒在最前、失焦不降级；再点恢复普通层级）----
 const pinBtn = $('winPin');
@@ -977,7 +1041,12 @@ function closeSettingsPage() {
 }
 $('openSettings').onclick = () => openSettingsPage();
 $('closeSettings').onclick = closeSettingsPage;
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSettingsPage(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  // T03777：Esc 先收起最上层的关闭询问弹层（它盖在设置中心之上），否则维持原「关设置中心」语义
+  if ($('closeAsk').style.display === 'block') { hideCloseAsk(); return; }
+  closeSettingsPage();
+});
 
 // ================= T01531：全局图标按钮体系（无文字·无边框·大图标 + 倾斜 + 提示）=================
 // 图标写入：SVG symbol 引用（描边随 currentColor，主题/禁用态自动适配）

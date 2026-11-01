@@ -93,11 +93,48 @@ async function main() {
     on: document.querySelector('#winPin').classList.contains('on') }))()`);
   t('K5 再次点击→恢复置顶：主进程 true + 高亮回归', back.pin === true && back.on === true, JSON.stringify(back));
 
-  // K6 关闭=隐藏到托盘：真实按钮点击 → document.hidden=true；closeWindow 回执 tray/degraded（进程不退）
+  // K6 关闭交互（T03777 起：没记住过就先问一次）：点按钮 → 回执 'ask' + 弹层出现，窗口不动、进程不退
+  const k6 = await ev(cdp2, `(async () => {
+    const mode = await globalThis.emoReply.closeWindow();
+    await new Promise((r) => setTimeout(r, 300));
+    return { mode, shown: document.querySelector('#closeAsk').style.display, hidden: document.hidden };
+  })()`);
+  t('K6 未记住时点关闭→弹窗询问（mode=ask + 弹层可见 + 窗口没被藏）',
+    k6?.mode === 'ask' && k6?.shown === 'block' && k6?.hidden === false, JSON.stringify(k6));
+
+  // K6b 弹层「取消」：收起弹层，窗口保持可见（进程/页面存活）
+  await ev(cdp2, `document.querySelector('#closeAskCancel').click()`);
+  await sleep(250);
+  t('K6b 取消=不关闭：弹层收起且窗口仍可见',
+    await ev(cdp2, `getComputedStyle(document.querySelector('#closeAsk')).display === 'none' && !document.hidden`));
+
+  // K6c 勾「记住」+ 选「最小化到托盘」→ 窗口隐藏 + 两键写穿
+  // 顺序要点：弹层每次打开都会把「记住」复位成不勾（openCloseAsk 的既定行为，见 K6c0），
+  // 所以必须「先弹出 → 再勾选 → 点弹层里的按钮」，反过来勾会被冲掉（本条踩过这个坑）。
   await ev(cdp2, `document.querySelector('#winClose').click()`);
+  await sleep(400);
+  t('K6c0 弹层重开时「记住」复位为不勾（不默认替用户改配置）',
+    await ev(cdp2, `document.querySelector('#closeAskRemember').checked === false`));
+  await ev(cdp2, `(() => { document.querySelector('#closeAskRemember').checked = true;
+    document.querySelector('#closeAskTray').click(); return true; })()`);
   await sleep(900);
-  const k6 = await ev(cdp2, `(async () => ({ hidden: document.hidden, mode: await globalThis.emoReply.closeWindow() }))()`);
-  t('K6 点关闭→窗口隐藏到托盘（进程/页面存活；mode=tray）', k6?.hidden === true && k6?.mode === 'tray', JSON.stringify(k6));
+  const k6c = await ev(cdp2, `({ hidden: document.hidden,
+    action: localStorage.getItem('emoreply_close_action'),
+    remember: localStorage.getItem('emoreply_close_remember') })`);
+  t('K6c 记住+最小化到托盘→窗口隐藏且配置写入镜像',
+    k6c?.hidden === true && k6c?.action === 'minimize_to_tray' && k6c?.remember === '1', JSON.stringify(k6c));
+
+  // K6d 落盘断言（settings.json 防抖 150ms 已覆盖）+ 复位两键保持套件幂等
+  if (PROFILE) {
+    try {
+      const s = JSON.parse(fs.readFileSync(path.join(PROFILE, 'settings.json'), 'utf8'));
+      t('K6d 关闭配置落盘（close_action=minimize_to_tray / close_remember=1）',
+        s.values?.emoreply_close_action === 'minimize_to_tray' && s.values?.emoreply_close_remember === '1',
+        'action=' + s.values?.emoreply_close_action + ' remember=' + s.values?.emoreply_close_remember);
+    } catch (e) { t('K6d 关闭配置落盘（close_action / close_remember）', false, e.message); }
+  }
+  await ev(cdp2, `['emoreply_close_action','emoreply_close_remember'].forEach((k) => localStorage.removeItem(k))`);
+  await sleep(600);
 
   // K7 唤回路径：二次启动同 profile → second-instance → showWindowFromTray（托盘单击同路径）
   if (PROFILE) {

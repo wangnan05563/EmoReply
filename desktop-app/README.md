@@ -34,5 +34,5 @@ npm start
 ## 已知边界（POC 尺度）
 
 - 未打包安装器（electron-builder 后续接入）；`npm start` 开发态运行
-- 无开机自启 / 托盘 / 多消息历史（悬浮窗最小实现）
+- 无开机自启（托盘常驻、本地加密历史、关闭窗口时询问/记住去向均已实现）
 - 密钥存 localStorage 明文（本机管理员可见）——与 Android 端 SharedPreferences 同级，M3 若引入同步再升级

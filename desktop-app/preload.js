@@ -36,7 +36,9 @@ contextBridge.exposeInMainWorld('emoReply', {
   // T01530：窗口最小化（控制栏按钮；托盘/任务栏可唤回）
   minimizeWindow: () => ipcRenderer.send('win:minimize'),
   // T01566：关闭到托盘（托盘不可用时降级最小化并回 'degraded'）+ 置顶切换
-  closeWindow: () => ipcRenderer.invoke('win:close'),
+  // T03777：closeWindow() 不传参 = 走关闭策略（未记住则回 'ask' 并推 app:ask-close）；
+  //          传 'minimize_to_tray' | 'exit_app' = 用户在选项框里刚选的即时动作
+  closeWindow: (choice) => ipcRenderer.invoke('win:close', choice),
   setPin: (on) => ipcRenderer.invoke('win:pin', on),
   getPin: () => ipcRenderer.invoke('win:get-pin'),
   // T01415：窗口可见性（隐藏时暂停动画）
@@ -44,6 +46,12 @@ contextBridge.exposeInMainWorld('emoReply', {
     const listener = (_e, visible) => cb(visible);
     ipcRenderer.on('app:visibility', listener);
     return () => ipcRenderer.removeListener('app:visibility', listener);
+  },
+  // T03777：主进程要求先问一次「收进托盘还是退出」（原生 Alt+F4 / 程序化关闭也走这条）
+  onAskClose: (cb) => {
+    const listener = () => cb();
+    ipcRenderer.on('app:ask-close', listener);
+    return () => ipcRenderer.removeListener('app:ask-close', listener);
   },
   // T01393：流式 chunk 订阅——返回取消函数（生成结束/异常时必须调用，防重复挂监听）
   onLlmChunk: (cb) => {

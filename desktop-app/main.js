@@ -85,11 +85,20 @@ function createWindow() {
   win.on('hide', () => { if (!win.isDestroyed()) win.webContents.send('app:visibility', false); });
   win.on('show', () => { if (!win.isDestroyed()) win.webContents.send('app:visibility', true); });
   // T01530：托盘常驻时窗口关闭 = 隐藏到托盘（进程不终止）；真退出由 isQuitting 放行
+  // T03777：关闭策略化——记住过就按记住的走，没记住就拦下来问一次。
+  // 右上角按钮与原生关闭（Alt+F4 / 程序化 win.close()）必须同一条策略，否则会出现
+  // 「按钮问、快捷键直接收进托盘」两套口径，用户无法用配置描述自己的行为。
   win.on('close', (e) => {
-    if (!isQuitting && tray) {
+    if (isQuitting) return; // 真退出（托盘菜单「退出应用」/ 记住 exit / before-quit）放行
+    const pick = closePolicy();
+    if (pick === null) {
       e.preventDefault();
-      win.hide();
+      askBeforeClose();
+      return;
     }
+    if (pick === 'exit_app') return; // 记住的是退出：让关闭正常走完 → window-all-closed → quit
+    e.preventDefault(); // 记住的是收进托盘
+    hideToTray();
   });
 }
 
@@ -154,17 +163,52 @@ ipcMain.on('win:minimize', () => {
 });
 
 // ---- T01566 关闭到托盘 / 置顶切换 ----
-// 关闭 = 隐藏到托盘（进程不退出，托盘图标可唤回）；托盘不可用时降级最小化到任务栏，
-// 返回 'degraded' 供渲染层提示用户——绝不静默退出（验收：程序进程正常运行）。
-ipcMain.handle('win:close', () => {
-  if (!win || win.isDestroyed()) return 'none';
+// T03777 起，关闭动作不再等于「一律收进托盘」，而是走下面的策略入口：
+// 未记住 → 拦下发 'app:ask-close' 让渲染层弹窗问一次；记住过 → 按记住的走。
+// 配置事实源仍是 userData/settings.json（渲染层 localStorage 写穿），主进程只读不算。
+const CLOSE_ACTION_KEY = 'emoreply_close_action';
+const CLOSE_REMEMBER_KEY = 'emoreply_close_remember';
+
+/** 已记住的关闭行为；未记住返回 null（= 每次都要问）。默认值取 minimize_to_tray（桌面软件常见习惯）。 */
+function closePolicy() {
+  const v = settings ? settings.getAll() : {};
+  if (v[CLOSE_REMEMBER_KEY] !== '1') return null;
+  return v[CLOSE_ACTION_KEY] === 'exit_app' ? 'exit_app' : 'minimize_to_tray';
+}
+
+/** 收进托盘；托盘不可用时降级最小化到任务栏，回执供渲染层明确提示「程序未退出」。 */
+function hideToTray() {
   if (tray) {
     win.hide();
     return 'tray';
   }
   win.minimize();
   return 'degraded';
-});
+}
+
+/** 问一次：先唤回窗口（原生快捷键可能在窗口隐藏时到达），再让渲染层弹选项框。 */
+function askBeforeClose() {
+  showWindowFromTray();
+  if (!win.isDestroyed()) win.webContents.send('app:ask-close');
+  return 'ask';
+}
+
+/** 真退出：置 isQuitting 放行 close 事件，否则会被「收进托盘」重新拦下。 */
+function exitApp() {
+  isQuitting = true;
+  win.close(); // → window-all-closed → app.quit()
+  return 'exit';
+}
+
+// choice 只认渲染层弹窗里那两个枚举值：IPC 是进程边界，不能把任意字符串当关闭策略执行
+function requestClose(choice) {
+  if (!win || win.isDestroyed()) return 'none';
+  const pick = choice === 'exit_app' || choice === 'minimize_to_tray' ? choice : closePolicy();
+  if (!pick) return askBeforeClose();
+  return pick === 'exit_app' ? exitApp() : hideToTray();
+}
+
+ipcMain.handle('win:close', (_e, choice) => requestClose(choice));
 
 ipcMain.handle('win:pin', (_e, on) => applyPin(on));
 ipcMain.handle('win:get-pin', () => pinned);
