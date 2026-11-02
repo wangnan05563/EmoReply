@@ -5,7 +5,7 @@
 // - 剪贴板：读（取对方消息原文）/ 写（回帖候选，用户自行粘贴发送——绝不自动发送，FR-4.2）
 // - LLM：主进程内 HTTPS 直连 OpenAI 兼容 /chat/completions（密钥仅存渲染进程 localStorage，
 //   随配置传参调用，不落盘、不入仓库）；未配置密钥时降级本地模板（附录 C24 同款约束）
-const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu, nativeImage, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu, nativeImage, safeStorage, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
@@ -21,6 +21,8 @@ const { extractToneCorpus } = require('./tone');
 const ocr = require('./ocr');
 // T01393：LLM 流式调用（独立模块，纯 Node 可冒烟）
 const { callLlmStream, fanoutGenerate, generateCore, screenCandidate } = require('./llm');
+const { createUpdater } = require('./updater'); // T03996：在线更新（内置仓库 → 检测 → 下载 → 交回用户安装）
+const { buildTrayMenuTemplate } = require('./tray-menu'); // T03996：托盘菜单项序（纯 Node 可冒烟）
 
 let win = null;
 let kb = null; // RAG 知识库（SRS 决策③；懒初始化，依赖 userData 路径）
@@ -137,21 +139,16 @@ function createTray() {
 }
 
 // T01566：托盘菜单随置顶状态重建（checkbox 状态在构建时快照，切换后须重设）
+// T03996：模板本体在 tray-menu.js（可纯 Node 冒烟），这里只做「模板 → 原生菜单」的转换
 function refreshTrayMenu() {
   if (!tray) return;
-  tray.setContextMenu(
-    Menu.buildFromTemplate([
-      { label: '显示/隐藏窗口', click: () => toggleWindow() },
-      {
-        label: '窗口置顶',
-        type: 'checkbox',
-        checked: pinned,
-        click: (item) => applyPin(item.checked),
-      },
-      { type: 'separator' },
-      { label: '退出应用', click: () => { isQuitting = true; app.quit(); } },
-    ]),
-  );
+  tray.setContextMenu(Menu.buildFromTemplate(buildTrayMenuTemplate({
+    toggleWindow,
+    applyPin,
+    pinned,
+    openUpdatePanel,
+    quitApp: () => { isQuitting = true; app.quit(); },
+  })));
 }
 
 // T01566：置顶切换的事实源函数（IPC 与托盘菜单共用）——落盘 + 同步托盘菜单勾选
@@ -217,6 +214,97 @@ ipcMain.handle('win:close', (_e, choice) => requestClose(choice));
 
 ipcMain.handle('win:pin', (_e, on) => applyPin(on));
 ipcMain.handle('win:get-pin', () => pinned);
+
+// ---- T03996 在线更新 ----
+// 仓库地址内置在 updater.js（代码常量），主进程也不接受渲染层传来的 URL：
+// 下载/安装只能针对「本进程刚查出来的那个结果」，渲染层只负责触发与呈现。
+let updater = null;
+let lastCheck = null;   // check() 的结果留在主进程，download() 从这里取
+let lastFile = null;    // download() 落盘路径，install() 从这里取
+
+// 版本口径（T01160/T01164）：仓内 package.json 是 YYYYMMDD-NNN，打包时被 scripts/pkg-semver.js
+// 临时写成 0.1.0-YYYYMMDD-NNN——两种写法里同一段日期序号才是权威版本，归一交给 updater 做。
+function readPkgVersion() {
+  try {
+    const v = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version;
+    if (v) return String(v);
+  } catch (e) {
+    console.warn('[update] 读 package.json 版本失败，回落 app.getVersion()：', e?.message || e);
+  }
+  return app.getVersion();
+}
+
+function getUpdater() {
+  if (!updater) {
+    updater = createUpdater({
+      currentVersion: readPkgVersion(),
+      dir: path.join(app.getPath('userData'), 'updates'),
+      log: console,
+    });
+  }
+  return updater;
+}
+
+/** 托盘菜单与渲染层按钮共用的入口：唤回窗口 + 让渲染层打开设置中心并触发同一条检查。 */
+function openUpdatePanel() {
+  showWindowFromTray();
+  if (win && !win.isDestroyed()) win.webContents.send('app:open-update');
+}
+
+ipcMain.handle('update:meta', () => {
+  const u = getUpdater();
+  return { version: u.currentVersion, repo: u.repo };
+});
+
+ipcMain.handle('update:check', async () => {
+  try {
+    lastCheck = await getUpdater().check();
+  } catch (e) {
+    lastCheck = { state: 'error', reason: 'unknown', message: '检查更新失败：' + String((e && e.message) || e) };
+  }
+  if (lastCheck.state !== 'newer') lastFile = null; // 换了目标版本，旧下载包不再算数
+  return lastCheck;
+});
+
+let downloading = false;
+ipcMain.handle('update:download', async () => {
+  if (downloading) return { state: 'error', message: '已有一个下载在进行中，请等它结束。' };
+  if (!lastCheck || lastCheck.state !== 'newer') return { state: 'error', message: '没有待下载的更新，请先检查更新。' };
+  downloading = true;
+  let r;
+  try {
+    r = await getUpdater().download(lastCheck, (p) => {
+      if (win && !win.isDestroyed()) win.webContents.send('update:progress', p);
+    });
+  } catch (e) {
+    r = { state: 'error', reason: 'unknown', message: '下载失败：' + String((e && e.message) || e) };
+  } finally {
+    downloading = false;
+  }
+  if (r.state === 'ready') lastFile = r.file;
+  return r;
+});
+
+// 安装包是「以用户身份执行的程序」，只在用户显式点「确认安装」后启动，且数组参数不过 shell。
+ipcMain.handle('update:install', () => {
+  if (!lastFile) return { state: 'error', message: '还没有下载好的安装包，请先下载。' };
+  const r = getUpdater().install(lastFile);
+  if (r.state === 'launched') {
+    // 装完要覆盖当前程序，进程必须先退——走 exitApp 放行 close，别被「收进托盘」拦成僵尸
+    exitApp();
+  }
+  return r;
+});
+
+ipcMain.handle('update:open-dir', async () => {
+  const dir = path.join(app.getPath('userData'), 'updates');
+  try { fs.mkdirSync(dir, { recursive: true }); } catch (e) {
+    return { state: 'error', message: '更新目录创建失败：' + String((e && e.message) || e) };
+  }
+  // openPath 成功返回空串、失败返回错误描述（Promise），别把 promise 当布尔判
+  const err = await shell.openPath(dir);
+  return err ? { state: 'error', message: '无法打开目录：' + err } : { state: 'ok', dir };
+});
 
 // ---- T01394 全局快捷键（FR-PC3-1，方案见 docs/t01391-m1-architecture-review.md §4）----
 const HOTKEY = 'Alt+Shift+E';

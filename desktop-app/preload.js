@@ -41,6 +41,24 @@ contextBridge.exposeInMainWorld('emoReply', {
   closeWindow: (choice) => ipcRenderer.invoke('win:close', choice),
   setPin: (on) => ipcRenderer.invoke('win:pin', on),
   getPin: () => ipcRenderer.invoke('win:get-pin'),
+  // T03996：在线更新。仓库地址内置在主进程，这里只能触发——渲染层传不进任何 URL 或版本号
+  updateMeta: () => ipcRenderer.invoke('update:meta'),
+  checkUpdate: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate: () => ipcRenderer.invoke('update:download'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  openUpdateDir: () => ipcRenderer.invoke('update:open-dir'),
+  // T03996：下载进度（主进程 200ms 节流后推来）
+  onUpdateProgress: (cb) => {
+    const listener = (_e, p) => cb(p);
+    ipcRenderer.on('update:progress', listener);
+    return () => ipcRenderer.removeListener('update:progress', listener);
+  },
+  // T03996：托盘菜单「检查更新…」→ 由渲染层打开设置中心并触发同一条检查
+  onOpenUpdate: (cb) => {
+    const listener = () => cb();
+    ipcRenderer.on('app:open-update', listener);
+    return () => ipcRenderer.removeListener('app:open-update', listener);
+  },
   // T01415：窗口可见性（隐藏时暂停动画）
   onVisibility: (cb) => {
     const listener = (_e, visible) => cb(visible);

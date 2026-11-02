@@ -1030,7 +1030,10 @@ function openSettingsPage(sectionSummary) {
   if (!page.open) page.show();
   if (sectionSummary) { // 降级引导等场景：直达并展开指定区块
     const det = $(sectionSummary)?.closest('details');
-    if (det) det.open = true;
+    // 从内到外把祖先 details 一并展开：折叠的 <details> 里内容仍参与布局，但不绘制也不接受
+    // 命中测试（实测：面板 getBoundingClientRect 有值、offsetParent 非空，用户却完全看不见点不到）。
+    // 只开自己那一层就会留下这种「自动化全绿、真人看不到」的死角。
+    for (let n = det; n; n = n.parentElement?.closest('details')) n.open = true;
     setTimeout(() => det?.scrollIntoView({ behavior: 'smooth' }), 60);
   }
 }
@@ -1047,6 +1050,101 @@ document.addEventListener('keydown', (e) => {
   if ($('closeAsk').style.display === 'block') { hideCloseAsk(); return; }
   closeSettingsPage();
 });
+
+// ================= T03996：在线更新（检查内置仓库版本 → 下载安装包 → 确认后交回用户安装）=================
+// 版本检测、下载、安装全部在主进程（updater.js）：仓库地址是那边的代码常量，渲染层既没有输入框
+// 也传不进 URL，这里只负责触发、呈现结果，以及在「退出程序装新版」这一步上前置一次确认。
+const updStatus = $('updStatus');
+const updBar = $('updBar');
+function updMsg(text, isOk) {
+  updStatus.textContent = text;
+  updStatus.classList.toggle('ok', !!isOk);
+}
+const mb = (bytes) => (Number(bytes) / 1048576).toFixed(1) + ' MB';
+
+// 首帧水合当前版本与内置仓库（失败不影响其他设置项）
+globalThis.emoReply.updateMeta().then((meta) => {
+  $('updRepo').textContent = meta.repo;
+  $('updCurrent').textContent = meta.version;
+}, (e) => console.warn('[renderer] 更新元开水合失败：', e?.message || e));
+
+// 进度只在这注册一次（页面生命周期内不重复挂监听）
+globalThis.emoReply.onUpdateProgress((p) => {
+  updBar.style.display = '';
+  $('updBarFill').style.width = (p.pct || 0) + '%';
+  updMsg(`下载中…已收到 ${mb(p.received)}${p.total ? ' / ' + mb(p.total) : ''}`);
+});
+
+async function runUpdateCheck() {
+  $('btnUpdDownload').disabled = true;
+  $('btnUpdOpen').style.display = 'none';
+  $('updConfirm').style.display = 'none';
+  updBar.style.display = 'none';
+  updMsg('正在检查更新…');
+  let r;
+  try { r = await globalThis.emoReply.checkUpdate(); } catch (e) { updMsg('检查更新失败：' + (e?.message || e)); return; }
+  if (r.state === 'newer') {
+    $('btnUpdDownload').disabled = false;
+    updMsg(`${r.message} 安装包 ${r.name}${r.size ? '（' + mb(r.size) + '）' : ''}。`);
+  } else if (r.state === 'latest') {
+    updMsg(`已是最新版本（${r.current}）。`, true);
+  } else if (r.state === 'no_release') {
+    // 内置仓库还没发布过任何版本：这是事实而非故障，用正常色陈述，别拿红字吓用户
+    updMsg(r.message, true);
+  } else {
+    updMsg(r.message);
+  }
+}
+$('btnUpdCheck').onclick = runUpdateCheck;
+
+$('btnUpdDownload').onclick = async () => {
+  $('btnUpdDownload').disabled = true;
+  updBar.style.display = '';
+  $('updBarFill').style.width = '0';
+  updMsg('开始下载…');
+  let r;
+  try {
+    r = await globalThis.emoReply.downloadUpdate();
+  } catch (e) {
+    updBar.style.display = 'none';
+    $('btnUpdDownload').disabled = false;
+    updMsg('下载失败：' + (e?.message || e));
+    return;
+  }
+  updBar.style.display = 'none';
+  if (r.state !== 'ready') {
+    $('btnUpdDownload').disabled = false;
+    updMsg(r.message);
+    return;
+  }
+  $('btnUpdOpen').style.display = '';
+  $('updConfirm').style.display = '';
+  $('btnUpdYes').disabled = false;
+  updMsg(`下载完成（${mb(r.bytes)}）：${r.name}`, true);
+};
+
+$('btnUpdOpen').onclick = async () => {
+  const r = await globalThis.emoReply.openUpdateDir();
+  if (r.state !== 'ok') updMsg(r.message);
+};
+
+// 取消只收起确认行：文件留在更新目录，随时可从「打开下载目录」手动装
+$('btnUpdNo').onclick = () => {
+  $('updConfirm').style.display = 'none';
+  updMsg('已取消安装。安装包仍在本机更新目录，可随时手动运行。', true);
+};
+
+$('btnUpdYes').onclick = async () => {
+  $('btnUpdYes').disabled = true; // 启动即退出，不给二次点击的机会
+  let r;
+  try { r = await globalThis.emoReply.installUpdate(); } catch (e) { r = { state: 'error', message: '启动安装程序失败：' + (e?.message || e) }; }
+  if (r.state !== 'launched') { $('btnUpdYes').disabled = false; updMsg(r.message); return; }
+  $('updConfirm').style.display = 'none';
+  updMsg('已启动安装程序，当前窗口即将退出…', true);
+};
+
+// 托盘菜单「检查更新…」只负责把窗口唤回来；展开哪一块、走哪条检查与按钮入口是同一条路径
+globalThis.emoReply.onOpenUpdate(() => { openSettingsPage('updateBox'); runUpdateCheck(); });
 
 // ================= T01531：全局图标按钮体系（无文字·无边框·大图标 + 倾斜 + 提示）=================
 // 图标写入：SVG symbol 引用（描边随 currentColor，主题/禁用态自动适配）

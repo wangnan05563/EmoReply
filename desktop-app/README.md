@@ -25,6 +25,16 @@ npm start
 - 设置区（折叠）：接口地址 / 模型名 / API Key / 自称；**密钥仅存本机 localStorage，不入仓库**
 - 默认 `https://api.deepseek.com/v1` + `deepseek-chat`（OpenAI 兼容，DeepSeek/通义/OpenAI 通用）
 
+## 在线更新（T03996）
+
+- 入口两处、实现一条：设置中心「在线更新」区块与托盘菜单「检查更新…」（后者只是唤回窗口并打开前者）
+- 更新源是 `updater.js` 里的代码常量 `REPO`，界面与配置都不能改；下载地址只认 GitHub 官方域名，文件名做清洗
+- 流程：`check()` 查 `releases/latest` → 有新版才允许 `download()` 到 `userData/updates/`（核对字节数，不完整即删）→ 用户在确认行点「确认安装并退出」才 `install()` 启动安装包并退出本程序
+- 版本比较先归一日期序号（`YYYYMMDD-NNN`），再回落 semver；打包期 `scripts/pkg-semver.js` 的临时口径不影响判断
+- 测试：`node scripts/updater.smoke.js`（纯逻辑，注入 fetch/spawn）+ `node scripts/tray-menu.smoke.js`（菜单项序与落点）
+  + `node scripts/update-e2e.js <独立 profile>`（真实 GUI 点击 + 真实 GitHub 往返，用命中测试证明面板真的可见可点）
+- 现状：仓库还没有任何 Release，所以真实环境点检查得到的是 `no_release`（「还没有发布任何版本」），发布第一个 Release 后同一入口即可用
+
 ## 与 Android 侧的关系
 
 - 提示词模板、风格枚举、「内容|理由」解释句格式、降级文案与 m1-poc / android-app 同构

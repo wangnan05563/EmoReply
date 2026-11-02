@@ -180,6 +180,9 @@
     .tone-tag:hover { background: var(--c-accent-soft); }
     .notice { margin-top: 8px; font-size: 12px; color: var(--c-warn); line-height: 1.5; }
     .ok { color: var(--c-ok); }
+    /* T03996：在线更新下载进度条 */
+    .upd-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--c-accent-hover); overflow: hidden; }
+    .upd-bar > i { display: block; height: 100%; width: 0; background: var(--c-accent); }
     .collapsible summary { font-size: 12px; color: var(--c-text-muted); cursor: pointer; }
     .collapsible input { margin-top: 6px; }
     textarea {
@@ -308,6 +311,9 @@
       <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
       <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
       <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></symbol>
+      <!-- T03996：在线更新（下载 / 外部链接） -->
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></symbol>
+      <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></symbol>
       <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></symbol>
       <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
       <symbol id="i-paste-in" viewBox="0 0 24 24"><path d="M9 10L4 15l5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></symbol>
@@ -502,6 +508,31 @@
       </div>
       <div class="notice" id="cfgModelsStatus"></div>
     </details>
+  </details>
+
+  <!-- T03996：在线更新。仓库地址是主进程里的代码常量——界面不提供输入框，也不接受从别处指定源，
+       这里只呈现「查到了什么」和「用户要不要装」。与「本地历史」平级：它是应用级动作，不属于接口配置。 -->
+  <details class="collapsible" id="updateBox">
+    <summary>在线更新（检测内置仓库 <span id="updRepo">…</span> 的最新发布）</summary>
+    <div class="row" style="align-items:center;gap:8px;">
+      <span style="font-size:12px;color:var(--c-text-muted);">当前版本</span>
+      <span id="updCurrent" style="font-size:12px;">—</span>
+      <button class="ibtn" id="btnUpdCheck" data-tip="检查更新｜查询内置 GitHub 仓库的最新发布版本"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+      <button class="ghost ibtn" id="btnUpdDownload" disabled data-tip="下载新版｜从 GitHub 下载新版安装包到本机更新目录"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg></button>
+      <button class="ghost ibtn" id="btnUpdOpen" style="display:none;" data-tip="打开下载目录｜在资源管理器里查看已下载的安装包"><svg class="ic" aria-hidden="true"><use href="#i-external"/></svg></button>
+    </div>
+    <div class="row" style="align-items:center;gap:8px;">
+      <div id="updBar" class="upd-bar" style="display:none;"><i id="updBarFill"></i></div>
+    </div>
+    <div class="notice" id="updStatus"></div>
+    <!-- 安装会退出当前程序，动手前先确认一次（与关闭询问框同样的口径） -->
+    <div id="updConfirm" style="display:none;">
+      <div style="font-size:12px;margin-top:8px;">安装程序即将启动，当前窗口会退出。确认继续？</div>
+      <div class="row">
+        <button class="ghost" id="btnUpdNo" data-tip="取消｜不安装，继续保持当前版本">取消</button>
+        <button id="btnUpdYes" data-tip="确认安装｜启动已下载的安装包并退出当前程序">确认安装并退出</button>
+      </div>
+    </div>
   </details>
 
   <details class="collapsible" id="historyBox">
