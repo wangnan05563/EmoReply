@@ -26,7 +26,7 @@ m1-poc/
 ## 运行
 
 ```powershell
-cd D:\code\otherProjects\28_AIMsg\m1-poc
+cd m1-poc   # 相对仓库根目录
 python -m pytest tests -v
 ```
 

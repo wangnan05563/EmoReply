@@ -10,10 +10,10 @@
 | 操作系统 | Windows 10 企业版 22H2（10.0.19045） | ✅ | Android Studio 与模拟器均支持 |
 | CPU | i7-1165G7（4 核 8 线程） | ✅ | 支持 VT-x |
 | 内存 | 63.7 GB | ✅ | 远超模拟器 4 GB 建议值 |
-| JDK | JDK 17：`D:\android\jdk17\jdk-17.0.20.1+1` | ✅ | AGP 8.7+ 要求 JDK 17；已独立安装 |
-| Gradle | 8.9：`D:\android\gradle-8.9\bin\gradle.bat` | ✅ | 支持 `--offline`（依赖已缓存） |
-| Android SDK | `D:\android\sdk`（`android-app/local.properties` 的 `sdk.dir`） | ✅ | 含 platform-tools / build-tools |
-| adb | `D:\android\sdk\platform-tools\adb.exe` | ✅ | 不在 PATH，调用时用绝对路径 |
+| JDK | JDK 17：`E:\Android\jdk17\jdk-17.0.20.1+1` | ✅ | AGP 8.7+ 要求 JDK 17；已独立安装 |
+| Gradle | 8.9：`E:\Android\gradle-8.9\bin\gradle.bat` | ✅ | 支持 `--offline`（依赖已缓存） |
+| Android SDK | `E:\Android\sdk`（`android-app/local.properties` 的 `sdk.dir`） | ✅ | 含 platform-tools / build-tools |
+| adb | `E:\Android\sdk\platform-tools\adb.exe` | ✅ | 不在 PATH，调用时用绝对路径 |
 | 真机连接 | `adb devices` 输出为空 | ❌ **硬阻塞** | 无设备，依赖真机的验收无法执行 |
 | 可用磁盘 | C 3.6 GB / D 2.9 GB | ❌ **硬阻塞** | 唯一可用模拟器镜像要求约 7.4 GB 数据分区，无法创建 |
 
@@ -35,7 +35,7 @@ SRS 的 FR-1.1（通知捕获成功率）与 FR-4.2（IME 注入成功率）**�
 2. PC 端确认设备（adb 已随 SDK 安装，无需再下载 platform-tools）：
 
 ```powershell
-& "D:\android\sdk\platform-tools\adb.exe" devices   # 期望看到 <序列号>  device
+& "E:\Android\sdk\platform-tools\adb.exe" devices   # 期望看到 <序列号>  device
 ```
 
 ### 2.2 验证「通知监听捕获」（对应 FR-1.1）
@@ -56,7 +56,7 @@ SRS 的 FR-1.1（通知捕获成功率）与 FR-4.2（IME 注入成功率）**�
 ### 2.3 验证「IME 候选条注入」（对应 FR-4.2）
 
 ```powershell
-$adb = "D:\android\sdk\platform-tools\adb.exe"
+$adb = "E:\Android\sdk\platform-tools\adb.exe"
 
 # 列出全部输入法（含未启用的自定义 IME）
 & $adb shell ime list -s -a
@@ -89,7 +89,7 @@ scripts\安卓推送测试.cmd
 ### 2.5 验收命令清单（可直接存为脚本）
 
 ```powershell
-$adb = "D:\android\sdk\platform-tools\adb.exe"
+$adb = "E:\Android\sdk\platform-tools\adb.exe"
 & $adb devices
 & $adb shell cmd notification allow_listener com.emoreply.poc/com.emoreply.poc.capture.NotifyCaptureService
 & $adb shell ime list -s -a
@@ -120,12 +120,12 @@ userdata 分区（显式改小 `disk.dataPartition.size` 仍报 need 7372.80 MB�
 ### 3.2 安装步骤
 
 1. 下载 **command-line tools**：`https://developer.android.com/studio#command-line-tools-only`
-   解压到 `D:\android\sdk\cmdline-tools\latest`（本机已装，可跳过）。
+   解压到 `E:\Android\sdk\cmdline-tools\latest`（本机已装，可跳过）。
 2. 设环境变量（当前会话）：
 
 ```powershell
-$env:ANDROID_HOME = "D:\android\sdk"
-$env:Path += ";D:\android\sdk\cmdline-tools\latest\bin;D:\android\sdk\platform-tools;D:\android\sdk\emulator"
+$env:ANDROID_HOME = "E:\Android\sdk"
+$env:Path += ";E:\Android\sdk\cmdline-tools\latest\bin;E:\Android\sdk\platform-tools;E:\Android\sdk\emulator"
 ```
 
 3. 安装组件并接受许可：
@@ -140,7 +140,7 @@ sdkmanager --licenses
 ```powershell
 avdmanager create avd -n emoreply37 -k "system-images;android-37.0;google_apis_playstore;x86_64" -d pixel_5
 emulator -avd emoreply37 -gpu swiftshader_indirect   # Intel 核显建议软渲染更稳
-& "D:\android\sdk\platform-tools\adb.exe" devices
+& "E:\Android\sdk\platform-tools\adb.exe" devices
 ```
 
 ### 3.3 模拟器上的验证差异（务必知悉）

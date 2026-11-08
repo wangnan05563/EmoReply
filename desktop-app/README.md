@@ -5,7 +5,7 @@ Windows 桌面形态先行：**悬浮窗 + 剪贴板交付**（FR-4.1 桌面面 
 ## 运行
 
 ```powershell
-cd D:\code\otherProjects\28_AIMsg\desktop-app
+cd desktop-app   # 相对仓库根目录
 npm install          # 首次安装 electron（可用 --registry=https://registry.npmmirror.com 加速）
 npm start
 ```
