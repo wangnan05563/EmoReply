@@ -13,7 +13,7 @@ android {
         applicationId = "com.emoreply.poc"
         minSdk = 26
         targetSdk = 35
-        versionCode = 247601
+        versionCode = 250001
         versionName = "0.1.0-poc"
         // T01124：截图 OCR POC 仅 arm64 真机（三星 S 系列），控制 .so 体积
         ndk {
