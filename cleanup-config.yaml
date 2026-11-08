@@ -1,11 +1,12 @@
 # ============================================================
-# 28_AIMsg 工作空间清理配置（2026-10-03 首轮）
+# EmoReply 工作空间清理配置（2026-10-03 首轮）
 # 基于 workspace-cleanup 技能示例模板定制。
-# 项目特点：无 git 仓库 → 不可逆删除风险高，非可再生目标一律隔离。
+# 项目特点：git 仓库已于 2026-10-18 初始化；构建产物/缓存被 .gitignore 排除，
+# 删除它们同样没有副本，因此非可再生目标仍优先隔离。
 # ============================================================
 
 workspace:
-  root: "D:/code/otherProjects/28_AIMsg"
+  root: "."
   script_dir: "scripts"
   docs_dir: "docs"
   logs_dir: "cleanup-logs"
@@ -150,7 +151,7 @@ detection:
     - "sonar-scan*.log"
     - "exe-smoke*.log"
   infer_confidence_threshold: 0.7
-  auto_add_inferred_to_gitignore: false   # 无 git，忽略规则无意义
+  auto_add_inferred_to_gitignore: false   # 有 git，但仍保持人工确认：模式推断可能误判，不自动写忽略规则
 
 actions:
   tiers:
@@ -188,7 +189,7 @@ quarantine:
     - "sha256"
     - "quarantined_at"
     - "expires"
-  gitignore: false   # 无 git
+  gitignore: true    # 有 git；根 .gitignore 已含 .cleanup-quarantine/
 
 evidence_gate:
   enabled: true
@@ -217,7 +218,8 @@ evidence_gate:
 
 recovery:
   enabled: true
-  # 注意：本项目无 git。可再生目标（有明确重建命令）视为「有可恢复副本」，
+  # 注意：git 已启用，但构建产物/缓存被 .gitignore 排除、不在版本库中，
+  # 删除它们仍无副本可言。可再生目标（有明确重建命令）视为「有可恢复副本」，
   # 不受因子阈值约束；唯一内容目标一律按 3 因子命中所判，走 quarantine。
   irreversibility_factors:
     - "not_vcs_tracked"
@@ -239,7 +241,7 @@ recovery:
     - "mark_reconstructed"
 
 ignored_audit:
-  enabled: false   # 无 git，无 ignore 盲区可言
+  enabled: true    # git 已启用：审计被 ignore 静默吞掉的目录（report_only，不驱动删除）
   report_only: true
   stale_days: 30
 
@@ -293,7 +295,7 @@ service_indicators:
   command_line_probe:
     enabled: true
     include_patterns:
-      - "28_AIMsg"
+      - "EmoReply"
       - "desktop-app"
     exclude_patterns: []
     on_unavailable: "treat_as_unknown"
@@ -339,7 +341,7 @@ capability_probe:
     - name: "hash_tool"
       fallback: "python_hashlib"
     - name: "vcs_cli"
-      fallback: "manual_review"   # 本项目无 git：S1 门触发，全部走隔离优先
+      fallback: "manual_review"   # git CLI 不可用时退回人工复核，不降级为直接删除
     - name: "glob_tool"
       fallback: "python_glob"
     - name: "external_build_tool"
@@ -382,7 +384,7 @@ platform:
         "not locked"
       } catch { "locked" }
   venv_python:
-    windows: "C:/Users/hspcadmin/.workbuddy/binaries/python/versions/3.13.12/python.exe"
+    windows: "python"
 
 execution:
   # python_s 绕过沙箱 safe-delete 钩子（经 ctypes Win32 直删亦可）
@@ -422,9 +424,10 @@ audit:
 verification:
   # 桌面端冒烟即本项目的核心完整性校验（generate 覆盖生成管线）；pytest 侧用 -p no:cacheprovider
   # 避免验证过程重建 .pytest_cache（-B 只挡字节码，挡不住 cacheprovider —— 第 3 轮实测复发）
-  command: "cd m1-poc && {venv_python} -B -m pytest -q -p no:cacheprovider"
+  # PowerShell 不支持 &&，改用分号；Set-Location 不改变 $LASTEXITCODE
+  command: "Set-Location m1-poc; {venv_python} -B -m pytest -q -p no:cacheprovider"
   venv_python:
-    windows: "C:/Users/hspcadmin/.workbuddy/binaries/python/versions/3.13.12/python.exe"
+    windows: "python"
   file_existence_checks:
     - "README.md"
     - "sonar-project.properties"
@@ -490,14 +493,14 @@ archive:
   gitignore_path: ".gitignore"
   precommit_path: ".pre-commit-config.yaml"
   gitattributes_path: ".gitattributes"
-  auto_update_gitignore: false   # 无 git
-  auto_update_precommit: false
+  auto_update_gitignore: true    # 有 git：新增垃圾模式同步写入 .gitignore
+  auto_update_precommit: false   # 项目未使用 pre-commit，跳过即人工维护
   gitignore_group_comments: []
   anchor_ignore_untracked_leftovers: false
   gitattributes_export_ignore: []
 
 git_integration:
-  enabled: false   # 无 git 仓库（S1 门：删除不可逆 → 隔离优先）
+  enabled: true    # git 已初始化（2026-10-18）；auto_commit 保持 false，不自动提交
   tracked_deleted_check: ""
   unstage_command: ""
   delete_index_command: ""

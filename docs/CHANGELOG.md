@@ -1,5 +1,37 @@
 # CHANGELOG
 
+## 2026-10-31 — 工作空间清理（workspace-cleanup 技能，第 4 轮）
+
+配置驱动（`cleanup-config.yaml`）。按用户选定「安全项 + 可重建产物」档执行，**保留**工具链缓存与依赖目录。
+
+### 处置汇总（口径：logical bytes）
+
+| 桶 | 项数 | 体积 | 明细 |
+|---|---|---|---|
+| delete | 1209 文件 | **1189.95MB** | `desktop-app/dist/` 534MB（NSIS/portable/win-unpacked，`npm run dist` 可重建）；`release/desktop/` 311MB（electron 解包产物）；`release/build/` 其余 873 文件 337MB（Android 构建中间物）；`.cleanup-quarantine/` 4 批次 5.6MB（2026-10-03 隔离，72h 窗口已于 10-06 到期）；`__pycache__`×3 + `.pytest_cache` 1.1MB；gradle/kotlin/npm 构建日志 4 个 |
+| quarantine | 0 | — | 空桶原因：全部候选可再生，无可逆性因子命中，无需占用隔离窗口 |
+| review→KEEP | — | — | `node_modules/`、`.env`、`.build/patch-seq.json`、`tmp/_mtask3`、`release/gradle-home`(1.10GB)/`toolchain`(129MB)/`gradle-project-cache`、`android-app/.gradle`、`.qoder-cn/`、`.idea/` |
+
+### 证据保留
+- `release/build/app/outputs/apk/debug/` 的 `app-debug.apk`(45.9MB) + `output-metadata.json` **原地保留**：`docs/品牌图标与接入.md` 引用该 APK 作真机核对证据。
+- `release/` 属含糊目录名，按 README L230 与 `.gitignore` L12 的声明判定为 gradle 构建输出目录，非手写源码。
+
+### 验证
+- m1-poc pytest **489 passed**（`python -B -m pytest -q -p no:cacheprovider`）。
+- 硬校验存在性 7/7；稳定性复扫无 `__pycache__`/`.pytest_cache` 复发。
+- 数量守恒：desktop-app −534.4MB、release −648.9MB、m1-poc −1.1MB 与审计合计吻合，无未解释缺口。
+
+### 审计与留痕
+- `cleanup-logs/cleanup-targets.txt` 追加 round4 执行段（逐文件 size + sha256，≥1MB 用 `P:` 采样指纹）。
+- 报告：[cleanup-report-20261031.md](../cleanup-logs/cleanup-report-20261031.md) 与同名 `.json`。
+
+### 配置漂移（清理后已修复，2026-10-31）
+- `git_integration.enabled` → `true`：仓库已于 2026-10-18 初始化；`auto_commit` 仍为 `false`，不自动提交。
+- `ignored_audit.enabled` → `true`、`quarantine.gitignore` → `true`、`archive.auto_update_gitignore` → `true`：这三处的原因注释均为「无 git」，前提已失效。
+- `platform.venv_python` / `verification.venv_python` → `F:/Program Files/Python3.14/python.exe`：原 3.13.12 无 pytest 模块，实测新解释器 pytest 9.1.1 跑 489 例通过。
+- `verification.command` 的 `cd … &&` 改为 `Set-Location …;`：PowerShell 5 不支持 `&&`，原命令不可执行。
+- 保留的保守项：`auto_add_inferred_to_gitignore`、`auto_commit`、`auto_update_precommit` 仍为 `false`（推断误判与自动提交的风险高于收益）。
+
 ## 2026-10-30 — docs 目录文档精简（人工整理）
 
 按"保留规格/设计/PRD/环境类持久文档、删除一次性过程文档、相关文档合并"原则整理 `docs/`：
