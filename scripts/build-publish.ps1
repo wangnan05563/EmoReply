@@ -94,6 +94,19 @@ Write-Host "[build-publish] gradle: $gradle"
 
 Push-Location $RepoRoot
 try {
+    # ---- 0) clean previous artifacts; toolchain/caches under release are kept ----
+    $cleanCfg = $cfg.release_cleanup
+    if ($cleanCfg -and $cleanCfg.enabled -eq $true) {
+        $cleanScript = Join-Path $RepoRoot 'scripts\clean-release.ps1'
+        if (-not (Test-Path $cleanScript)) { throw ("[build-publish] clean script missing: " + $cleanScript) }
+        $cleanScope = 'all'
+        if ($cleanCfg.scope) { $cleanScope = $cleanCfg.scope }
+        $cleanArgs = @{ ProjectRoot = $RepoRoot; Scope = $cleanScope }
+        if ($cleanCfg.purge_caches -eq $true) { $cleanArgs.PurgeCaches = $true }
+        & $cleanScript @cleanArgs
+        Write-Host "[build-publish] release artifacts cleaned" -ForegroundColor Cyan
+    }
+
     # ---- 1) build pipeline (via temp .cmd so native cmd semantics apply) ----
     if ($cfg.build_pipeline -and $cfg.build_pipeline.steps) {
         $i = 0
@@ -155,6 +168,11 @@ try {
     $assets = @()
     function Add-Asset([string]$dir, [string]$glob, [string]$display, [string[]]$exclude) {
         $d = Join-Path $RepoRoot $dir
+        # Every publishable asset must live under the one-time release directory.
+        $releaseRoot = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot 'release')).TrimEnd([char[]]@('\', '/')) + [System.IO.Path]::DirectorySeparatorChar
+        if (-not ([System.IO.Path]::GetFullPath($d)).StartsWith($releaseRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+            throw ("[build-publish] asset dir must live under release/: " + $dir)
+        }
         if (-not (Test-Path $d)) { Write-Warning ("[build-publish] asset dir missing: " + $d); return }
         $glob = $glob -replace '<VER>', $ver
         $m = Get-ChildItem -Path $d -File | Where-Object { $_.Name -like $glob } | Where-Object {

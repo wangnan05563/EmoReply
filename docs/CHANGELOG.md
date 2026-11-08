@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-11-09 — 构建产物集中至 release（T04719）
+
+- 桌面端 electron-builder 输出由 `desktop-app/dist` 改到 `release/desktop-installer`（`desktop-app/package.json` 的 `build.directories.output`，相对路径）；`setup-and-build-desktop.ps1` 从该目录搬运 NSIS 安装包到交付目录 `release/desktop`，工程内不再留 `dist/` 残留。
+- `scripts/config.json`：一键发布的 2 处桌面资产目录改到 `release/desktop-installer`；新增 `release_cleanup` 配置段（默认 enabled / scope=all / 不清理缓存）。Android 资产仍取 `release/build/app/outputs/apk/debug`，与 `docs/品牌图标与接入.md` 的证据引用一致。
+- 新增 `scripts/clean-release.ps1`：按 `-Scope desktop|android|all` 清理旧产物，默认保留 `release/toolchain`、`npm-cache`、`gradle-home`、`gradle-project-cache`、`kotlin` 等重建代价高的缓存；支持 `-PurgeCaches` / `-PurgeAll` / `-WhatIf`，删除前校验目标必须位于工程根内。
+- 三个构建入口在构建前调用清理：一键发布 `build-publish.ps1`（scope=all）、`setup-and-build-desktop.ps1`（desktop）、`setup-and-build-android.ps1`（android，只清 APK outputs 以保留增量构建）。发布脚本另加「资产目录必须位于 `release/` 下」的校验。
+- `release/` 与 `desktop-app/dist/` 均已在 `.gitignore`；发布说明 `release-notes-<VER>.md` 属人工输入文档，不放入一次性目录。
+- 注意：`docs/品牌图标与接入.md` 引用的真机核对 APK 位于 `release/build/app/outputs/apk/debug/`，属一次性产物；执行 android/all 清理后需重新构建 Android 才会恢复。
+- 验证：`scripts/verify.ps1` 脚本编码/语法校验、JSON 解析、路径引用一致性、临时目录清理演练（产物删除 + 缓存保留）。完整 `npm run dist` / Gradle 构建与 GitHub Release 发布属外部动作，未实跑，待后续按需执行。
+
 ## 2026-11-02 — 系统架构设计文档（T04074）
 
 基于四端源码（`m1-poc` Python 事实源 / `android-app` Kotlin / `desktop-app` Electron JS / `ios-app` SwiftPM 库）整理 [`系统架构设计`](系统架构设计.md)：

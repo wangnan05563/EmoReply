@@ -20,7 +20,7 @@
     "productName": "EmoReply",
     "copyright": "Copyright © 2026 EmoReply",
     "directories": {
-      "output": "dist"
+      "output": "../release/desktop-installer"
     },
     "files": [
       "main.js",

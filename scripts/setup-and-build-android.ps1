@@ -279,6 +279,8 @@ if ($SkipBuild) {
 Write-Host ''
 Write-Host '构建 debug APK ...' -ForegroundColor Cyan
 Remove-LegacyCaches
+# Remove stale APK outputs; build intermediates and caches are preserved.
+& (Join-Path $PSScriptRoot 'clean-release.ps1') -ProjectRoot $ProjectRoot -ReleaseDir $ReleaseDir -Scope android
 Invoke-ApkBuild
 
 if (-not (Test-Path $BuiltApk)) { throw "构建结束但未找到 APK：$BuiltApk" }

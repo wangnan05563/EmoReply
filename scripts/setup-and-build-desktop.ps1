@@ -242,7 +242,7 @@ function Invoke-InstallerPackage {
     # patch 号（YYYYMMDD-NNN）非合法 semver 的兼容由 pkg-semver.js 处理
     # （打包期临时改写为 0.1.0-YYYYMMDD-NNN，结束无论成败还原原文件）。
     # 产物统一复制进交付目录 release\desktop，与绿色便携版放在一起。
-    $ebDist = Join-Path $AppDir 'dist'
+    $ebDist = Join-Path $ReleaseDir 'desktop-installer'
     # 每次全量重建 electron-builder 输出目录，避免旧版本安装包残留被重复搬运
     if (Test-Path $ebDist) { Remove-Tree $ebDist }
 
@@ -328,6 +328,9 @@ if ($SkipBuild) {
     Write-Host '已指定 -SkipBuild，跳过打包。' -ForegroundColor Yellow
     exit 0
 }
+
+# Clean stale artifacts; npm cache and Node toolchain under release are preserved.
+& (Join-Path $PSScriptRoot 'clean-release.ps1') -ProjectRoot $ProjectRoot -ReleaseDir $ReleaseDir -Scope desktop
 
 Write-Host ''
 Write-Host '打包绿色便携版 ...' -ForegroundColor Cyan

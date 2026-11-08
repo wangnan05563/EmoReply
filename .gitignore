@@ -8,7 +8,11 @@
 android-app/.gradle/
 android-app/app/build/
 android-app/build/
-# 构建产物统一外置目录（app/build.gradle.kts: layout.buildDirectory = ../release/build/app）
+# 一次性产物根目录：桌面/Android 产物、构建缓存与 Node 工具链均在此。
+# 整目录删除后可经 scripts/ 下的构建脚本从零重建，不影响源码与外部 SDK/JDK；
+# 只想清产物（保留缓存/工具链）用 scripts/clean-release.ps1。
+# Android: app/build.gradle.kts 的 layout.buildDirectory = ../release/build/app
+# 桌面: desktop-app/package.json 的 build.directories.output = ../release/desktop-installer
 release/
 # APK/AAB 与中间签名物
 *.apk
