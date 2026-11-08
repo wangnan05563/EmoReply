@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-11-09 — patch 号同日唯一性加固（T04726）
+
+- 核验 `scripts/Gen-PatchVersion.ps1`：`YYYYMMDD-NNN` 格式、序号持久化在 `.build/patch-seq.json`、同日 +1 / 跨天重置、写回 `desktop-app/package.json` 的 version 并读回校验；`构建打包.bat` 与 `PC构建打包.cmd` 均在打包前调用。项目无根 `package.json`，发布配置 `version_file_path` 也指向 `desktop-app/package.json`，故写入位置为项目适配。
+- 缺口（隔离沙盒实测）：并发启动 4 次构建时 3 次生成同一个 `20261109-001`、1 次写入失败；`.build/patch-seq.json` 损坏后会重置为 001，重用当天已用号。二者都违反「同日全局唯一」。
+- 修复：新增跨进程锁 `.build/patch-seq.lock`（`FileShare.None` + 100ms×300 重试，进程退出由 OS 自动释放），把「读序号 → 写 version → 写序号」整体串行化；序号状态缺失/损坏时，从 package.json 当前 version 解析当天序号并 +1（兼容 `-Semver` 前缀），不再从 1 重来。
+- 验证：隔离沙盒 5 组用例全过（顺序递增、跨天重置、JSON 合法性、4 并发唯一、状态损坏恢复）；`scripts/verify.ps1` 10 PASS / 0 FAIL。
+- 已知边界：一键发布 `一键发布.bat`（`build-publish.ps1` 的 `build_pipeline`）不经过 patch 号生成步骤，版本号沿用上次构建值；如需「每次发布也唯一」，可在 `config.json` 的 build_pipeline 首步加入 `Gen-PatchVersion.ps1`，本次未改动（超出任务范围）。
+
 ## 2026-11-09 — 构建产物集中至 release（T04719）
 
 - 桌面端 electron-builder 输出由 `desktop-app/dist` 改到 `release/desktop-installer`（`desktop-app/package.json` 的 `build.directories.output`，相对路径）；`setup-and-build-desktop.ps1` 从该目录搬运 NSIS 安装包到交付目录 `release/desktop`，工程内不再留 `dist/` 残留。

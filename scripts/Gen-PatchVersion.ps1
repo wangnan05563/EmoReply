@@ -7,6 +7,9 @@
       - date part  : 8 digits, yyyyMMdd (no separators)
       - sequence   : starts at 1 within one day, increments per run, resets to 1
                      when the day changes (persisted in .build/patch-seq.json)
+      - uniqueness : a cross-process lock (.build/patch-seq.lock) makes the whole
+                     read-write atomic; a missing/corrupt state file falls back to
+                     the sequence already written in package.json (T04726)
       - version    : written back as "yyyyMMdd-NNN" (for example 20260927-001)
 
     T01335: also bumps the Android versionCode in app/build.gradle.kts.
@@ -65,9 +68,32 @@ if (-not (Test-Path $PackagePath)) {
     exit 1
 }
 
+# --- cross-process lock (T04726): seq read -> version write -> seq write must be atomic.
+# Without it, builds started at the same time all read the same sequence and emit
+# the same patch number. FileShare.None is released by the OS when this one-shot
+# process exits (including on `exit`), so no explicit Dispose is needed.
+$lockPath = Join-Path (Split-Path -Parent $SeqFile) "patch-seq.lock"
+$lockDir = Split-Path -Parent $lockPath
+if (-not (Test-Path $lockDir)) { New-Item -ItemType Directory -Path $lockDir | Out-Null }
+$patchLock = $null
+for ($attempt = 0; $attempt -lt 300; $attempt++) {
+    try {
+        $patchLock = [System.IO.File]::Open($lockPath, [System.IO.FileMode]::OpenOrCreate,
+            [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
+        break
+    } catch [System.IO.IOException] {
+        Start-Sleep -Milliseconds 100
+    }
+}
+if (-not $patchLock) {
+    Write-Host "[PatchVersion][ERROR] another build holds the patch lock: $lockPath"
+    exit 1
+}
+
 # --- sequence: same day -> +1 ; new day -> reset to 1 ---
 $seq = 1
-if (Test-Path $SeqFile) {
+$seqNeedsFallback = -not (Test-Path $SeqFile)
+if (-not $seqNeedsFallback) {
     try {
         $state = Get-Content -Raw -Encoding UTF8 $SeqFile | ConvertFrom-Json
         if ($state.date -eq $Today) {
@@ -75,9 +101,23 @@ if (Test-Path $SeqFile) {
             if ($prev -gt 0) { $seq = $prev + 1 }
         }
     } catch {
-        Write-Host "[PatchVersion][WARN] seq file unreadable, restart from 1: $SeqFile"
+        Write-Host "[PatchVersion][WARN] seq file unreadable: $SeqFile"
         $seq = 1
+        $seqNeedsFallback = $true
     }
+}
+# A missing or corrupt state file must NOT reuse a number already used today:
+# recover the last sequence from the version currently in package.json.
+# The optional prefix also covers the -Semver form "0.1.0-yyyyMMdd-NNN".
+if ($seqNeedsFallback) {
+    try {
+        $rawPkg = [System.IO.File]::ReadAllText($PackagePath)
+        $vm = [regex]::Match($rawPkg, '"version"\s*:\s*"(?:[\d.]+-)?(\d{8})-(\d{3})"')
+        if ($vm.Success -and $vm.Groups[1].Value -eq $Today) {
+            $seq = [int]$vm.Groups[2].Value + 1
+            Write-Host "[PatchVersion][WARN] seq state recovered from package.json: $seq"
+        }
+    } catch { }
 }
 
 $patch = "{0}-{1}" -f $Today, ("{0:D3}" -f $seq)
