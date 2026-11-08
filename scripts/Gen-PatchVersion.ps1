@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Generate a unique patch number (yyyyMMdd-NNN) and write it into package.json version.
 
