@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-11-02 — 系统架构设计文档（T04074）
+
+基于四端源码（`m1-poc` Python 事实源 / `android-app` Kotlin / `desktop-app` Electron JS / `ios-app` SwiftPM 库）整理 [`系统架构设计`](系统架构设计.md)：
+
+- 章节：系统概述、总体架构、核心管线（跨端同构）、模块详细设计、数据流分析、技术选型、部署架构、安全与隐私、跨端一致性、附录。
+- 含 7 张 Mermaid 图：总体架构、核心管线、Android/iOS 模块、Android 通知/读屏序列、桌面序列、部署。
+- 严格对应现有实现，未假设不存在的功能；FR/C/T 编号均来自代码注释可追溯标记。
+- `docs/` 文件数 10 → 11（10 Markdown + 1 docx）。
+
 ## 2026-10-31 — 工作空间清理（workspace-cleanup 技能，第 4 轮）
 
 配置驱动（`cleanup-config.yaml`）。按用户选定「安全项 + 可重建产物」档执行，**保留**工具链缓存与依赖目录。
