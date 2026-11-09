@@ -730,20 +730,13 @@
                     android:orientation="vertical"
                     android:visibility="gone">
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    <TextView
+                        android:id="@+id/tvUpdateRepo"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:hint="@string/update_url_hint">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etUpdateUrl"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textUri"
-                            android:singleLine="true" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="12sp" />
 
                     <Button
                         android:id="@+id/btnCheckUpdate"
@@ -759,7 +752,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:enabled="false"
-                        android:text="@string/update_check" />
+                        android:text="@string/update_do_idle" />
 
                     <ProgressBar
                         android:id="@+id/pbUpdate"

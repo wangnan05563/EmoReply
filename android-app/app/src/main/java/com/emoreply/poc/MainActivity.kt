@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
     private var wizardShown = false
 
     // 更新状态：pendingUpdate 非 null 表示已检查到新版本、待下载安装
-    private val pendingUpdate = AtomicReference<UpdateManager.Manifest?>(null)
+    private val pendingUpdate = AtomicReference<UpdateManager.ReleaseInfo?>(null)
     private val updateExecutor = Executors.newSingleThreadExecutor()
     // T01838：下载中再次点击「更新」按钮 = 中途取消；取消后 pendingUpdate 保留可续
     private val downloadCancel = AtomicBoolean(false)
@@ -858,62 +858,45 @@ class MainActivity : AppCompatActivity() {
     // ---------- 版本更新（T00881） ----------
 
     private fun setupUpdateSection() {
-        val etUrl = findViewById<EditText>(R.id.etUpdateUrl)
-        // 回显上次填过的清单地址，便于启动自动检查
-        val saved = getPreferences(Context.MODE_PRIVATE).getString(KEY_UPDATE_URL, null)
-        if (!saved.isNullOrBlank()) etUrl.setText(saved)
-
-        findViewById<Button>(R.id.btnCheckUpdate).setOnClickListener {
-            val url = etUrl.text.toString().trim()
-            if (url.isBlank()) {
-                toastUpdateStatus(getString(R.string.update_failed, "请先填写版本清单 URL"))
-                return@setOnClickListener
-            }
-            getPreferences(Context.MODE_PRIVATE).edit().putString(KEY_UPDATE_URL, url).apply()
-            checkUpdate(url)
-        }
+        // T04015 路线A：版本源为内置仓库常量，不再手填 URL；展示内置仓库地址
+        findViewById<TextView>(R.id.tvUpdateRepo).text = getString(R.string.update_repo, UpdateManager.REPO)
+        findViewById<Button>(R.id.btnCheckUpdate).setOnClickListener { checkUpdate() }
         findViewById<Button>(R.id.btnDoUpdate).setOnClickListener {
             if (downloading) {
                 // T01838：下载中点击按钮 = 中途取消；pendingUpdate 保留，取消后可再次点击继续
                 downloadCancel.set(true)
                 return@setOnClickListener
             }
-            val manifest = pendingUpdate.get() ?: return@setOnClickListener
-            startDownload(manifest)
+            val release = pendingUpdate.get() ?: return@setOnClickListener
+            startDownload(release)
         }
-        // 启动自动检查（仅当有已保存的清单地址）
-        if (!saved.isNullOrBlank()) checkUpdate(saved)
+        // 启动自动检查内置仓库（无发布/限流均给友好文案，不阻断）
+        checkUpdate()
     }
 
-    private fun checkUpdate(manifestUrl: String) {
+    private fun checkUpdate() {
         val btn = findViewById<Button>(R.id.btnDoUpdate)
         btn.isEnabled = false
         pendingUpdate.set(null)
         toastUpdateStatus(getString(R.string.update_checking))
         updateExecutor.execute {
-            try {
-                val found = UpdateManager.check(this, manifestUrl)
-                runOnUiThread {
-                    if (found != null) {
-                        pendingUpdate.set(found)
-                        btn.text = getString(R.string.update_do, found.versionName)
-                        btn.isEnabled = true
-                        val local = UpdateManager.localVersion(this)
-                        toastUpdateStatus(
-                            "${found.versionName}（当前 ${local.versionName}）\n${found.notes}"
-                        )
-                    } else {
-                        val local = UpdateManager.localVersion(this)
-                        toastUpdateStatus(getString(R.string.update_latest, local.versionName))
-                    }
+            val result = UpdateManager.check(this)
+            runOnUiThread {
+                val release = result.release
+                if (result.state == UpdateManager.UpdateState.NEWER && release != null) {
+                    pendingUpdate.set(release)
+                    btn.text = getString(R.string.update_do, release.versionName)
+                    btn.isEnabled = true
+                    toastUpdateStatus("${release.versionName}（当前 ${result.current}）\n${release.notes}")
+                } else {
+                    btn.text = getString(R.string.update_do_idle)
+                    toastUpdateStatus(result.message)
                 }
-            } catch (e: UpdateManager.UpdateException) {
-                runOnUiThread { toastUpdateStatus(getString(R.string.update_failed, e.userMessage)) }
             }
         }
     }
 
-    private fun startDownload(manifest: UpdateManager.Manifest) {
+    private fun startDownload(release: UpdateManager.ReleaseInfo) {
         val btn = findViewById<Button>(R.id.btnDoUpdate)
         val btnCheck = findViewById<Button>(R.id.btnCheckUpdate)
         val pb = findViewById<ProgressBar>(R.id.pbUpdate)
@@ -930,7 +913,7 @@ class MainActivity : AppCompatActivity() {
         apk.parentFile?.mkdirs()
         updateExecutor.execute {
             try {
-                UpdateManager.download(manifest.apkUrl, apk, { pct ->
+                UpdateManager.download(release.apkUrl, apk, release.size, { pct ->
                     runOnUiThread {
                         pb.progress = pct
                         toastUpdateStatus(getString(R.string.update_downloading, pct))
@@ -940,7 +923,7 @@ class MainActivity : AppCompatActivity() {
                     downloading = false
                     pb.visibility = View.GONE
                     toastUpdateStatus(getString(R.string.update_download_done))
-                    setBtnUpdateIdle(btn, manifest)
+                    setBtnUpdateIdle(btn, release)
                     btnCheck.isEnabled = true
                     UpdateManager.install(this, apk)
                 }
@@ -949,7 +932,7 @@ class MainActivity : AppCompatActivity() {
                     downloading = false
                     pb.visibility = View.GONE
                     toastUpdateStatus(getString(R.string.update_cancelled))
-                    setBtnUpdateIdle(btn, manifest)
+                    setBtnUpdateIdle(btn, release)
                     btnCheck.isEnabled = true
                 }
             } catch (e: UpdateManager.UpdateException) {
@@ -958,7 +941,7 @@ class MainActivity : AppCompatActivity() {
                     pb.visibility = View.GONE
                     toastUpdateStatus(getString(R.string.update_failed, e.userMessage))
                     // 允许重新点击继续（重新下载）
-                    setBtnUpdateIdle(btn, manifest)
+                    setBtnUpdateIdle(btn, release)
                     btnCheck.isEnabled = true
                 }
             }
@@ -966,8 +949,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     /** 按钮回到「发现新版本 X，立即更新」待命态（pendingUpdate 保留，可再次点击）。 */
-    private fun setBtnUpdateIdle(btn: Button, manifest: UpdateManager.Manifest) {
-        btn.text = getString(R.string.update_do, manifest.versionName)
+    private fun setBtnUpdateIdle(btn: Button, release: UpdateManager.ReleaseInfo) {
+        btn.text = getString(R.string.update_do, release.versionName)
         btn.isEnabled = true
     }
 
@@ -1014,10 +997,6 @@ class MainActivity : AppCompatActivity() {
 
     /** 完成或跳过后落盘标记，重启不再弹。 */
     private fun skipOnboarding() = UxSettings.setOnboardingDone(this, true)
-
-    companion object {
-        private const val KEY_UPDATE_URL = "update_manifest_url"
-    }
 
     /** T01092：保存类操作统一 Snackbar 反馈（原 Toast）。 */
     private fun toast(resId: Int) {
