@@ -6,7 +6,7 @@
 读屏/剪贴板拿到对方的话 → 本地预处理 → 云端 LLM 生成可直接发送的候选回复 → 一键注入聊天输入框。
 **Android 输入法 + Electron 桌面端 + Python 核心链路（概念验证阶段）**
 
-![Android](https://img.shields.io/badge/Android-Kotlin-3DDC84) ![Desktop](https://img.shields.io/badge/Desktop-Electron-47848F) ![Core](https://img.shields.io/badge/Core-Python%203-3776AB) ![Tests](https://img.shields.io/badge/pytest-489%20passed-4B8BBE) ![E2E](https://img.shields.io/badge/UI%20e2e-51%20passed-2EA043)
+![Android](https://img.shields.io/badge/Android-Kotlin-3DDC84) ![Desktop](https://img.shields.io/badge/Desktop-Electron-47848F) ![Core](https://img.shields.io/badge/Core-Python%203-3776AB) ![Tests](https://img.shields.io/badge/pytest-489%20passed-4B8BBE) ![E2E](https://img.shields.io/badge/UI%20e2e-51%20passed-2EA043) ![GitHub](https://img.shields.io/badge/GitHub-wangnan05563%2FEmoReply-181717?logo=github&logoColor=white) ![Issues](https://img.shields.io/github/issues/wangnan05563/EmoReply)
 
 <img src="brand/social-preview.png" width="1280" alt="EmoReply · GitHub 社交预览图（1280×640，同时用作仓库 Social preview）" />
 
@@ -254,6 +254,23 @@ EmoReply 目前以概念验证版本开放体验，桌面端可自行构建运�
 
 ---
 
+## GitHub 仓库说明
+
+本仓库即项目主页，源码、文档与问题反馈都在 GitHub 上维护。
+
+- **仓库地址**：[github.com/wangnan05563/EmoReply](https://github.com/wangnan05563/EmoReply)
+- **Star / Watch / Fork**：右上角 Star 收藏、Watch 接收更新通知、Fork 派生自己的副本做实验。
+- **克隆到本地**：
+  ```bash
+  git clone https://github.com/wangnan05563/EmoReply.git
+  cd EmoReply
+  ```
+- **下载发布版（Release）**：桌面端安装包与 Android APK 不入库（产物可再生），**发布首个 Release 后**可在仓库 `Releases` 页下载。当前尚未发布任何 Release（与「在线更新」说明一致），需自行构建，见[快速开始](#快速开始)。
+- **反馈与求助（Issues）**：使用中遇到的问题、场景需求、Bug 复现，请走 [Issues](https://github.com/wangnan05563/EmoReply/issues)。建议附：系统 / 版本号、复现步骤、相关日志（设置页可导出）、是否自填了云端 Key。影响「回得出去」的问题优先处理。
+- **社交预览图（Social preview）**：根目录 `brand/social-preview.png`（1280×640）已内嵌在 README 顶部；建议再到仓库 **Settings → Social preview** 上传同一份，使分享链接卡片与仓库内一致。
+
+---
+
 ## 目录结构
 
 ```
@@ -407,11 +424,59 @@ python tools/gen_social_preview.py
 - 云端生成质量、粘贴回宿主窗口兼容性仍需真机 + 真实 Key 复核（见 MTask 待办 T01500/T01502）
 - 输入法（Android）配图已在模拟器（API 34）以演示会话补入（11–14）；真机与真实聊天场景的实拍仍待补充
 
+## 持续集成（CI / GitHub Actions）
+
+仓库目前尚未启用 GitHub Actions（`.github/workflows` 为空）。下列命令是 CI 的事实基准，本地提交前与未来 CI 都以此为准：
+
+| 链路 | 命令 | 作用 |
+| --- | --- | --- |
+| Python 核心 | `cd m1-poc && python -m pytest -q` | 参考实现验收（平台无关核心） |
+| 桌面单元 | `cd desktop-app && npm test` | 8 套冒烟，117 项断言 |
+| 桌面 E2E | `cd desktop-app && npm run test:e2e` | CDP 驱动 51 项断言（需独立 `--user-data-dir`） |
+| 桌面构建 | `cd desktop-app && npm run dist` | 生产构建（NSIS + portable），产物不入库 |
+
+**建议的起点工作流**（尚未提交，可作为 `.github/workflows/ci.yml` 启用；先覆盖可在 CI 跑通的 Python 与桌面单测，E2E 与 Android 构建需图形 / SDK 环境，建议后续单独 job）：
+
+```yaml
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: cd m1-poc && python -m pytest -q
+  desktop:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: cd desktop-app && npm ci
+      - run: cd desktop-app && npm test
+```
+
+> 说明：E2E 需 Electron 图形环境与独立 profile，Android 构建需 JDK 17 + Gradle，二者不在上述起步 CI 内；是否接入取决于 runner 与对应环境，先在本地按「快速开始」验证。
+
 ## 贡献
 
-个人概念验证项目，暂不接受外部 PR；问题与使用反馈欢迎提 [Issue](https://github.com/wangnan05563/EmoReply/issues)。
+当前以维护者驱动为主，暂不常规接受外部 PR；外部贡献请先提 [Issue](https://github.com/wangnan05563/EmoReply/issues) 沟通范围，确认后再 Fork 动手，避免重复劳动。问题与使用反馈随时欢迎开 Issue。
 
-开发约定（提交前请过一遍）：
+### 开发协作流程（GitHub）
+
+1. **Fork 与分支**：派生仓库到自己账号，`git clone` 后从 `main` 切出功能分支，命名建议 `feat/xxx`、`fix/xxx`、`docs/xxx`、`chore/xxx`。
+2. **本地验证**：提交前跑通 `m1-poc` 的 `python -m pytest -q` 与桌面端 `npm test`；渲染层改动再过 `npm run test:e2e`（独立 `--user-data-dir`）。
+3. **提交信息**：建议采用 Conventional Commits（`feat:` / `fix:` / `docs:` / `chore:` + 范围 + 简述），便于生成变更记录；可附带任务号（如 `(T04015)`）。
+4. **PR 与关联 Issue**：开 Pull Request 到上游 `main`，标题与说明中**关联对应 Issue**（GitHub 关键字 `Closes #123` / `Fixes #123`）；描述写明改动点、验证方式与影响面。
+5. **Review 与合并**：至少一名维护者 review 通过、CI 全绿后方可合并。
+
+### 提交前检查清单
 
 - 新能力先落 `m1-poc`（Python 参考实现 + pytest 验收），通过后再镜像到 Kotlin / Electron 端，保持三端同构
 - 提交前跑通 `m1-poc` 的 `python -m pytest -q` 与桌面端 `npm test`；渲染层改动需再过 `npm run test:e2e`（独立 `--user-data-dir`）

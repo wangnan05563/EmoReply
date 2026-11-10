@@ -1,0 +1,43 @@
+# EmoReply CI（起步工作流）
+#
+# 现状：仓库此前未启用 GitHub Actions。本文件覆盖可在 CI 干净 runner 上直接跑通的
+# 两条链路——Python 核心验收与桌面端单测。
+# 暂不纳入：桌面 E2E（需 Electron 图形环境 + 独立 --user-data-dir）、
+#           Android 构建（需 JDK 17 + Gradle）。两者建议后续单独 job 接入。
+#
+# 参考：README「持续集成（CI / GitHub Actions）」一节。
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python:
+    name: Python 核心验收 (m1-poc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安装测试依赖
+        run: python -m pip install --upgrade pip pytest
+      - name: 运行 pytest
+        run: cd m1-poc && python -m pytest -q
+
+  desktop:
+    name: 桌面端单测 (desktop-app)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: 安装依赖
+        run: cd desktop-app && npm ci
+      - name: 运行单测
+        run: cd desktop-app && npm test
