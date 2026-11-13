@@ -11,6 +11,7 @@ import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
+import com.emoreply.poc.core.similarity
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
@@ -732,20 +733,24 @@ class EmoReplyReaderService : AccessibilityService() {
             // T02222：气泡颜色判侧（截图路径才有像素；仅微信）。[cropped] 因此
             // 延后到判侧结束才 recycle——判据本身只读像素，不改图。
             val sides = judgeSides(cropped, groupFiltered, sw)
+            // T05728：节点树×OCR 交叉验证——节点树可读的应用里，节点框左缘是
+            // 控件级几何，比 OCR 像素行框更稳；行中心落在节点框内且文本相似时
+            // 用节点侧别覆盖。微信节点树被保护 → nodeLines 为空 → 静默跳过。
+            val fusedSides = fuseNodeSides(groupFiltered, sides, collectNodeLines(svc), sw)
             // T01129：全部保留并加侧别标注（自己行「我：」、对方行「对方：」）；
             // 频次过滤按侧别分组（同一文本对方发 3 次才滤，双方不互算）
             // 侧别读取用 getValue：[judgeSides] 对传入的每一行无条件写入（键为行对象引用，
             // 必然命中），缺键属不可达路径——与旧 `!!` 一致按异常暴露，绝不静默换侧。
-            val freqMine = groupFiltered.filter { sides.getValue(it).side == BubbleSideJudge.SIDE_MINE }
+            val freqMine = groupFiltered.filter { fusedSides.getValue(it).side == BubbleSideJudge.SIDE_MINE }
                 .groupingBy { it.text }.eachCount()
-            val freqOther = groupFiltered.filter { sides.getValue(it).side != BubbleSideJudge.SIDE_MINE }
+            val freqOther = groupFiltered.filter { fusedSides.getValue(it).side != BubbleSideJudge.SIDE_MINE }
                 .groupingBy { it.text }.eachCount()
             val result = groupFiltered.asSequence()
                 // T01343：时间行转「话题分段标记」保留（与节点路径同构）
                 // T02224：居中门槛——气泡里的「通话时长10:52」不是分隔行，不该抢走方向标注
                 .filter { l -> isMessageText(l.text) || isTimeMark(l.text.trim(), l.cx, sw) }
                 .filter { l ->
-                    val mine = sides.getValue(l).side == BubbleSideJudge.SIDE_MINE
+                    val mine = fusedSides.getValue(l).side == BubbleSideJudge.SIDE_MINE
                     val n = (if (mine) freqMine else freqOther)[l.text] ?: 0
                     !(l.text.length <= 10 && n >= 3)
                 }
@@ -754,7 +759,7 @@ class EmoReplyReaderService : AccessibilityService() {
                     val v = it.text.trim()
                     val prefix = when {
                         isTimeMark(v, it.cx, sw) -> TIME_MARK_PREFIX
-                        sides.getValue(it).side == BubbleSideJudge.SIDE_MINE -> SPEAKER_ME_PREFIX
+                        fusedSides.getValue(it).side == BubbleSideJudge.SIDE_MINE -> SPEAKER_ME_PREFIX
                         else -> SPEAKER_OTHER_PREFIX
                     }
                     prefix + v
@@ -830,6 +835,92 @@ class EmoReplyReaderService : AccessibilityService() {
             instance?.windows?.any { w -> w.root?.packageName == WECHAT_PKG } == true
         }.getOrDefault(false)
 
+        // ===== T05728：节点树×OCR 交叉验证（与 m1-core preprocess.fuse_node_sides 同构）=====
+
+        /**
+         * 收集当前目标应用窗口的节点树文本行（交叉验证的证据源）。
+         * 只读 text/content-desc 与 bounds，与 [captureVisibleMessages] 同口径、
+         * 无任何节点动作；节点树被保护（微信 8.0.78 实测）时返回空表，融合静默跳过。
+         */
+        private fun collectNodeLines(svc: AccessibilityService): List<NodeLine> {
+            val roots = runCatching { svc.windows }
+                .getOrElse { emptyList() }
+                .mapNotNull { w -> w.root?.takeIf { it.packageName in TARGET_PKGS } }
+            if (roots.isEmpty()) return emptyList()
+            val out = mutableListOf<NodeLine>()
+            roots.forEach { collect(it, out) }
+            return out
+        }
+
+        /**
+         * 节点树证据覆盖 OCR 判侧。
+         *
+         * OCR 行框来自像素，左缘随字号/折行漂移；节点树 TextView 的 bounds 是控件级
+         * 几何。两者同屏可得时（部分应用节点树可读），对「OCR 行中心落在节点框内且
+         * 文本相似」的行，节点位置判定视为硬证据覆盖 OCR 结论；无匹配行保持原判
+         * ——宁可沿用颜色/位置，不凭空改侧。
+         *
+         * 与 py 版的一处口径差：这里不让节点证据覆盖 byColor 的高置信颜色结论
+         * （T02222 的判定层级：颜色 > 位置）。py 融合输入不含颜色置信度，且微信
+         * 节点树为空走不到该分支，行为等价。
+         */
+        private fun fuseNodeSides(
+            lines: List<OcrLineInfo>,
+            sides: Map<OcrLineInfo, BubbleSideJudge.SideCall>,
+            nodeLines: List<NodeLine>,
+            sw: Int,
+        ): Map<OcrLineInfo, BubbleSideJudge.SideCall> {
+            if (nodeLines.isEmpty()) return sides
+            val fused = HashMap(sides)
+            var overrides = 0
+            for (l in lines) {
+                val call = sides.getValue(l)
+                if (call.byColor) continue
+                val cx = (l.left + l.right) / 2
+                val cy = (l.top + l.bottom) / 2
+                val hit = nodeLines.firstOrNull { n ->
+                    n.left <= cx && cx <= n.right && n.top <= cy && cy <= n.bottom &&
+                        similarity(l.text, n.text) >= 0.6f
+                } ?: continue
+                val nodeSide = if (isMine(hit.left, sw)) BubbleSideJudge.SIDE_MINE
+                else BubbleSideJudge.SIDE_OTHER
+                if (nodeSide != call.side) {
+                    fused[l] = BubbleSideJudge.SideCall(nodeSide, false, 0, 0)
+                    overrides++
+                }
+            }
+            if (overrides > 0) Log.i(TAG, "fuse: node overrides=$overrides/${lines.size}")
+            return fused
+        }
+
+        /**
+         * T05728：跨屏重复行的变体投票合并（与 m1-core preprocess.vote_screen_batches 同构）。
+         * 旧 mergeScreenBatches 按整行精确去重——滚动重叠区同一行被 OCR 读出两个变体
+         * （错字/空格漂移）时两行都保留，重复上下文污染生成。本函数把归一化相似
+         * ≥ 0.8 的行聚簇取众数（并列取先出现者），时序按簇内首现位置；精确重复
+         * 场景行为与旧函数一致。
+         */
+        private fun voteScreenBatches(batches: List<List<String>>): List<String> {
+            class Cluster(val counts: LinkedHashMap<String, Int>, val first: Int, val rep: String)
+            val seq = mutableListOf<String>()
+            for (b in batches) for (line in b) {
+                val t = line.trim()
+                if (t.isNotEmpty()) seq.add(t)
+            }
+            val clusters = mutableListOf<Cluster>()
+            seq.forEachIndexed { idx, t ->
+                val hit = clusters.firstOrNull { similarity(t, it.rep) >= 0.8f }
+                if (hit == null) {
+                    clusters.add(Cluster(linkedMapOf(t to 1), idx, t))
+                } else {
+                    hit.counts[t] = (hit.counts[t] ?: 0) + 1
+                }
+            }
+            return clusters.sortedBy { it.first }.map { c ->
+                c.counts.entries.maxByOrNull { it.value }?.key ?: c.rep
+            }
+        }
+
         /**
          * T01138 反馈：群聊读屏噪声过滤（纯文本规则，与 m1-core preprocess.strip_group_noise 同构）。
          * 1) UI 悬浮条「N条新消息」——屏幕右侧，会被侧别判定误标为「我：」；
@@ -878,7 +969,8 @@ class EmoReplyReaderService : AccessibilityService() {
 
         /**
          * T01145：多屏读屏——当前屏 + 上滑 [extraScreens] 次（每次截图 OCR），
-         * 最后滑回原位，批次按时间先后合并去重（与 m1-core merge_screen_batches 同构）。
+         * 最后滑回原位，批次按时间先后投票合并（T05728 起用 voteScreenBatches，
+         * 与 m1-core vote_screen_batches 同构；精确重复场景与旧去重行为一致）。
          * 滑动用 AccessibilityService.dispatchGesture（仅用户点击读屏时执行，
          * 一次点击授权整个读屏序列）。调用方须在后台线程调用。
          * T01291 用户反馈简化：聊天默认停在最下方（最新消息），无需再向下翻找，
@@ -903,7 +995,7 @@ class EmoReplyReaderService : AccessibilityService() {
                 swipeDown()
                 Thread.sleep(SWIPE_SETTLE_MS)
             }
-            val merged = mergeScreenBatches(batches)
+            val merged = voteScreenBatches(batches)
             Log.i(TAG, "ocr: multiscreen batches=${batches.size} merged=${merged.size}")
             return merged.takeLast(maxCount)
         }
@@ -951,19 +1043,6 @@ class EmoReplyReaderService : AccessibilityService() {
                 Log.w(TAG, "dispatch 手势 3s 内未完成回调")
             }
             return ok
-        }
-
-        /** 批次合并去重：顺序拼接 + 整行去重（保留首次出现），与 py merge_screen_batches 同构。 */
-        private fun mergeScreenBatches(batches: List<List<String>>): List<String> {
-            val out = mutableListOf<String>()
-            val seen = mutableSetOf<String>()
-            for (batch in batches) {
-                for (line in batch) {
-                    val t = line.trim()
-                    if (t.isNotEmpty() && seen.add(t)) out.add(t)
-                }
-            }
-            return out
         }
 
         /** 换行拆行合并：行间空白 < 行高 × 比例 → 同一条消息的折行（T01134）。

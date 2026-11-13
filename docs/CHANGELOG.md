@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-11-13 — 节点树×OCR 交叉验证判侧 + 跨屏变体投票（T05728，T05725 阶段 1）
+
+- 背景：读屏此前是「节点树为空才走 OCR」的二选一，两个证据源从未交叉（见 [`评估报告`](聊天界面OCR优化与大模型引入评估报告.md) §5.1）。
+- **节点树证据覆盖 OCR 判侧（P0-1）**：`m1-core/emoreply/preprocess.fuse_node_sides`（事实源）+ `EmoReplyReaderService.fuseNodeSides`（kt 同构，接入 `captureViaScreenshot`）。OCR 行中心落在节点树 TextView 框内且文本相似（LCS ≥0.6，OCR 错一字可容错）时，节点框左缘位置判定视为硬证据覆盖 OCR 侧别；无匹配行保持原判。微信节点树被保护 → 证据源为空 → 静默跳过；kt 侧额外保护 byColor 高置信颜色结论不被位置证据覆盖（T02222 判定层级）。`collectNodeLines` 与 `captureVisibleMessages` 同口径只读 text/bounds，无节点动作。
+- **跨屏变体投票（P0-2）**：`preprocess.vote_screen_batches` + `voteScreenBatches` 同构。旧 `mergeScreenBatches` 按整行精确去重——滚动重叠区同一行被 OCR 读出两个变体（错字/空格漂移）时双行并存污染上下文；现把归一化相似 ≥0.8 的行聚簇取众数（并列取先出现者），时序按首现位置。`captureMultiScreen` 改接投票合并；kt 旧函数删除（py 版保留为 T01145 契约回归锚点，精确重复场景行为一致）。
+- 验证：m1-core 新增 `test_t05728_fusion_vote.py` 12 例（硬证据覆盖/几何不匹配跳过/文本不相似不误配/左右缘比例判侧/OCR 错字容错/投票并簇取众数/时序首现/并列取先）；全量 pytest **524 passed** 零回归；Android `assembleDebug --offline` 编译通过（JDK17 + Gradle 8.9），APK 已产出。
+- 已知边界：真机（SM-G9980 / Android 15 / 微信）回测未执行（设备离线）——融合在微信主场景为空路径，预期收益面是钉钉/QQ/短信等节点树可读应用；T05727 合成基线指标不变（融合属捕获层，回放器不触发），侧别收益待真机以 `lastSideStats` 与基准集量化。
+
 ## 2026-11-13 — 读屏 OCR 基准数据集与评测工具（T05727，T05725 阶段 0）
 
 - 背景：项目此前无 OCR 基线指标，bad case 全靠用户反馈发现，改动的「提升」无法证伪（见 [`评估报告`](聊天界面OCR优化与大模型引入评估报告.md) §2.3）。本单补齐评测基建，真机采集部分待设备接入后补跑。

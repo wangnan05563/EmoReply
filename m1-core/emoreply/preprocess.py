@@ -649,11 +649,14 @@ def filter_non_text_noise(lines: List[OcrLine], *, symbol_ratio: float = 0.34) -
 
 
 def merge_screen_batches(batches: List[List[str]]) -> List[str]:
-    """T01145：多屏读屏结果合并（事实源，与 kt mergeScreenBatches 同构）。
+    """T01145：多屏读屏结果合并（事实源）。
 
     读屏扩展为「当前屏 + 上滑 N 屏」后，各批次的 OCR 行按时间先后顺序拼接，
     相邻批次间的重叠行（滚动重叠区/同屏残留）按整行文本去重——保留首次出现
     位置，时序不变。输入行可含侧别标注前缀（「我：/对方：」），按整行去重。
+
+    T05728：kt 侧多屏合并已改用 vote_screen_batches 的同构实现（变体投票是其
+    超集——精确重复场景行为一致）；本函数保留作为 T01145 契约的回归锚点。
     """
     out: List[str] = []
     seen = set()
@@ -663,4 +666,98 @@ def merge_screen_batches(batches: List[List[str]]) -> List[str]:
             if t and t not in seen:
                 seen.add(t)
                 out.append(t)
+    return out
+
+
+# ===== T05728：节点树×OCR 交叉验证 + 跨屏变体投票（P0 结构优化，事实源）=====
+
+
+def _norm_text(s: str) -> str:
+    return "".join((s or "").split())
+
+
+def _similarity(a: str, b: str) -> float:
+    """LCS 比率 = 2·LCS/(|a|+|b|)（与 sanitize.similarity、kt Sanitize.similarity 同算法）。"""
+    a, b = _norm_text(a), _norm_text(b)
+    if not a or not b:
+        return 0.0
+    # 滚动数组 LCS：读屏行 ≤ 数十字
+    prev = [0] * (len(b) + 1)
+    for ca in a:
+        cur = [0]
+        for j, cb in enumerate(b, 1):
+            cur.append(prev[j - 1] + 1 if ca == cb else max(prev[j], cur[j - 1]))
+        prev = cur
+    return 2 * prev[len(b)] / (len(a) + len(b))
+
+
+def fuse_node_sides(ocr_lines: List[OcrLine],
+                    sides: List[str],
+                    node_lines: List[tuple],
+                    width: int,
+                    *,
+                    min_text_ratio: float = 0.6,
+                    self_side_left_ratio: float = None) -> List[str]:
+    """节点树证据覆盖 OCR 判侧（T05728 P0-1，与 kt fuseNodeSides 同构）。
+
+    背景：OCR 路径的行框来自像素，左缘随字号/折行漂移；节点树 TextView 的
+    bounds 是控件级几何（真机实测对位置判定更稳）。两者同屏可得时（部分应用
+    节点树可读），对**文本相似且行中心落在节点框内**的行，节点位置判定视为
+    硬证据覆盖 OCR 结论；无匹配行保持原判——宁可沿用颜色/位置，不凭空改侧。
+
+    - [ocr_lines]/[sides]：OCR 行与并行判侧结果（「我」/「对方」）；
+    - [node_lines]：节点树行 (left, right, top, bottom, text)；
+    - 节点侧别 = 节点框左缘 ≥ 屏宽×[self_side_left_ratio]（缺省用 bubble_side
+      的 SELF_SIDE_LEFT_RATIO，与 kt isMine 同源）。
+    """
+    from .bubble_side import SELF_SIDE_LEFT_RATIO
+
+    ratio = self_side_left_ratio if self_side_left_ratio is not None else SELF_SIDE_LEFT_RATIO
+    fused = list(sides)
+    for i, ln in enumerate(ocr_lines):
+        cx, cy = (ln.left + ln.right) // 2, (ln.top + ln.bottom) // 2
+        for (nl, nr, nt, nb, text) in node_lines:
+            if not (nl <= cx <= nr and nt <= cy <= nb):
+                continue  # 行中心不在节点框内：不是同一条消息
+            if _similarity(ln.text, text) < min_text_ratio:
+                continue
+            fused[i] = "我" if nl >= width * ratio else "对方"
+            break  # 首个命中即采纳（同一行至多属于一个气泡节点）
+    return fused
+
+
+def vote_screen_batches(batches: List[List[str]], *, agree: float = 0.8) -> List[str]:
+    """跨屏重复行的变体投票合并（T05728 P0-2，与 kt voteScreenBatches 同构）。
+
+    现行 `merge_screen_batches` 按整行**精确**去重——滚动重叠区里同一行被 OCR
+    读出两个变体（错字/空格漂移）时两行都保留，重复上下文污染生成。本函数把
+    归一化相似 ≥ [agree] 的行聚成一簇取众数文本（并列取先出现者），时序按簇内
+    首次出现位置。保守约束：仅用于多屏采集的批间合并，单批行为与精确去重一致
+    （同文多行仍各占一簇→仅去重首个之后者）；不改动 T01145 既有契约。
+    """
+    # 展平保序：[(原文, 首现序号)]；簇 = [(变体计数, 首现序号, 代表文本)]
+    seq: List[str] = []
+    for batch in batches:
+        for line in batch:
+            t = (line or "").strip()
+            if t:
+                seq.append(t)
+    clusters: List[dict] = []  # {counts: Counter, first: int}
+    for idx, t in enumerate(seq):
+        norm = _norm_text(t)
+        hit = None
+        for c in clusters:
+            rep = _norm_text(c["rep"])
+            if _similarity(norm, rep) >= agree:
+                hit = c
+                break
+        if hit is None:
+            clusters.append({"counts": {t: 1}, "first": idx, "rep": t})
+        else:
+            hit["counts"][t] = hit["counts"].get(t, 0) + 1
+    out: List[str] = []
+    for c in sorted(clusters, key=lambda c: c["first"]):
+        # 众数；并列取先出现的变体（dict 保序，首个最大计数即最先达成该计数）
+        best = max(c["counts"], key=c["counts"].get)
+        out.append(best)
     return out
