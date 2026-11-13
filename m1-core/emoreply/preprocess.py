@@ -209,7 +209,11 @@ WRAP_MERGE_GAP_RATIO_CROSS_BLOCK = 0.6
 
 @dataclass
 class OcrLine:
-    """OCR 单行文本及其屏幕坐标（px）；block 为 ML Kit 视觉块序号。"""
+    """OCR 单行文本及其屏幕坐标（px）；block 为 ML Kit 视觉块序号。
+
+    T05729：confidence 为引擎行级置信度（0~1；节点树路径无此信号，默认 1.0）——
+    先贯通数据链路供评测与分级使用，判定函数见 [is_low_confidence]。
+    """
 
     text: str
     left: int
@@ -217,10 +221,24 @@ class OcrLine:
     top: int
     bottom: int
     block: int = 0
+    confidence: float = 1.0
 
     @property
     def height(self) -> int:
         return self.bottom - self.top
+
+
+# ===== T05729 P1-1：置信度分级 =====
+
+# 行级置信度低于此值视为「疑似」——疑似行不静默删除（宁可带疑进上下文），
+# 由调用方决定降权/标注；阈值 0.6 与 T05725 评估报告 §3.1 口径一致。
+LOW_CONFIDENCE_THRESHOLD = 0.6
+
+
+def is_low_confidence(confidence: Optional[float],
+                      threshold: float = LOW_CONFIDENCE_THRESHOLD) -> bool:
+    """行置信度是否达到「疑似」级（缺失按不可判处理，返回 False 不误伤）。"""
+    return confidence is not None and confidence < threshold
 
 
 def _join_wrapped(prev: str, nxt: str) -> str:
@@ -691,6 +709,56 @@ def _similarity(a: str, b: str) -> float:
     return 2 * prev[len(b)] / (len(a) + len(b))
 
 
+# ===== T05729 P1-3：行框几何推断左右列分界（替代固定 0.3125 比例）=====
+
+
+def infer_side_boundary(lefts: List[int],
+                        width: int,
+                        *,
+                        gap_ratio: float = 0.08,
+                        min_cluster: int = 2,
+                        min_right_offset: float = 0.2) -> Optional[int]:
+    """从行框左缘分布推断聊天左右列分界（px）；双列分布不显著返回 None。
+
+    背景（T05725 报告 §3.1）：`SELF_SIDE_LEFT_RATIO`（0.3125）隐含 1440 宽假设，
+    机型/字号漂移下误判（T01143/T01150 实测）。聊天气泡天然左右两列对齐——
+    行框左缘分布若呈「显著双列」（恰好 2 簇、每簇 ≥ [min_cluster] 行、右簇
+    左缘 ≥ 屏宽×[min_right_offset]），簇间隙中点即分界；其余情形（单列/
+    碎簇/噪声行干扰）一律回退 None，调用方沿用固定比例——动态分界只在证据
+    充分时启用，绝不比 T01143 实测口径更激进。
+    """
+    vals = sorted(v for v in lefts if 0 <= v <= width)
+    if len(vals) < min_cluster * 2:
+        return None
+    gap = width * gap_ratio
+    clusters: List[List[int]] = [[vals[0]]]
+    for v in vals[1:]:
+        if v - clusters[-1][-1] > gap:
+            clusters.append([])
+        clusters[-1].append(v)
+    if len(clusters) != 2:
+        return None
+    lo, hi = clusters
+    if len(lo) < min_cluster or len(hi) < min_cluster:
+        return None
+    right_start = hi[0]
+    if right_start < width * min_right_offset:
+        return None
+    # 分界取簇间隙中点：右簇最小左缘与左簇最大左缘的中间
+    return (lo[-1] + right_start) // 2
+
+
+def mine_at(left: int, boundary: Optional[int], width: int,
+            *, default_ratio: Optional[float] = None) -> bool:
+    """行框左缘判侧：动态分界存在则用之，否则回退固定比例（kt mineAt 同构）。"""
+    if boundary is not None:
+        return left >= boundary
+    from .bubble_side import SELF_SIDE_LEFT_RATIO
+
+    ratio = default_ratio if default_ratio is not None else SELF_SIDE_LEFT_RATIO
+    return left >= width * ratio
+
+
 def fuse_node_sides(ocr_lines: List[OcrLine],
                     sides: List[str],
                     node_lines: List[tuple],
@@ -707,12 +775,15 @@ def fuse_node_sides(ocr_lines: List[OcrLine],
 
     - [ocr_lines]/[sides]：OCR 行与并行判侧结果（「我」/「对方」）；
     - [node_lines]：节点树行 (left, right, top, bottom, text)；
-    - 节点侧别 = 节点框左缘 ≥ 屏宽×[self_side_left_ratio]（缺省用 bubble_side
-      的 SELF_SIDE_LEFT_RATIO，与 kt isMine 同源）。
+    - 节点侧别 = 节点框左缘判侧：T05729 起先按节点框左缘分布推断动态分界
+      （[infer_side_boundary]，双列显著才启用），否则回退
+      [self_side_left_ratio]（缺省 bubble_side.SELF_SIDE_LEFT_RATIO，与 kt
+      isMine/mineAt 同源）。
     """
     from .bubble_side import SELF_SIDE_LEFT_RATIO
 
     ratio = self_side_left_ratio if self_side_left_ratio is not None else SELF_SIDE_LEFT_RATIO
+    boundary = infer_side_boundary([nl[0] for nl in node_lines], width)
     fused = list(sides)
     for i, ln in enumerate(ocr_lines):
         cx, cy = (ln.left + ln.right) // 2, (ln.top + ln.bottom) // 2
@@ -721,7 +792,7 @@ def fuse_node_sides(ocr_lines: List[OcrLine],
                 continue  # 行中心不在节点框内：不是同一条消息
             if _similarity(ln.text, text) < min_text_ratio:
                 continue
-            fused[i] = "我" if nl >= width * ratio else "对方"
+            fused[i] = "我" if mine_at(nl, boundary, width, default_ratio=ratio) else "对方"
             break  # 首个命中即采纳（同一行至多属于一个气泡节点）
     return fused
 

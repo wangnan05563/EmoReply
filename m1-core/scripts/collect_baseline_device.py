@@ -31,10 +31,12 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-# EmoReplyReaderService 的行级诊断日志：ocr: line t=.. b=.. l=.. r=.. "文本"
+# EmoReplyReaderService 的行级诊断日志：ocr: line t=.. b=.. l=.. r=.. "文本" [c=置信度]
+# c= 为 T05729 追加（0~1）；旧版 APK 无该字段 → 可选组，缺省 None
 LINE_RE = re.compile(
     r'(?P<ts>\d{2}-\d{2} (?P<clock>[\d:.]+)).*EmoReplyReader.*ocr: line '
-    r't=(?P<t>-?\d+) b=(?P<b>-?\d+) l=(?P<l>-?\d+) r=(?P<r>-?\d+) "(?P<txt>.*)"')
+    r't=(?P<t>-?\d+) b=(?P<b>-?\d+) l=(?P<l>-?\d+) r=(?P<r>-?\d+) "(?P<txt>.*)"'
+    r'(?: c=(?P<c>[\d.]+))?')
 START_RE = re.compile(r'(?P<ts>\d{2}-\d{2} (?P<clock>[\d:.]+)).*EmoReplyReader.*ocr: start')
 # IME 侧读屏路径标记（T01124）：via = 节点树 / 截图OCR
 VIA_RE = re.compile(r'(?P<ts>\d{2}-\d{2} (?P<clock>[\d:.]+)).*EmoReplyIme.*via = (?P<via>\S+)')
@@ -62,6 +64,7 @@ def parse(log: str):
             cur["lines"].append({
                 "text": m["txt"], "left": int(m["l"]), "right": int(m["r"]),
                 "top": int(m["t"]), "bottom": int(m["b"]),
+                **({"confidence": float(m["c"])} if m["c"] else {}),
             })
             continue
         m = VIA_RE.search(ln)

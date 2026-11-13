@@ -211,16 +211,18 @@ class EmoReplyReaderService : AccessibilityService() {
                     isMessageText(v) && !(v.length <= 12 && (freq[v] ?: 0) >= 3)
                 }
                 .sortedBy { it.top }
-                // 侧别前缀（与 OCR 路径 T01129 同构）：节点路径此前输出裸文本，生成层分不清
-                // 「谁说的」，实测把自己发言当成对方发言、回复方向反了。
-                .map {
-                    val v = it.text.trim()
-                    val prefix = when {
-                        isTimeMark(v, it.cx, sw) -> TIME_MARK_PREFIX
-                        isMine(it.left, sw) -> SPEAKER_ME_PREFIX
-                        else -> SPEAKER_OTHER_PREFIX
+                // T05729 P1-3：侧别分界由节点框左缘分布动态推断（双列显著才启用）
+                .let { seq ->
+                    val boundary = sideBoundaryPx(hits.map { it.left }, sw)
+                    seq.map {
+                        val v = it.text.trim()
+                        val prefix = when {
+                            isTimeMark(v, it.cx, sw) -> TIME_MARK_PREFIX
+                            mineAt(it.left, boundary, sw) -> SPEAKER_ME_PREFIX
+                            else -> SPEAKER_OTHER_PREFIX
+                        }
+                        prefix + v
                     }
-                    prefix + v
                 }
                 .toList()
                 .takeLast(maxCount)
@@ -599,6 +601,38 @@ class EmoReplyReaderService : AccessibilityService() {
         private fun isMine(left: Int, screenWidth: Int): Boolean =
             left >= screenWidth * SELF_SIDE_LEFT_RATIO
 
+        // ===== T05729 P1-3：行框几何推断左右列分界（与 m1-core infer_side_boundary/mine_at 同构）=====
+
+        /**
+         * 从行框左缘分布推断聊天左右列分界（px）；双列分布不显著返回 null。
+         *
+         * 背景：[isMine] 的固定比例 0.3125 隐含 1440 宽假设，机型/字号漂移下误判
+         * （T01143/T01150）。聊天气泡天然左右两列对齐——左缘分布呈「显著双列」
+         * （恰好 2 簇、每簇 ≥2 行、右簇左缘 ≥ 屏宽×0.2）时簇间隙中点即分界；
+         * 其余情形一律回退 null，调用方沿用固定比例——动态分界只在证据充分时
+         * 启用，绝不比 T01143 实测口径更激进。
+         */
+        private fun sideBoundaryPx(lefts: List<Int>, screenWidth: Int): Int? {
+            val vals = lefts.filter { it in 0..screenWidth }.sorted()
+            if (vals.size < 4) return null
+            val gap = screenWidth * 0.08f
+            val clusters = mutableListOf(mutableListOf(vals[0]))
+            for (v in vals.drop(1)) {
+                if (v - clusters.last().last() > gap) clusters.add(mutableListOf())
+                clusters.last().add(v)
+            }
+            if (clusters.size != 2) return null
+            val (lo, hi) = clusters
+            if (lo.size < 2 || hi.size < 2) return null
+            val rightStart = hi.first()
+            if (rightStart < screenWidth * 0.2f) return null
+            return (lo.last() + rightStart) / 2
+        }
+
+        /** 左缘判侧：动态分界存在则用之，否则回退固定比例（py mine_at 同构）。 */
+        private fun mineAt(left: Int, boundary: Int?, screenWidth: Int): Boolean =
+            boundary?.let { left >= it } ?: isMine(left, screenWidth)
+
         /** 微信包名：气泡颜色判侧的适用门槛（其他平台气泡色各异，只走位置判定）。 */
         private const val WECHAT_PKG = "com.tencent.mm"
 
@@ -675,9 +709,13 @@ class EmoReplyReaderService : AccessibilityService() {
             var top: Int,
             var bottom: Int,
             val block: Int = 0,
+            /** T05729 P1-1：ML Kit 行级置信度（0~1）；节点树路径无此信号默认 1.0。 */
+            val confidence: Float = 1f,
         ) {
             val cx get() = (left + right) / 2
             val height get() = bottom - top
+            /** 与 py is_low_confidence 同构：低于 0.6 视为「疑似」（不静默删除）。 */
+            val lowConfidence get() = confidence < 0.6f
         }
 
         /**
@@ -723,9 +761,12 @@ class EmoReplyReaderService : AccessibilityService() {
             )
             // T01343：侧别比例判定的屏幕宽度基准（一次计算，序内复用）
             val sw = screenWidthPx()
-            // 诊断：行级明细（真机核对侧别/合并阈值用）
+            // 诊断：行级明细（真机核对侧别/合并阈值用）；c= 为 T05729 行级置信度
+            // （replay_t02305 等回放脚本的 txt 捕获止于引号，追加字段不破坏解析）
+            var lowConf = 0
             merged.take(15).forEach {
-                Log.i(TAG, "ocr: line t=${it.top} b=${it.bottom} l=${it.left} r=${it.right} \"${it.text.take(24)}\"")
+                if (it.lowConfidence) lowConf++
+                Log.i(TAG, "ocr: line t=${it.top} b=${it.bottom} l=${it.left} r=${it.right} \"${it.text.take(24)}\" c=${it.confidence}")
             }
             // T01138 反馈：群聊噪声过滤（判侧前执行）——UI 悬浮条「N条新消息」
             // 被右侧坐标误判为「我：」、表情图标误读「(田+0)」、发送者昵称行被当独立消息
@@ -767,7 +808,7 @@ class EmoReplyReaderService : AccessibilityService() {
                 .toList()
                 .takeLast(maxCount)
             cropped.recycle()
-            Log.i(TAG, "ocr: raw=${raw.size} merged=${merged.size} result=${result.size} cost=${System.currentTimeMillis() - t0}ms")
+            Log.i(TAG, "ocr: raw=${raw.size} merged=${merged.size} result=${result.size} lowconf=$lowConf cost=${System.currentTimeMillis() - t0}ms")
             return result
         }
 
@@ -789,6 +830,8 @@ class EmoReplyReaderService : AccessibilityService() {
             val t0 = System.currentTimeMillis()
             // 仅微信：其他平台气泡色各异（钉钉蓝、QQ 白/绿混合），颜色规则反而拉低准确率
             val colorAvailable = isWechatWindow()
+            // T05729 P1-3：位置回退的分界由行框左缘分布动态推断（双列显著才启用）
+            val boundary = sideBoundaryPx(lines.map { it.left }, sw)
             val sides = HashMap<OcrLineInfo, BubbleSideJudge.SideCall>(lines.size)
             var budgetLeft = SIDE_TOTAL_BUDGET_MS
             var slowest = 0L
@@ -799,7 +842,7 @@ class EmoReplyReaderService : AccessibilityService() {
                     box = BubbleSideJudge.ProbeBox(l.left, l.right, l.top, l.bottom),
                     width = bmp.width,
                     height = bmp.height,
-                    positionSide = if (isMine(l.left, sw)) BubbleSideJudge.SIDE_MINE
+                    positionSide = if (mineAt(l.left, boundary, sw)) BubbleSideJudge.SIDE_MINE
                     else BubbleSideJudge.SIDE_OTHER,
                     colorAvailable = colorAvailable && budgetLeft > 0,
                 )
@@ -882,7 +925,9 @@ class EmoReplyReaderService : AccessibilityService() {
                     n.left <= cx && cx <= n.right && n.top <= cy && cy <= n.bottom &&
                         similarity(l.text, n.text) >= 0.6f
                 } ?: continue
-                val nodeSide = if (isMine(hit.left, sw)) BubbleSideJudge.SIDE_MINE
+                // T05729 P1-3：节点侧别分界由节点框左缘分布动态推断（与 py 同构）
+                val nodeBoundary = sideBoundaryPx(nodeLines.map { it.left }, sw)
+                val nodeSide = if (mineAt(hit.left, nodeBoundary, sw)) BubbleSideJudge.SIDE_MINE
                 else BubbleSideJudge.SIDE_OTHER
                 if (nodeSide != call.side) {
                     fused[l] = BubbleSideJudge.SideCall(nodeSide, false, 0, 0)
@@ -1205,7 +1250,12 @@ class EmoReplyReaderService : AccessibilityService() {
                             val bb = line.boundingBox ?: return@forEach
                             // ML Kit 的 line 可能覆盖气泡内多个视觉折行（text 含 \n），直接拼接
                             val t = line.text.replace("\n", "").trim()
-                            if (t.isNotBlank()) out.add(OcrLineInfo(t, bb.left, bb.right, bb.top, bb.bottom, bi))
+                            if (t.isNotBlank()) {
+                                // T05729 P1-1：行级置信度贯通（此前丢弃未用）——诊断日志与
+                                // 低置信分级的数据源；分级判定口径见 py is_low_confidence
+                                out.add(OcrLineInfo(t, bb.left, bb.right, bb.top, bb.bottom, bi,
+                                    line.confidence))
+                            }
                         }
                     }
                 }
