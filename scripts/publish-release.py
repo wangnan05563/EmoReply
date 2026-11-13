@@ -424,7 +424,11 @@ def _print_dry_run(asset, body, release_name, display):
 
 
 def _create_release(body, release_name):
-    """创建或复用 Release，返回带 upload_url 的 Release 对象（失败即退出）。"""
+    """创建或复用 Release，返回带 upload_url 的 Release 对象（失败即退出）。
+
+    幂等且可刷新：Release 不存在则创建；已存在（409/422）则拉取现有 Release
+    并用本次说明（body）/名称刷新，避免首次用占位符说明后无法更新。
+    """
     st, resp = api(f"/repos/{REPO}/releases", {
         "tag_name": TAG,
         "target_commitish": TARGET,
@@ -433,17 +437,26 @@ def _create_release(body, release_name):
         "draft": DRAFT,
         "prerelease": PRERELEASE,
     })
-    if st not in (200, 201) and st not in (409, 422):
-        print("create release 失败:", st, json.dumps(resp, ensure_ascii=False)[:800])
-        sys.exit(1)
-
+    # 新创建成功
     if isinstance(resp, dict) and "upload_url" in resp:
         return resp
-    release = get_existing_release_by_tag(TAG)
-    if not release:
-        print("无法获取已有 Release，退出。", json.dumps(resp, ensure_ascii=False)[:400])
-        sys.exit(1)
-    return release
+    # 已存在：拉取现有 Release 并刷新 body/name（占位符/更新说明场景）
+    if st in (409, 422) or (isinstance(resp, dict) and "id" in resp):
+        release = get_existing_release_by_tag(TAG)
+        if release and "id" in release:
+            rid = release["id"]
+            pst, pres = api(f"/repos/{REPO}/releases/{rid}",
+                            {"body": body, "name": release_name}, method="PATCH")
+            if isinstance(pres, dict) and "upload_url" in pres:
+                print("release 已存在，已刷新说明 body（id=%s, status=%s）" % (rid, pst))
+                return pres
+            if isinstance(pres, dict) and "id" in pres:
+                print("release 已存在，已刷新说明 body（id=%s, status=%s）" % (rid, pst))
+                return pres
+            print("release 已存在，但刷新说明失败（status=%s），沿用现有 release。" % pst)
+            return release
+    print("create release 失败:", st, json.dumps(resp, ensure_ascii=False)[:800])
+    sys.exit(1)
 
 
 def _upload_asset(release, display, asset):
