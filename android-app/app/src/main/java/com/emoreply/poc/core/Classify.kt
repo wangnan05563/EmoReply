@@ -3,7 +3,7 @@ package com.emoreply.poc.core
 /**
  * 意图与情感理解（REQ-006 / FR-2.1 / FR-2.2 / FR-2.4）。
  *
- * 与 m1-poc `emoreply/classify.py` 同构的规则版基线：只读通知场景下先用
+ * 与 m1-core `emoreply/classify.py` 同构的规则版基线：只读通知场景下先用
  * 可解释硬规则压「通知类不回复」误判（FR-2.4），意图/情绪供提示词增强。
  */
 object Classify {

@@ -2,7 +2,7 @@ import Foundation
 import CryptoKit
 
 /// RAG 人设知识库（SRS 决策③ 2026-09-26 拍板：生成层补 RAG）。
-/// 与 m1-poc rag.py / Android KnowledgeBase.kt / desktop kb.js 同构。
+/// 与 m1-core rag.py / Android KnowledgeBase.kt / desktop kb.js 同构。
 ///
 /// 条目三类：
 /// - persona：用户个人事实与偏好（如「我养了两只猫」）
@@ -101,7 +101,7 @@ public final class KnowledgeBase {
 }
 
 /// 词面检索（默认）：CJK bigram 重叠率 + 同联系人加权 0.15（次级信号）。
-/// 无重叠且非当前联系人 → 不返回（防噪声注入）。与 m1-poc LexicalRetriever 同构。
+/// 无重叠且非当前联系人 → 不返回（防噪声注入）。与 m1-core LexicalRetriever 同构。
 public enum LexicalRetriever {
 
     public static let contactBoost = 0.15

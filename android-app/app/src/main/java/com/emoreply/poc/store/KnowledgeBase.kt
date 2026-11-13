@@ -10,7 +10,7 @@ import java.security.SecureRandom
 /**
  * RAG 知识库（SRS 决策③ 2026-09-26 拍板：生成层补 RAG）。
  *
- * 与 m1-poc `emoreply/rag.py` 同构：三类条目（persona 个人事实 / relation 联系人话术 /
+ * 与 m1-core `emoreply/rag.py` 同构：三类条目（persona 个人事实 / relation 联系人话术 /
  * platform 平台礼仪），AES-256-GCM 加密单 JSON 文件落库（复用 [Crypto]）。
  * 检索为 [LexicalRetriever]（bigram 词面版，零依赖可离线）；语义版（/embeddings）留待云侧。
  */
@@ -64,7 +64,7 @@ class KnowledgeBase private constructor(context: Context, passphrase: String?) {
         file.writeText(Crypto.encrypt(key, JSONObject().put("entries", arr).toString()))
     }
 
-    /** relation 类可绑联系人；其余强制忽略 contact（与 m1-poc 一致）。 */
+    /** relation 类可绑联系人；其余强制忽略 contact（与 m1-core 一致）。 */
     @Synchronized
     fun add(category: String, text: String, contact: String? = null): String {
         require(category in CATEGORIES) { "非法知识分类：$category" }
@@ -127,7 +127,7 @@ class KnowledgeBase private constructor(context: Context, passphrase: String?) {
 
 /**
  * 词面检索（默认）：CJK bigram 重叠率 + 同联系人加权 0.15（次级信号）。
- * 无重叠且非当前联系人 → 不返回（防噪声注入）。与 m1-poc LexicalRetriever 同构。
+ * 无重叠且非当前联系人 → 不返回（防噪声注入）。与 m1-core LexicalRetriever 同构。
  */
 object LexicalRetriever {
 

@@ -1,7 +1,7 @@
 import Foundation
 
 /// 捕获层预处理：去重 → 指向判定 → 空载荷兜底（FR-1.3 / 1.4 / 1.5）。
-/// 与 m1-poc preprocess.py 同构；全部纯函数。
+/// 与 m1-core preprocess.py 同构；全部纯函数。
 public enum Preprocess {
 
     static let dedupeWindowSeconds = 2.0

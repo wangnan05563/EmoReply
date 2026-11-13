@@ -1,6 +1,6 @@
 # EmoReply iOS 端（T01053 · iOS 保留在首期范围）
 
-与 m1-poc / android-app / desktop-app 四端同构的核心链路 Swift 移植 + iOS 呈现 App 壳。
+与 m1-core / android-app / desktop-app 四端同构的核心链路 Swift 移植 + iOS 呈现 App 壳。
 **本目录交付源码与测试；构建需 macOS/Xcode（开发机无此环境，未编译验证）。**
 
 ## 结构
@@ -8,7 +8,7 @@
 ```
 ios-app/
 ├── Package.swift                  # Swift Package（核心库 + XCTest）
-├── Sources/EmoReplyCore/          # 平台无关核心（与 m1-poc 一一对应）
+├── Sources/EmoReplyCore/          # 平台无关核心（与 m1-core 一一对应）
 │   ├── Models.swift               # 通知/判定/候选（FR-1.2 字段对齐）
 │   ├── Preprocess.swift           # 去重、指向判定、空载荷兜底（FR-1.3/1.4/1.5）
 │   ├── Compose.swift              # 伪历史 + token 截断 + 提示词（C16 / FR-3.1 / REQ-006 注入）
@@ -19,7 +19,7 @@ ios-app/
 │   ├── Persona.swift              # FR-5.1/5.2 加密存储（CryptoKit AES-GCM 单文件）
 │   ├── Knowledge.swift            # RAG 知识库（决策③）：三类条目加密存储 + LexicalRetriever 词面检索
 │   └── CloudLlmGenerator.swift    # FR-3.1 云端生成 + StubGenerator 兜底（C24）
-├── Tests/EmoReplyCoreTests/       # XCTest（移植 m1-poc 66 项中的关键行为）
+├── Tests/EmoReplyCoreTests/       # XCTest（移植 m1-core 66 项中的关键行为）
 └── App/                           # SwiftUI 壳：粘贴 → 生成 → 复制（不自动发送）
     ├── EmoReplyApp.swift
     └── ContentView.swift
@@ -36,11 +36,11 @@ ios-app/
 
 ## 设计要点
 
-- 密钥 = SHA256(设备标识 ‖ 可选口令)，与 m1-poc persona.py / android Crypto.kt 同型；
+- 密钥 = SHA256(设备标识 ‖ 可选口令)，与 m1-core persona.py / android Crypto.kt 同型；
   POC 用 UserDefaults 存配置，生产建议 Keychain + NSFileProtectionComplete。
 - 提示词模板、风格枚举、「内容|理由」格式、降级文案与其余三端逐字同构。
 - 分类（Classify）与禁语过滤已随核心移植；通知捕获在 iOS 由手动粘贴替代（系统限制）。
-- **RAG 知识库（决策③）**：与 m1-poc rag.py / Android KnowledgeBase.kt / desktop kb.js 同构——
+- **RAG 知识库（决策③）**：与 m1-core rag.py / Android KnowledgeBase.kt / desktop kb.js 同构——
   三类条目（persona 个人事实 / relation 关系话术 / platform 平台礼仪）AES-GCM 加密单文件存储，
   relation 强制绑联系人；LexicalRetriever 按 CJK bigram 重叠打分（同联系人加权 0.15 次级信号，
   无重叠且非当前联系人不返回），Pipeline 生成前检索 top3 注入「参考资料」约束行。

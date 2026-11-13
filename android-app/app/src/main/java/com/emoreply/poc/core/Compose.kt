@@ -21,7 +21,7 @@ private const val SYSTEM_TEMPLATE =
         "4) 即使上下文不完整或混乱，也基于已有信息给出最合适的回复——" +
         "严禁输出「请提供更多信息/聊天记录」之类请求澄清的元话语。"
 
-// ===== T01159：候选表情（默认开启，与 m1-poc compose.EMOJI_HINT 同构）=====
+// ===== T01159：候选表情（默认开启，与 m1-core compose.EMOJI_HINT 同构）=====
 // 只给「1-2 个、贴合语气、不堆砌」的软约束——硬编码插表情会破坏语义（C10），
 // 交给模型按语气使用；输出侧由 Sanitize.normalizeEmoji 兜底防堆砌。
 const val EMOJI_HINT = (
@@ -29,7 +29,7 @@ const val EMOJI_HINT = (
         "不得堆砌连续表情，也不得用表情替代必要文字。"
     )
 
-// ===== T01158 FR-7.3：语气强度（连续滑杆：理性 ↔ 活泼，与 m1-poc compose 同构）=====
+// ===== T01158 FR-7.3：语气强度（连续滑杆：理性 ↔ 活泼，与 m1-core compose 同构）=====
 // 4 档风格（FR-3.2）之上叠加连续强度：风格定「基本人设」，强度定「表达热度」。
 const val TONE_MIN = 0
 const val TONE_MAX = 100
@@ -49,7 +49,7 @@ fun toneHint(tone: Int): String {
     return TONE_BANDS.first { t < it.first }.second
 }
 
-// ===== T01349：多风格并行候选（单请求多语气，不增加 RTT；与 m1-poc compose 同构）=====
+// ===== T01349：多风格并行候选（单请求多语气，不增加 RTT；与 m1-core compose 同构）=====
 // 三档变体取 tone 五档带中三个互异描述区（35/58/80 分别命中「偏理性/中性自然/偏活泼」），
 // 约束模型单请求内跨语气分布，RTT 不变——IME 场景对延迟极敏感，禁止并发多请求。
 val MULTI_TONE_VARIANTS = listOf(35, 58, 80)
@@ -79,7 +79,7 @@ fun buildExcludeHint(exclude: List<String>): String {
     return "\n换一批：以下候选已给出过，必须换角度或换措辞，不得重复：$lines。"
 }
 
-// ===== T01244 FR-8.2：三维筛选（关系×场景×目的）约束注入（与 m1-poc compose 同构）=====
+// ===== T01244 FR-8.2：三维筛选（关系×场景×目的）约束注入（与 m1-core compose 同构）=====
 // 三维都是生成前约束，非空才注入；relation 交由调用方按 intent/emotion 分支去重。
 private val SCENARIO_HINTS = mapOf(
     "闲聊" to "对方在闲聊，回话要轻松自然，不必刻意推进",
@@ -212,7 +212,7 @@ private fun historyWindow(
  * 一次生成请求的全部可选上下文（默认值即 M1 行为）。
  *
  * S107 收敛：这些字段原本摊在 [buildPrompt] 的 19 个形参上，聚合成对象只为
- * 收拢形参个数；字段名、默认值、注入顺序一字未改——与 m1-poc compose.PromptContext
+ * 收拢形参个数；字段名、默认值、注入顺序一字未改——与 m1-core compose.PromptContext
  * 逐字段同名（lastTopic/favorites 为安卓端 FR-8.5/8.8 增量，py 侧无对应请求路径）。
  */
 data class PromptContext(
@@ -282,7 +282,7 @@ fun buildPrompt(
         truncated = dropped > 0,
     )
 }
-// ===== T01130：输入框文字美化（与 m1-poc compose.BEAUTIFY_SYSTEM 同构）=====
+// ===== T01130：输入框文字美化（与 m1-core compose.BEAUTIFY_SYSTEM 同构）=====
 const val BEAUTIFY_SYSTEM = (
     "你是文字润色助手。请对用户给出的文本做美化，严格遵守：\n"
     + "1) 保持核心语义不变，不得改变文本语言（中文美化中文，英文美化英文）；\n"

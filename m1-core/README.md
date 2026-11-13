@@ -12,7 +12,7 @@ M1 概念验证的完整形态是「Android 通知监听捕获 → 云端 LLM �
 ## 目录
 
 ```
-m1-poc/
+m1-core/
 ├── emoreply/
 │   ├── models.py       # 通知载荷 / 判定结果 / 候选（对齐 FR-1.2 字段）
 │   ├── preprocess.py   # 去重、噪声过滤、指向判定、空载荷兜底（FR-1.3/1.4/1.5）
@@ -26,7 +26,7 @@ m1-poc/
 ## 运行
 
 ```powershell
-cd m1-poc   # 相对仓库根目录
+cd m1-core   # 相对仓库根目录
 python -m pytest tests -v
 ```
 

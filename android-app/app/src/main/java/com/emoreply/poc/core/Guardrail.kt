@@ -25,7 +25,7 @@ private val INCOMING_RULES: List<Pair<String, Regex>> = listOf(
     "otp" to Regex(SENSITIVE + ".{0,8}" + REQUEST_VERB + "|" + REQUEST_VERB + ".{0,8}" + SENSITIVE),
     "money" to MONEY_ASK,
     "impersonation" to Regex("(账号?异常|安全验证|涉嫌违规|点击.{0,4}链接|我是你(的)?(领导|老板|同事))"),
-    // T01245 FR-8.3：威胁/恐吓类入站识别（与 m1-poc guardrail 同算法）。
+    // T01245 FR-8.3：威胁/恐吓类入站识别（与 m1-core guardrail 同算法）。
     // 「冻结」必须接账户/资金/钱才判威胁，「不会被冻结」这类正常安抚不误伤。
     "threat" to Regex(
         "(?:不(?:转|配合|照做).{0,6}(?:后果|就|别怪)|告(?:发|诉)" +

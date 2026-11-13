@@ -1,4 +1,4 @@
-"""T01348：关系感知 → 语气默认档位（m1-poc 事实源，Android 侧 core/Tone.kt 同构镜像）。
+"""T01348：关系感知 → 语气默认档位（m1-core 事实源，Android 侧 core/Tone.kt 同构镜像）。
 
 来源（T01345 竞品分析）：钉钉「AI 灵动回复」的高情商感知主要来自「先识别双方
 身份与关系，再决定语气分布」。本项目 PersonaStore.relation 与 UxSettings.relation

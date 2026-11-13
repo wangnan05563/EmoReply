@@ -1,7 +1,7 @@
 import Foundation
 
 /// 候选回复的输出清洗（C3 markdown / C25 HTML / FR-3.3 解释句解析）。
-/// 与 m1-poc sanitize.py / android Sanitize.kt 同构；只剥离格式符号、不改写文字。
+/// 与 m1-core sanitize.py / android Sanitize.kt 同构；只剥离格式符号、不改写文字。
 public enum Sanitize {
 
     public static func stripMarkdown(_ text: String) -> String {
@@ -77,7 +77,7 @@ public enum Sanitize {
 
     /// 把一条 LLM 输出拆成单候选行数组（只拆结构，不改写文字）。
     /// 多行逐行拆；单行含内联编号（「选项1：… 选项2：…」）按编号拆；其余原样单条。
-    /// 与 m1-poc `sanitize.expand_candidates` 同构。
+    /// 与 m1-core `sanitize.expand_candidates` 同构。
     public static func expandCandidates(_ raw: String?) -> [String] {
         let s = (raw ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         if s.isEmpty { return [] }

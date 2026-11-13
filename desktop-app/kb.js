@@ -1,4 +1,4 @@
-// RAG 人设知识库（SRS 决策③）——与 m1-poc rag.py / Android KnowledgeBase.kt 同构的 JS 移植。
+// RAG 人设知识库（SRS 决策③）——与 m1-core rag.py / Android KnowledgeBase.kt 同构的 JS 移植。
 //
 // 存储：AES-256-GCM 加密单文件 JSON（密钥 = SHA256(机器指纹 || 可选口令)，端侧绑定）；
 // 条目三类 persona / relation / platform；检索 bigram 词面重叠 + 同联系人加权 0.15。
@@ -16,7 +16,7 @@ const CATEGORIES = [CATEGORY_PERSONA, CATEGORY_RELATION, CATEGORY_PLATFORM];
 const IV_LEN = 12;
 const AUTH_TAG_LEN = 16;
 
-// ---- 加解密原语（与 m1-poc crypto.py 密文格式互通：`iv.ciphertext` hex 两段）----
+// ---- 加解密原语（与 m1-core crypto.py 密文格式互通：`iv.ciphertext` hex 两段）----
 
 function deriveKey(passphrase) {
   const seed = passphrase || `${os.platform()}-${os.hostname()}`;

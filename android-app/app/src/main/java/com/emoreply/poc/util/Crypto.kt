@@ -10,7 +10,7 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * 端侧 AES-256-GCM 加解密（T01053 决策：自实现，零新依赖）。
  *
- * 与 m1-poc `emoreply/persona.py` 同型方案：主密钥 = SHA256(设备指纹 || 可选口令)。
+ * 与 m1-core `emoreply/persona.py` 同型方案：主密钥 = SHA256(设备指纹 || 可选口令)。
  * Android 指纹用 Settings.Secure.ANDROID_ID（恢复出厂才变更，满足端侧缓存加密的
  * 设备绑定语义）；密钥不落盘、不进仓库。
  */

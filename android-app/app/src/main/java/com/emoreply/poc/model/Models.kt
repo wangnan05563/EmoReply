@@ -2,7 +2,7 @@ package com.emoreply.poc.model
 
 /**
  * 一次系统通知（捕获层输出，只读，不触碰聊天数据库）。
- * 字段对齐 SRS FR-1.2，与 m1-poc/emoreply/models.py 保持同构。
+ * 字段对齐 SRS FR-1.2，与 m1-core/emoreply/models.py 保持同构。
  */
 data class Notification(
     val source: String,

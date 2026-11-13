@@ -23,7 +23,7 @@ desktop-app/node_modules/
 desktop-app/dist/
 desktop-app/tmp/
 
-# Python POC（m1-poc）
+# Python POC（m1-core）
 __pycache__/
 *.py[cod]
 .venv/

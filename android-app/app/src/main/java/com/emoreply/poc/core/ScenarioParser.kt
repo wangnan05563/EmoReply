@@ -1,7 +1,7 @@
 package com.emoreply.poc.core
 
 /**
- * T01538：通知载荷 → 场景/目的维度解析（与 m1-poc `emoreply/scenario_parser.py` 同构镜像）。
+ * T01538：通知载荷 → 场景/目的维度解析（与 m1-core `emoreply/scenario_parser.py` 同构镜像）。
  *
  * 背景：T01350 采纳率闭环只在手动生成链路生效，通知链路因缺维度上下文而空转。
  * 本模块从通知载荷（平台、会话名、消息文本）自动推断 scenario/purpose，复用

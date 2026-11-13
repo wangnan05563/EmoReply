@@ -1,6 +1,6 @@
 import Foundation
 
-// MARK: - 数据模型（与 m1-poc models.py / android Models.kt 同构，FR-1.2 字段对齐）
+// MARK: - 数据模型（与 m1-core models.py / android Models.kt 同构，FR-1.2 字段对齐）
 
 /// 一次系统通知（捕获层输出，只读，不触碰聊天数据库）。
 public struct EmoNotification: Codable, Equatable {

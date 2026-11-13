@@ -1,7 +1,7 @@
 import Foundation
 
 /// M3 核心链路编排：预处理 → 分类 → 上下文/提示词 → 生成 → 清洗 → 护栏 → 候选。
-/// 与 m1-poc pipeline.py / android Pipeline.kt 同构；生成由注入的闭包承担。
+/// 与 m1-core pipeline.py / android Pipeline.kt 同构；生成由注入的闭包承担。
 public struct PipelineOutcome {
     public let decision: Decision
     public var candidates: [Candidate] = []
@@ -20,9 +20,9 @@ public final class ReplyPipeline {
     /// 显式风格（nil = 允许人设 default_style 生效）
     let explicitStyle: String?
     let maxTokens: Int
-    /// FR-5.1/5.2：人设与关系（可选，与 m1-poc persona.py 同构）
+    /// FR-5.1/5.2：人设与关系（可选，与 m1-core persona.py 同构）
     public let persona: PersonaStore?
-    /// RAG 知识库（决策③，可选，与 m1-poc rag.py 同构）
+    /// RAG 知识库（决策③，可选，与 m1-core rag.py 同构）
     public let kb: KnowledgeBase?
 
     public init(generator: @escaping Generator,

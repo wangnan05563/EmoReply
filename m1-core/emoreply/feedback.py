@@ -1,4 +1,4 @@
-"""T01350：采纳率闭环接回生成（m1-poc 事实源，Android 侧 core/Adaptive.kt 同构镜像）。
+"""T01350：采纳率闭环接回生成（m1-core 事实源，Android 侧 core/Adaptive.kt 同构镜像）。
 
 来源（T01345 竞品分析）：钉钉把问题案例回流训练形成「生成→评估→优化」闭环；
 本项目 FeedbackStore.adoptionRate() 只统计、不反作用于生成——闭环是断的。

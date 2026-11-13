@@ -546,11 +546,11 @@ class EmoReplyReaderService : AccessibilityService() {
         /** 输入框功能行高度（px）：IME 窗口顶再往上让出这一段，滤掉「语音/+/表情」按钮文字。 */
         private const val IME_ROW_MARGIN_PX = 140
 
-        /** T01129 侧别标注前缀（与 m1-poc preprocess.parse_speaker_line 同构，全角冒号）。 */
+        /** T01129 侧别标注前缀（与 m1-core preprocess.parse_speaker_line 同构，全角冒号）。 */
         const val SPEAKER_ME_PREFIX = "我："
         const val SPEAKER_OTHER_PREFIX = "对方："
 
-        /** T01343：时间行转换的「话题分段标记」前缀（与 m1-poc preprocess.TIME_MARK_PREFIX 同构）。
+        /** T01343：时间行转换的「话题分段标记」前缀（与 m1-core preprocess.TIME_MARK_PREFIX 同构）。
          *  纯时间/日期行不再静默丢弃，而是转为「时间：xxx」标记行——它是读屏数据里
          *  唯一的话题边界信号，解析层（splitDialogueTurns）据此截断已完结话题。 */
         const val TIME_MARK_PREFIX = "时间："
@@ -686,7 +686,7 @@ class EmoReplyReaderService : AccessibilityService() {
          * T01124 边界细化：
          * - 换行合并（T01134）：行间空白 < 行高 × 比例（同 block 1.0 / 跨 block 0.6）→ 合并为
          *   一条消息。用相对比例而非绝对像素，见 [WRAP_MERGE_RATIO_SAME_BLOCK] 注释；
-         * - 气泡侧别：T01150 起统一用 [isMine]（左缘判定），与节点路径、m1-poc judge_side
+         * - 气泡侧别：T01150 起统一用 [isMine]（左缘判定），与节点路径、m1-core judge_side
          *   同构（旧的右缘阈值对长气泡失效，实测对方长气泡右缘 1163 被误判「我」）；
          *   T01129：不滤除，改为「我：」/「对方：」标注保留（生成层感知完整双方上下文）；
          * - 头像字形：单字符 && 行高<60 && 中心 x<[AVATAR_CX_MAX_PX]（最左头像区），
@@ -831,7 +831,7 @@ class EmoReplyReaderService : AccessibilityService() {
         }.getOrDefault(false)
 
         /**
-         * T01138 反馈：群聊读屏噪声过滤（纯文本规则，与 m1-poc preprocess.strip_group_noise 同构）。
+         * T01138 反馈：群聊读屏噪声过滤（纯文本规则，与 m1-core preprocess.strip_group_noise 同构）。
          * 1) UI 悬浮条「N条新消息」——屏幕右侧，会被侧别判定误标为「我：」；
          * 2) 表情/图标误读行（整行括号包裹短内容，如「(田+0)」）；
          * 3) 发送者昵称行：群聊结构=昵称小字行+气泡正文，OCR 后昵称成独立行（对象错误）——
@@ -878,7 +878,7 @@ class EmoReplyReaderService : AccessibilityService() {
 
         /**
          * T01145：多屏读屏——当前屏 + 上滑 [extraScreens] 次（每次截图 OCR），
-         * 最后滑回原位，批次按时间先后合并去重（与 m1-poc merge_screen_batches 同构）。
+         * 最后滑回原位，批次按时间先后合并去重（与 m1-core merge_screen_batches 同构）。
          * 滑动用 AccessibilityService.dispatchGesture（仅用户点击读屏时执行，
          * 一次点击授权整个读屏序列）。调用方须在后台线程调用。
          * T01291 用户反馈简化：聊天默认停在最下方（最新消息），无需再向下翻找，

@@ -89,7 +89,7 @@ class ReplyPipeline(
 
         // FR-2.1/2.2（REQ-006）：意图与情绪并入提示词，增强生成的贴合度
         val (emotion, urgency) = Classify.classifyEmotion(current.body)
-        // FR-5.1/5.2：人设（自称/禁语）与联系人关系（可选，与 m1-poc persona 同构）
+        // FR-5.1/5.2：人设（自称/禁语）与联系人关系（可选，与 m1-core persona 同构）
         var me = "我"
         var relation = ""
         var banned: List<String> = emptyList()

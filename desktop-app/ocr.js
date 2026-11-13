@@ -24,7 +24,7 @@ function isMeaningfulCh(ch) {
 }
 
 /**
- * T01554：乱码文本检测（与 Android isGarbledText、m1-poc is_garbled_text 同构）。
+ * T01554：乱码文本检测（与 Android isGarbledText、m1-core is_garbled_text 同构）。
  * 截图 OCR 会把控件描边、进度条、噪点误识成「■■■」「???」之类无效行，
  * 混入会话上下文会污染生成质量。四条判据任一命中即视为乱码：
  * ① 控制字符（C0/C1，排除 \t\n\r）；② 有意义字符占比 < 70%；
@@ -51,7 +51,7 @@ function isGarbledText(line) {
   return false;
 }
 
-/** 单行噪声过滤（与 m1-poc preprocess.py 的行级过滤同精神）：
+/** 单行噪声过滤（与 m1-core preprocess.py 的行级过滤同精神）：
  * 纯数字/时间戳、单字符、URL、媒体占位、乱码行、全文无汉字的行剔除。 */
 function isNoiseLine(line) {
   const s = String(line ?? '').trim();

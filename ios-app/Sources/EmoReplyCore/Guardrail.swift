@@ -1,7 +1,7 @@
 import Foundation
 
 /// 安全护栏（FR-3.5 输出侧 / FR-6.4 入站侧）+ 提示节流（C6）。
-/// 与 m1-poc guardrail.py / android Guardrail.kt 同构。
+/// 与 m1-core guardrail.py / android Guardrail.kt 同构。
 public enum Guardrail {
 
     static let sensitive = "(验证码|校验码|动态码|短信码|支付密码|登录密码|银行卡号|身份证号)"

@@ -68,8 +68,23 @@ if (-not (Test-Path $ApkPath)) {
 
 # 只认 state=device 的行：unauthorized / offline 同样会列在 devices 里，
 # 若不过滤会把「未授权」误判为「可用设备」，后续 adb 命令才失败，提示不直观
+# 注意：adb 首次启动守护进程会把 "* daemon not running..." 打到 stderr。
+# PowerShell 在 $ErrorActionPreference=Stop 下会把原生命令的 stderr 当成终止错误
+# 抛 NativeCommandError（与是否 2>&1/2>$null 无关），故临时切到 Continue 避免误杀，
+# 失败改判 $LASTEXITCODE；守护进程一旦启动，后续 install/shell 调用都不再打印该信息。
+$devices = @()
+try {
+    $ErrorActionPreference = 'Continue'
+    $devicesRaw = & $AdbExe devices 2>$null
+} finally {
+    $ErrorActionPreference = 'Stop'
+}
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ("adb devices 执行失败（exit {0}），请确认 adb 可正常运行" -f $LASTEXITCODE) -ForegroundColor Red
+    exit 1
+}
 $devices = @(
-    & $AdbExe devices 2>&1 |
+    $devicesRaw |
         Where-Object { $_ -match '^\S+\s+device\s*$' } |
         ForEach-Object { ($_ -split '\s+')[0] }
 )

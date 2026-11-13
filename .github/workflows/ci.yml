@@ -17,7 +17,7 @@ on:
 
 jobs:
   python:
-    name: Python 核心验收 (m1-poc)
+    name: Python 核心验收 (m1-core)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +27,7 @@ jobs:
       - name: 安装测试依赖
         run: python -m pip install --upgrade pip pytest
       - name: 运行 pytest
-        run: cd m1-poc && python -m pytest -q
+        run: cd m1-core && python -m pytest -q
 
   desktop:
     name: 桌面端单测 (desktop-app)

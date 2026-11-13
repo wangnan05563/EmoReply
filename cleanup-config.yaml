@@ -14,7 +14,7 @@ workspace:
   frontend_src_dir: ""
   scan_roots:
     - "desktop-app"
-    - "m1-poc"
+    - "m1-core"
     - "tools"
     - "tmp"
     - "docs"
@@ -47,7 +47,7 @@ preserve_roots:
   - "desktop-app/docs/"      # 桌面端文档与截图
   - "desktop-app/perf/output/" # 压测原始数据（报告引用的证据）
   - "tmp/_mtask3/"           # MTask 回传单留档（审计记录）
-  - "m1-poc/"                # Python 参考实现（源码；仅 __pycache__ 可清）
+  - "m1-core/"                # Python 参考实现（源码；仅 __pycache__ 可清）
   - "tools/"                 # 工具脚本（仅 __pycache__ 可清）
   - "scripts/"               # 构建脚本
 
@@ -102,7 +102,7 @@ script_exclude_dirs:
   - "scripts/"
   - "tools/"
   - "brand/_tools/"
-  - "m1-poc/"
+  - "m1-core/"
 
 garbage_patterns:
   redirect_artifacts: []
@@ -425,7 +425,7 @@ verification:
   # 桌面端冒烟即本项目的核心完整性校验（generate 覆盖生成管线）；pytest 侧用 -p no:cacheprovider
   # 避免验证过程重建 .pytest_cache（-B 只挡字节码，挡不住 cacheprovider —— 第 3 轮实测复发）
   # PowerShell 不支持 &&，改用分号；Set-Location 不改变 $LASTEXITCODE
-  command: "Set-Location m1-poc; {venv_python} -B -m pytest -q -p no:cacheprovider"
+  command: "Set-Location m1-core; {venv_python} -B -m pytest -q -p no:cacheprovider"
   venv_python:
     windows: "python"
   file_existence_checks:
@@ -434,7 +434,7 @@ verification:
     - "desktop-app/main.js"
     - "desktop-app/package.json"
     - "desktop-app/assets/ocr/chi_sim.traineddata"
-    - "m1-poc/emoreply/__init__.py"
+    - "m1-core/emoreply/__init__.py"
     - "tmp/_mtask3"
   optional_generated_checks:
     - "desktop-app/dist/"
@@ -472,9 +472,9 @@ dependency_check:
   enabled: true
   auto_remove: false
   python:
-    manifest: "m1-poc/requirements.txt"
+    manifest: "m1-core/requirements.txt"
     scan_dirs:
-      - "m1-poc"
+      - "m1-core"
     indirect_allowlist: []
   frontend:
     manifest: "desktop-app/package.json"

@@ -46,7 +46,7 @@ fun cleanCandidate(text: String): String {
 
 /**
  * FR-3.3：解析 LLM 候选行的「内容|理由」格式，理由缺失返回 null。
- * 与 m1-poc `sanitize.split_rationale` 同构：按最后一个 | 切分，
+ * 与 m1-core `sanitize.split_rationale` 同构：按最后一个 | 切分，
  * 内容本身含 | 时不受影响；清洗只作用于内容，理由仅作展示。
  *
  * T01554 增强：二次校验确保 rationale 不会混入 text——若 text 很短而
@@ -105,7 +105,7 @@ private fun inlineRationalePair(s: String): Pair<String, String?>? {
  * 关键词启发式拆分（T01554，原 for 循环）；全部关键词不满足长度判据时返回 null。
  *
  * T01554：启发式检测——text 中是否混入了 rationale 内容。
- * 相对初版做了两点收紧（由 m1-poc 同构镜像时实测发现的误伤）：
+ * 相对初版做了两点收紧（由 m1-core 同构镜像时实测发现的误伤）：
  * 初版的「说明」弱词 + 不要求关键词后紧跟冒号，会把「好的，我说明一下情况」
  * 误砍成候选「好的，我」+理由「说明一下情况」——把完整句子拦腰截断，
  * 比「理由混入候选」这个原 bug 更糟。故：
@@ -176,7 +176,7 @@ private val RATIONALE_LINE = Regex(
  * T01720：把「理由：xxx」续行接回上一条候选行，理由行自身不产出候选。
  * 常规补 | 交给 [splitRationale] 统一解析；上一行以悬空管道符收尾直接续接；
  * 上一行已含 |（已接过度理由）用「；」续接进理由段；无上一行则丢弃。
- * 与 m1-poc `sanitize._merge_rationale_lines` / desktop `mergeRationaleLines` 同构。
+ * 与 m1-core `sanitize._merge_rationale_lines` / desktop `mergeRationaleLines` 同构。
  */
 private fun mergeRationaleLines(lines: List<String>): List<String> {
     val out = mutableListOf<String>()
@@ -226,7 +226,7 @@ private fun joinDanglingPipe(lines: List<String>): List<String> {
  * - 多行输出：逐行拆（LLM 逐行列候选的常见格式）；
  * - 单行但含内联编号（「选项1：… 选项2：…」）：按编号拆；
  * - 其余：原样单条返回，交由 [splitRationale] 继续处理。
- * 与 m1-poc `sanitize.expand_candidates` 同构。
+ * 与 m1-core `sanitize.expand_candidates` 同构。
  */
 fun expandCandidates(raw: String?): List<String> {
     val s = raw?.trim() ?: return emptyList()
@@ -268,14 +268,14 @@ fun pairUnmarkedReasons(lines: List<String>, expected: Int): List<String> {
     if (lines.any { hasRationaleMark(it) }) return lines
     return lines.chunked(2).take(expected).map { (text, reason) -> "$text|$reason" }
 }
-// ===== T01158 FR-7.1：换一批去重（与 m1-poc sanitize 同算法，结果一致）=====
+// ===== T01158 FR-7.1：换一批去重（与 m1-core sanitize 同算法，结果一致）=====
 private val PUNCT = Regex("""[\s　，。！？、；：,.!?;:~～\-—…"'()（）\[\]【】]""")
 
 /** 比较用归一化：去表情、去标点空白、统一小写。 */
 fun normalizeForCompare(text: String): String =
     PUNCT.replace(stripEmoji(text), "").lowercase()
 
-/** LCS 比率相似度 = 2*LCS / (len(a)+len(b))（与 m1-poc sanitize.similarity 同算法）。 */
+/** LCS 比率相似度 = 2*LCS / (len(a)+len(b))（与 m1-core sanitize.similarity 同算法）。 */
 fun similarity(a: String, b: String): Float {
     val x = normalizeForCompare(a)
     val y = normalizeForCompare(b)
@@ -304,7 +304,7 @@ fun <T> filterDuplicates(candidates: List<T>, exclude: List<String>, textOf: (T)
     return candidates.filter { !isDuplicate(textOf(it), exclude) }
 }
 
-// ===== T01159：表情（emoji）处理（与 m1-poc sanitize 同构）=====
+// ===== T01159：表情（emoji）处理（与 m1-core sanitize 同构）=====
 // 表情是正文的一部分（不属 markdown/markup 噪声，C3/C25 清洗不得动它）；
 // 但 LLM 常见「🎉🎉🎉」堆砌，注入聊天框会显得廉价——只做收敛，不改写文字。
 private fun isEmojiBase(cp: Int): Boolean = when {
@@ -420,7 +420,7 @@ fun stripEmoji(text: String): String {
     return SPACE_RUN.replace(out, " ").trim()
 }
 
-// ===== 元话语候选过滤（与 m1-poc sanitize.is_meta_candidate 同构）=====
+// ===== 元话语候选过滤（与 m1-core sanitize.is_meta_candidate 同构）=====
 private val META_REPLY = Regex(
     "(请[^，。；！?？]{0,15}(提供|补充|给出|发送给我|告诉我|描述|说明)" +
         "[^，。；！?？]{0,20}(聊天记录|上下文|最近(说)?的话|更多信息|详细内容|聊天内容)" +

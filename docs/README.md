@@ -10,7 +10,7 @@ EmoReply 全部文档导航。命名约定：`t0xxxx-*.md` 中的编号即 **MTa
 >
 > 2026-10-31（T03716）：帮助文档全面更新。`docs/` 当前共 **10 个文件**（9 份 Markdown + 1 份 docx）；本日实测核对并修正了 Android 环境指引与端侧模型下载指南中过期的工具链路径、包名/服务名、模型落地目录与命令。
 >
-> 2026-11-02（T04074）：新增 [`系统架构设计`](系统架构设计.md)（基于 m1-poc / android-app / desktop-app / ios-app 四端源码整理，含 Mermaid 图表）。`docs/` 当前共 **11 个文件**（10 份 Markdown + 1 份 docx）。
+> 2026-11-02（T04074）：新增 [`系统架构设计`](系统架构设计.md)（基于 m1-core / android-app / desktop-app / ios-app 四端源码整理，含 Mermaid 图表）。`docs/` 当前共 **11 个文件**（10 份 Markdown + 1 份 docx）。
 
 ## 规格与设计
 

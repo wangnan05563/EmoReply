@@ -1,7 +1,7 @@
 package com.emoreply.poc.core
 
 /**
- * T01348：关系感知 → 语气默认档位（与 m1-poc `emoreply/tone.py` 同构镜像）。
+ * T01348：关系感知 → 语气默认档位（与 m1-core `emoreply/tone.py` 同构镜像）。
  *
  * 来源（T01345 竞品分析）：钉钉的高情商感知来自「先识别双方关系，再决定语气分布」。
  * 本项目 PersonaStore.relation 与 UxSettings.relation（三维筛选）的数据一直在库里，
@@ -54,7 +54,7 @@ object Tone {
      * - 其余（0-100 或越界手动值）→ clamp 后返回。
      *
      * T01348 旧语义「override 仅在 AUTO 时生效」已由 T01537 升级为
-     * 「联系人级覆盖一切全局值」（与 m1-poc `tone.py` resolve_tone 同构）。
+     * 「联系人级覆盖一切全局值」（与 m1-core `tone.py` resolve_tone 同构）。
      */
     fun resolveTone(tone: Int?, relation: String? = null, override: Int? = null): Int? {
         if (tone == null) return null

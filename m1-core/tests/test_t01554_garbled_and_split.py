@@ -4,7 +4,7 @@
 1. `EmoReplyReaderService.isGarbledText` —— OCR 偶发乱码行未被符号占比阈值拦住；
 2. `Sanitize.splitRationale` —— 理由列偶尔显示在候选列（分隔符错位 / 关键词缺失）。
 
-本模块把两侧逻辑镜像回 m1-poc 事实源，并对 kt 原实现的启发式规则做收紧
+本模块把两侧逻辑镜像回 m1-core 事实源，并对 kt 原实现的启发式规则做收紧
 （详见 sanitize._heuristic_rationale_split 注释），用例含误伤回归锁。
 """
 import pytest

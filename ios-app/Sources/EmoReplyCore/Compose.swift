@@ -1,7 +1,7 @@
 import Foundation
 
 /// 上下文拼装与提示词组装（FR-3.1 上下文策略 + 附录 C-2 C16）。
-/// 与 m1-poc compose.py / android Compose.kt 同构。
+/// 与 m1-core compose.py / android Compose.kt 同构。
 public enum Compose {
 
     public static let defaultMaxTokens = 4096

@@ -6,7 +6,7 @@ const assert = require('node:assert');
 const { createWorker } = require('tesseract.js');
 const { isGarbledText, isNoiseLine } = require('../ocr');
 
-// ---- T01554：乱码行判据（与 Android isGarbledText、m1-poc is_garbled_text 三端同构）----
+// ---- T01554：乱码行判据（与 Android isGarbledText、m1-core is_garbled_text 三端同构）----
 // ① 控制字符
 assert.equal(isGarbledText('你好\u0007世界'), true, '控制字符判为乱码');
 assert.equal(isGarbledText('你好\t可以的'), false, String.raw`\t 属正常空白不判乱码`);

@@ -1180,7 +1180,7 @@ class EmoReplyImeService : InputMethodService() {
     }
 
     /**
-     * T01129：读屏多行文本侧别解析（与 m1-poc preprocess.split_dialogue_turns 同构）。
+     * T01129：读屏多行文本侧别解析（与 m1-core preprocess.split_dialogue_turns 同构）。
      * 「我：xxx」→ 我方发言；「对方：xxx」/无前缀 → 对方发言（向后兼容）。
      * current 取最后一条对方发言（我方发言不需要回复），其余按原始时序进 history；
      * 无对方发言时 current 返回 null（解析失败，调用方须明确提示、不得生成）。
@@ -1730,7 +1730,7 @@ class EmoReplyImeService : InputMethodService() {
         /** 生成中防连点提示（多处共用同一文案）。 */
         private const val MSG_GENERATING = "正在生成中…"
 
-        /** T01343：读屏 history 进 prompt 的条数上限（与 m1-poc preprocess.HISTORY_LIMIT 同构）。 */
+        /** T01343：读屏 history 进 prompt 的条数上限（与 m1-core preprocess.HISTORY_LIMIT 同构）。 */
         private const val HISTORY_LIMIT = 12
         private const val TAG_READ_SCREEN = "read_screen"
         private const val TAG_IME = "EmoReplyIme"

@@ -15,7 +15,7 @@ const { URL } = require('node:url');
 const { KnowledgeBase, LexicalRetriever, EmbeddingRetriever, deriveKey, encrypt, decrypt } = require('./kb');
 const { createSettingsStore } = require('./settings-store'); // T01541：设置持久化（userData/settings.json）
 const embedRetriever = new EmbeddingRetriever(); // T01402：向量档（配置 embeddingModel 才启用）
-// T01392：候选清洗管线（与 m1-poc sanitize.py 同构；顺序铁律先 markdown 后标签前缀）
+// T01392：候选清洗管线（与 m1-core sanitize.py 同构；顺序铁律先 markdown 后标签前缀）
 const { sanitizeCandidates, cleanCandidate, heuristicNoReply } = require('./sanitize');
 const { extractToneCorpus } = require('./tone');
 const ocr = require('./ocr');

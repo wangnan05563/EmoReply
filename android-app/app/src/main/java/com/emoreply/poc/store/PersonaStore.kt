@@ -10,7 +10,7 @@ import org.json.JSONObject
 /**
  * 人设 / 联系人关系 / 历史摘要的本地加密存储（FR-5.1 / FR-5.2）。
  *
- * 与 m1-poc `emoreply/persona.py` 同构：SQLite 三表（persona/contacts/history），
+ * 与 m1-core `emoreply/persona.py` 同构：SQLite 三表（persona/contacts/history），
  * 敏感字段 AES-256-GCM 加密落库（见 [Crypto]），库文件拷走读不出明文。
  * 关系默认「陌生」，未标注不影响生成（FR-2.3）。
  */
@@ -43,7 +43,7 @@ class PersonaStore private constructor(context: Context, passphrase: String?) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // T01348：v2 contacts 加 tone_manual（联系人级语气手动覆盖，与 m1-poc 同构）
+        // T01348：v2 contacts 加 tone_manual（联系人级语气手动覆盖，与 m1-core 同构）
         if (oldVersion < 2) {
             db.execSQL("ALTER TABLE contacts ADD COLUMN tone_manual INTEGER")
         }

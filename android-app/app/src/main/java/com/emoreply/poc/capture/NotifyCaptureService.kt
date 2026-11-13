@@ -24,7 +24,7 @@ import java.util.concurrent.Executors
 /**
  * 通知捕获层（FR-1.1 / FR-1.2）。
  *
- * 只读取系统通知载荷，不触碰聊天数据库；解析产物映射为与 m1-poc 同构的
+ * 只读取系统通知载荷，不触碰聊天数据库；解析产物映射为与 m1-core 同构的
  * [EmoNotification]，因此可直接复用核心链路。
  *
  * 生成步骤（T01043）：配置了云端 LLM 时用 [CloudLlmGenerator]，否则回退 [StubGenerator]；

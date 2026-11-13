@@ -277,7 +277,7 @@ EmoReply 目前以概念验证版本开放体验，桌面端可自行构建运�
 android-app/    Android 端（输入法 IME、通知捕获、无障碍读屏 + OCR；Kotlin）
 desktop-app/    Electron 桌面端（悬浮窗 + 剪贴板交付；含本地 HTTP API 与离线 OCR）
 ios-app/        iOS 侧实现（需 macOS / Xcode 环境构建，本机无构建链路）
-m1-poc/         平台无关核心链路的 Python 参考实现 + pytest 验收（事实源）
+m1-core/         平台无关核心链路的 Python 参考实现 + pytest 验收（事实源）
 app-chat-reply-tool/  最早的可行性原型（两个 HTML demo + 设计说明，仅存档不维护）
 assets/         README 产品配图（桌面端 UI 截图，隔离档案演示数据）
 docs/           需求/设计/计划/报告与迭代 PRD（导航见 docs/README.md）
@@ -289,7 +289,7 @@ desktop-app/perf/    桌面端性能压测脚手架（配置驱动）
 cleanup-logs/   工作空间清理的审计与报告
 ```
 
-> **双向演进约定**：新能力先在 `m1-poc` 落 Python 参考实现与测试，通过后再镜像到端侧 Kotlin/Swift 实现，保持两侧同构。
+> **双向演进约定**：新能力先在 `m1-core` 落 Python 参考实现与测试，通过后再镜像到端侧 Kotlin/Swift 实现，保持两侧同构。
 
 ## 快速开始
 
@@ -343,7 +343,7 @@ scripts\安卓推送测试.cmd
 ### Python 核心链路（无真机也能验）
 
 ```bash
-cd m1-poc
+cd m1-core
 python -m pytest -q
 ```
 
@@ -430,7 +430,7 @@ python tools/gen_social_preview.py
 
 | 链路 | 命令 | 作用 |
 | --- | --- | --- |
-| Python 核心 | `cd m1-poc && python -m pytest -q` | 参考实现验收（平台无关核心） |
+| Python 核心 | `cd m1-core && python -m pytest -q` | 参考实现验收（平台无关核心） |
 | 桌面单元 | `cd desktop-app && npm test` | 8 套冒烟，117 项断言 |
 | 桌面 E2E | `cd desktop-app && npm run test:e2e` | CDP 驱动 51 项断言（需独立 `--user-data-dir`） |
 | 桌面构建 | `cd desktop-app && npm run dist` | 生产构建（NSIS + portable），产物不入库 |
@@ -451,7 +451,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - run: cd m1-poc && python -m pytest -q
+      - run: cd m1-core && python -m pytest -q
   desktop:
     runs-on: windows-latest
     steps:
@@ -471,15 +471,15 @@ jobs:
 ### 开发协作流程（GitHub）
 
 1. **Fork 与分支**：派生仓库到自己账号，`git clone` 后从 `main` 切出功能分支，命名建议 `feat/xxx`、`fix/xxx`、`docs/xxx`、`chore/xxx`。
-2. **本地验证**：提交前跑通 `m1-poc` 的 `python -m pytest -q` 与桌面端 `npm test`；渲染层改动再过 `npm run test:e2e`（独立 `--user-data-dir`）。
+2. **本地验证**：提交前跑通 `m1-core` 的 `python -m pytest -q` 与桌面端 `npm test`；渲染层改动再过 `npm run test:e2e`（独立 `--user-data-dir`）。
 3. **提交信息**：建议采用 Conventional Commits（`feat:` / `fix:` / `docs:` / `chore:` + 范围 + 简述），便于生成变更记录；可附带任务号（如 `(T04015)`）。
 4. **PR 与关联 Issue**：开 Pull Request 到上游 `main`，标题与说明中**关联对应 Issue**（GitHub 关键字 `Closes #123` / `Fixes #123`）；描述写明改动点、验证方式与影响面。
 5. **Review 与合并**：至少一名维护者 review 通过、CI 全绿后方可合并。
 
 ### 提交前检查清单
 
-- 新能力先落 `m1-poc`（Python 参考实现 + pytest 验收），通过后再镜像到 Kotlin / Electron 端，保持三端同构
-- 提交前跑通 `m1-poc` 的 `python -m pytest -q` 与桌面端 `npm test`；渲染层改动需再过 `npm run test:e2e`（独立 `--user-data-dir`）
+- 新能力先落 `m1-core`（Python 参考实现 + pytest 验收），通过后再镜像到 Kotlin / Electron 端，保持三端同构
+- 提交前跑通 `m1-core` 的 `python -m pytest -q` 与桌面端 `npm test`；渲染层改动需再过 `npm run test:e2e`（独立 `--user-data-dir`）
 - 不提交任何密钥、安装包产物，以及含真实聊天内容的真机截图等敏感内容；仓库内的产品配图（`assets/screenshots/`）与 UI 自动化截图一律来自**独立测试档案 + 演示数据**，重拍时须确认 Key 输入框为空、知识库/候选为演示内容
 - 改 README 顶部图/换品牌色后重跑 `tools/gen_social_preview.py` 并同步 `brand/README.md`；换产品配图时替换 `assets/screenshots/` 同名文件并保持图序与题注一致
 

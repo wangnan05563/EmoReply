@@ -86,7 +86,7 @@ eq(heuristicNoReply('好的，那明天见面聊？'), { noReply: false, reason:
 eq(heuristicNoReply('明天下午3点开会，请准时参加。'), { noReply: false, reason: null }, '正式通知 → 放行');
 eq(heuristicNoReply(''), { noReply: false, reason: null }, '空消息放行');
 
-// ---- T01554：管道符错位 + 启发式拆分（与 m1-poc/py、Android/kt 三端同构）----
+// ---- T01554：管道符错位 + 启发式拆分（与 m1-core/py、Android/kt 三端同构）----
 eq(splitRationale('好|今天天气不错，我们去爬山吧'), ['今天天气不错，我们去爬山吧', '好'], 'T01554 错位检测：短文本在前→交换');
 eq(splitRationale('今天天气不错，我们去爬山吧|语气轻松，回应邀请'), ['今天天气不错，我们去爬山吧', '语气轻松，回应邀请'], '正常管道不交换');
 eq(splitRationale('好的我看看|短'), ['好的我看看', '短'], 'text>3 字符不满足错位条件');
@@ -102,7 +102,7 @@ eq(cleanCandidate('厦门旅行时光。|'), '厦门旅行时光。', String.raw
 eq(cleanCandidate('请把材料送到 Z 区前台'), '请把材料送到 Z 区前台', '含 Z 正文不得被误删（此前会吞掉「 Z」）');
 eq(cleanCandidate('走 Z 通道'), '走 Z 通道', '单个 Z 前空白不被 stripping');
 
-// ---- T01720：理由换行续行接回上一条候选（与 m1-poc/py、Android/kt 三端同构）----
+// ---- T01720：理由换行续行接回上一条候选（与 m1-core/py、Android/kt 三端同构）----
 const { mergeRationaleLines } = require('../sanitize');
 eq(
   expandCandidates('1. 哈哈被你发现了\n理由：以自嘲化解调侃\n2. 那咱定在10点半\n理由：直接给行动方案'),

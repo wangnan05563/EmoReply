@@ -1,7 +1,7 @@
 import Foundation
 
 /// 意图与情感理解（FR-2.1 / 2.2 / 2.4）+ 风格枚举（FR-3.2）。
-/// 与 m1-poc classify.py / android Classify.kt 同构的规则版基线。
+/// 与 m1-core classify.py / android Classify.kt 同构的规则版基线。
 public enum Classify {
 
     public static let intents = ["问询", "请求", "闲聊", "情绪倾诉", "通知", "冲突", "邀约"]

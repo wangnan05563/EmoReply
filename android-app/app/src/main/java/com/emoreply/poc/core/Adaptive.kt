@@ -1,7 +1,7 @@
 package com.emoreply.poc.core
 
 /**
- * T01350：采纳率闭环接回生成——推理侧路由（与 m1-poc `emoreply/feedback.py` 同构镜像）。
+ * T01350：采纳率闭环接回生成——推理侧路由（与 m1-core `emoreply/feedback.py` 同构镜像）。
  *
  * 三方 LLM 无训练闭环下的等价替代（不改模型，改输入）：按「关系 × tone 桶 × 风格」
  * 维度统计采纳率（FeedbackStore），某维度样本充足且采纳率低于阈值 → 该场景本次

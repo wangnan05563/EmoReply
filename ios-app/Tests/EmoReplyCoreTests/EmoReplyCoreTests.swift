@@ -1,7 +1,7 @@
 import XCTest
 @testable import EmoReplyCore
 
-/// 移植 m1-poc 验收测试的关键用例（24+30+12 项中的核心行为）。
+/// 移植 m1-core 验收测试的关键用例（24+30+12 项中的核心行为）。
 /// 在 Mac 上 `swift test` 即可全量回归；iOS 真机侧另需 UI 实测。
 final class EmoReplyCoreTests: XCTestCase {
 
@@ -209,7 +209,7 @@ final class EmoReplyCoreTests: XCTestCase {
         XCTAssertEqual(outcome.candidates[0].text, "好的，马上处理")
     }
 
-    // ---- RAG 知识库（决策③ / 与 m1-poc test_rag.py 同构） ----
+    // ---- RAG 知识库（决策③ / 与 m1-core test_rag.py 同构） ----
 
     private func tempKb() -> KnowledgeBase {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

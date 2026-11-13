@@ -3,7 +3,7 @@ import CryptoKit
 
 /// 人设 / 联系人关系 / 历史摘要的本地加密存储（FR-5.1 / FR-5.2）。
 ///
-/// 与 m1-poc persona.py 同构；iOS 上以 CryptoKit AES-GCM 加密单 JSON 文件落盘
+/// 与 m1-core persona.py 同构；iOS 上以 CryptoKit AES-GCM 加密单 JSON 文件落盘
 /// （数据量小，无需 SQLite），密钥 = SHA256(设备标识 || 可选口令)。
 /// 生产建议升级为 Keychain 保存密钥 + 文件保护（NSFileProtectionComplete）。
 public final class PersonaStore {
