@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-11-13 — 端侧 LLM 纠错 POC：选型修正 + 评测骨架（T05730，T05725 阶段 4）
+
+- **运行时选型修正（推翻 T05725 报告 §4.2 一处判断）**：MediaPipe GenAI 的 LLM Inference API **已原生支持多模态提示**（文本+图像输入，Gemma 3n E2B/E4B 变体，Android API 官方文档明确）——项目无需换 LiteRT/llama.cpp 运行时，升级 `tasks-genai`（现 0.10.35）+ 首次下载 Gemma 3n `.task` 即可；端侧基建与现有 `MediaPipeOnDeviceGenerator` 同栈。Gemma 3n E2B INT4 约 1.5GB 模型 / 6GB RAM 门槛 / 视觉编码+prefill 数秒的约束不变，「异步、用户显式触发、默认关闭」设计维持。
+- **低置信纠错 POC 骨架（可复现）**：`m1-core/emoreply/correction.py`（事实源）——① 错误注入器 `inject_ocr_errors`：混淆对**全部来自项目内实测留痕**（昨→咋 时间行误读、形近字、图标残字），每行至多 1 处、可种子复现；② 纠错器协议 `TextCorrector`（行数契约：只改字不增删行）+ `NoopCorrector` 基线 + `OpenAICompatibleCorrector`（效果上限测量，可接云端/本地端点；行数破坏/网络失败回退直通的幻觉防护）。`scripts/eval_correction_poc.py`：注入 → 纠错 → `baseline.cer` 对比 → `correction-report.json`，含准入判定字段。
+- POC 基线（本机无推理运行时，LLM 列空缺）：631 条 GT 消息注入 63 条（10% 场景）→ 注入后 CER **0.0189**、无误杀。**准入判定待端点接入**：复跑 `--endpoint` 得 LLM 纠错 CER 与误杀数，显著低于基线且无误杀才建端侧实装单，否则「不开」。
+- 隐私红线（POC 阶段锁定）：云端端点仅允许喂合成语料；真实聊天内容的端侧实装走 MediaPipe GenAI，绝不经云端路径。
+- 验证：新增 `test_t05730_correction_poc.py` 11 例；全量 pytest **548 passed** 零回归。
+- 已知边界：图意摘要（范围第 2 项）无本机 VLM 运行时可测，效果与延迟待真机批（Gemma 3n `.task` 下载 + SM-G9980 实测）——人工评估流程：对同一批图片消息对比「有/无图意摘要」的候选可用率。
+
 ## 2026-11-13 — 读屏结构优化 P1：置信度分级贯通 + 行框几何动态分界（T05729，T05725 阶段 2）
 
 - 范围裁剪（诚实标注）：四项 P1/P2 中本轮落地 **P1-1 置信度分级**与 **P1-3 行框几何替代硬编码**——两项均可离线验证；**P1-2 对比度增强（CLAHE）与 P2-4 UI 层级先验挂账**——评估报告自注「需真机验证不伤正常图」，无设备盲改渲染链路/裁剪窗口风险大于收益，待真机批随 T05727/T05728 验证同批补做。
