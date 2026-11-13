@@ -57,6 +57,8 @@ brand/_source/agnes-config.yaml
 tmp/
 cleanup-logs/
 .cleanup-quarantine/
+# 一键发布自动生成的发布说明占位符（正式发布前由人工替换为正式说明）
+release-notes-*.auto.md
 
 # ---------- IDE / Agent 工作区 ----------
 .idea/
