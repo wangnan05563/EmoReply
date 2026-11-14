@@ -213,6 +213,11 @@ object UpdateManager {
         return done
     }
 
+    /** 删除半成品/残留 APK；删除失败只记日志，不掩盖原始异常。 */
+    private fun deleteQuietly(file: File, why: String) {
+        if (!file.delete()) Log.w(TAG, "$why：${file.name}")
+    }
+
     /** 下载 APK 到 app 缓存目录；onProgress(0..100) 在下载线程回调。
      *  expectedSize>0 时以下载字节数核对，不符即删残留判失败（照搬桌面 size 守卫）。
      *  cancelled（可选）置 true 可中途取消：抛 [UpdateCancelledException] 并清理半成品。 */
@@ -242,18 +247,18 @@ object UpdateManager {
             }
             conn.disconnect()
             if (total > 0 && received != total) {
-                if (!target.delete()) Log.w(TAG, "残留 APK 删除失败：${target.name}")
+                deleteQuietly(target, "残留 APK 删除失败")
                 throw UpdateException(0, "size mismatch: $received/$total",
                     "下载不完整（$received/$total 字节），已删除残留文件，请重试")
             }
             if (total <= 0) onProgress(100)
         } catch (e: UpdateCancelledException) {
-            if (!target.delete()) Log.w(TAG, "半成品 APK 删除失败：${target.name}")
+            deleteQuietly(target, "半成品 APK 删除失败")
             throw e
         } catch (e: UpdateException) {
             throw e
         } catch (e: IOException) {
-            if (!target.delete()) Log.w(TAG, "半成品 APK 删除失败：${target.name}")
+            deleteQuietly(target, "半成品 APK 删除失败")
             throw UpdateException(0, "download failed: ${e.message}", "下载失败：请检查网络后重试")
         }
     }

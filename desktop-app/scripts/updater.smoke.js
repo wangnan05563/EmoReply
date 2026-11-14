@@ -66,10 +66,10 @@ async function main() {
   eq(pickAsset(release('t', [asset('EmoReply-portable-x64.exe', GH + 'p.exe', 1)])).name,
     'EmoReply-portable-x64.exe', '只有 portable 时兜底选它');
   eq(sanitizeName('../../evil.exe'), 'evil.exe', '目录成分被剥掉（路径穿越只留最后一段）');
-  eq(sanitizeName('..\\..\\evil.exe'), 'evil.exe', '反斜杠同样按分隔符处理（Windows 形态）');
+  eq(sanitizeName(String.raw`..\..\evil.exe`), 'evil.exe', '反斜杠同样按分隔符处理（Windows 形态）');
   eq(sanitizeName('....evil.exe'), 'evil.exe', '前导点剥掉，不留隐藏名/幽灵名');
   eq(sanitizeName('..'), '', '纯点段不是文件名，直接拒绝');
-  eq(sanitizeName('a/b\\c.exe'), 'c.exe', '多级路径只取最后一段');
+  eq(sanitizeName(String.raw`a/b\c.exe`), 'c.exe', '多级路径只取最后一段');
   eq(sanitizeName('bad;name.exe'), '', '含 shell 元字符的文件名直接拒绝');
   eq(sanitizeName('x'.repeat(200) + '.exe'), '', '超长文件名拒绝');
   eq(sanitizeName('EmoReply Setup (x64).exe'), 'EmoReply Setup (x64).exe', '空格/括号/连字符属合法集，原样保留');
@@ -80,7 +80,7 @@ async function main() {
       res: jsonRes(release('v20261101-002', [asset('EmoReply-Setup-x64.exe', GH + 'v20261101-002/EmoReply-Setup-x64.exe', 4096)])) }]) });
     const r = await u.check();
     eq([r.state, r.latest, r.name, r.size], ['newer', 'v20261101-002', 'EmoReply-Setup-x64.exe', 4096], '有新版：状态/版本/资产名/字节数齐全');
-    ok(/^发现版本|发现新版本/.test(r.message), '有新版文案是「发现新版本」口径');
+    ok(/^(发现版本|发现新版本)/.test(r.message), '有新版文案是「发现新版本」口径');
     ok(r.url.startsWith('https://github.com/'), '下载地址取 browser_download_url 且是 https');
     ok(u.apiUrl.includes(REPO) && u.apiUrl.startsWith('https://api.github.com/repos/'), '查询走内置仓库地址（硬编码，无用户输入）');
   }
@@ -134,7 +134,7 @@ async function main() {
     eq(fs.readFileSync(r.file).length, 6, '落盘字节数正确');
     eq(path.basename(r.file), 'EmoReply-Setup-x64.exe', '落盘文件名 = 清洗后的资产名');
     ok(path.dirname(r.file) === path.join(TMP, '20261012-001'), '落盘在指定 updates 目录内');
-    ok(seen.length >= 1 && seen[seen.length - 1] === 99, '进度回调有回报且完成前不超过 99%（100% 留给 ready 态）');
+    ok(seen.length >= 1 && seen.at(-1) === 99, '进度回调有回报且完成前不超过 99%（100% 留给 ready 态）');
   }
   {
     // 声称 6 字节只收到 3 字节：必须删残留文件并报错，不能把半截安装包交给用户点安装
@@ -152,7 +152,7 @@ async function main() {
   {
     // 名字里带穿越也不许跑出下载目录：清洗成最后一段后仍落在 dir 内
     const u = mk('trav', { fetchImpl: fakeFetch([{ match: 'releases/download', res: streamRes(['ab'], 2) }]) });
-    const r = await u.download({ state: 'newer', name: '..\\..\\evil.exe', size: 2, url: GH + 'x' });
+    const r = await u.download({ state: 'newer', name: String.raw`..\..\evil.exe`, size: 2, url: GH + 'x' });
     eq([r.state, path.basename(r.file), path.dirname(r.file) === path.join(TMP, 'trav')],
       ['ready', 'evil.exe', true], '穿越名清洗后仍在下载目录内落盘（不写到目录外面去）');
   }
@@ -188,4 +188,14 @@ async function main() {
   fs.rmSync(TMP, { recursive: true, force: true });
   console.log(`\n===== UPDATER SMOKE: ${pass} PASS =====`);
 }
-main().catch((e) => { console.error('UPDATER SMOKE FAILED:', e.message || e); process.exit(1); });
+// CJS 没有顶层 await：入口保持同步，异步失败在函数内兜底
+async function runAll() {
+  try {
+    await main();
+  } catch (e) {
+    console.error('UPDATER SMOKE FAILED:', e.message || e);
+    process.exit(1);
+  }
+}
+// CJS 没有顶层 await：入口放到下一拍，异常已在 runAll 内兜底
+setTimeout(runAll, 0);

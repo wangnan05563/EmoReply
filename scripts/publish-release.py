@@ -423,6 +423,21 @@ def _print_dry_run(asset, body, release_name, display):
     print("  （设置 GH_DRY_RUN=0 或清除该变量后重跑即可真正发布）")
 
 
+def _refresh_existing_release(body, release_name):
+    """Release 已存在时拉取并刷新说明；返回可用的 Release 对象，无法刷新返回 None。"""
+    release = get_existing_release_by_tag(TAG)
+    if not (release and "id" in release):
+        return None
+    rid = release["id"]
+    pst, pres = api(f"/repos/{REPO}/releases/{rid}",
+                    {"body": body, "name": release_name}, method="PATCH")
+    if isinstance(pres, dict) and ("upload_url" in pres or "id" in pres):
+        print("release 已存在，已刷新说明 body（id=%s, status=%s）" % (rid, pst))
+        return pres
+    print("release 已存在，但刷新说明失败（status=%s），沿用现有 release。" % pst)
+    return release
+
+
 def _create_release(body, release_name):
     """创建或复用 Release，返回带 upload_url 的 Release 对象（失败即退出）。
 
@@ -442,19 +457,9 @@ def _create_release(body, release_name):
         return resp
     # 已存在：拉取现有 Release 并刷新 body/name（占位符/更新说明场景）
     if st in (409, 422) or (isinstance(resp, dict) and "id" in resp):
-        release = get_existing_release_by_tag(TAG)
-        if release and "id" in release:
-            rid = release["id"]
-            pst, pres = api(f"/repos/{REPO}/releases/{rid}",
-                            {"body": body, "name": release_name}, method="PATCH")
-            if isinstance(pres, dict) and "upload_url" in pres:
-                print("release 已存在，已刷新说明 body（id=%s, status=%s）" % (rid, pst))
-                return pres
-            if isinstance(pres, dict) and "id" in pres:
-                print("release 已存在，已刷新说明 body（id=%s, status=%s）" % (rid, pst))
-                return pres
-            print("release 已存在，但刷新说明失败（status=%s），沿用现有 release。" % pst)
-            return release
+        refreshed = _refresh_existing_release(body, release_name)
+        if refreshed is not None:
+            return refreshed
     print("create release 失败:", st, json.dumps(resp, ensure_ascii=False)[:800])
     sys.exit(1)
 

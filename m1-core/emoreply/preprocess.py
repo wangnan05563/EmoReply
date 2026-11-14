@@ -797,6 +797,34 @@ def fuse_node_sides(ocr_lines: List[OcrLine],
     return fused
 
 
+def _flatten_batches(batches: List[List[str]]) -> List[str]:
+    """展平多屏批并保序，丢弃空白行。"""
+    seq: List[str] = []
+    for batch in batches:
+        for line in batch:
+            t = (line or "").strip()
+            if t:
+                seq.append(t)
+    return seq
+
+
+def _cluster_variants(seq: List[str], agree: float) -> List[dict]:
+    """按归一化相似度聚簇：同簇内累计变体计数，记录簇首现序号与代表文本。"""
+    clusters: List[dict] = []  # {counts, first, rep}
+    for idx, t in enumerate(seq):
+        norm = _norm_text(t)
+        hit = None
+        for c in clusters:
+            if _similarity(norm, _norm_text(c["rep"])) >= agree:
+                hit = c
+                break
+        if hit is None:
+            clusters.append({"counts": {t: 1}, "first": idx, "rep": t})
+        else:
+            hit["counts"][t] = hit["counts"].get(t, 0) + 1
+    return clusters
+
+
 def vote_screen_batches(batches: List[List[str]], *, agree: float = 0.8) -> List[str]:
     """跨屏重复行的变体投票合并（T05728 P0-2，与 kt voteScreenBatches 同构）。
 
@@ -806,29 +834,9 @@ def vote_screen_batches(batches: List[List[str]], *, agree: float = 0.8) -> List
     首次出现位置。保守约束：仅用于多屏采集的批间合并，单批行为与精确去重一致
     （同文多行仍各占一簇→仅去重首个之后者）；不改动 T01145 既有契约。
     """
-    # 展平保序：[(原文, 首现序号)]；簇 = [(变体计数, 首现序号, 代表文本)]
-    seq: List[str] = []
-    for batch in batches:
-        for line in batch:
-            t = (line or "").strip()
-            if t:
-                seq.append(t)
-    clusters: List[dict] = []  # {counts: Counter, first: int}
-    for idx, t in enumerate(seq):
-        norm = _norm_text(t)
-        hit = None
-        for c in clusters:
-            rep = _norm_text(c["rep"])
-            if _similarity(norm, rep) >= agree:
-                hit = c
-                break
-        if hit is None:
-            clusters.append({"counts": {t: 1}, "first": idx, "rep": t})
-        else:
-            hit["counts"][t] = hit["counts"].get(t, 0) + 1
+    clusters = _cluster_variants(_flatten_batches(batches), agree)
     out: List[str] = []
-    for c in sorted(clusters, key=lambda c: c["first"]):
+    for c in sorted(clusters, key=lambda item: item["first"]):
         # 众数；并列取先出现的变体（dict 保序，首个最大计数即最先达成该计数）
-        best = max(c["counts"], key=c["counts"].get)
-        out.append(best)
+        out.append(max(c["counts"], key=c["counts"].get))
     return out

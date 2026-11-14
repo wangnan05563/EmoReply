@@ -32,7 +32,7 @@ def _msg(text, side, msg=1, **kw):
 
 class TestCer:
     def test_identical_zero(self):
-        assert cer("你好吗", "你好吗") == 0.0
+        assert cer("你好吗", "你好吗") == pytest.approx(0.0)
 
     def test_substitution(self):
         assert cer("你好吗", "你好吧") == pytest.approx(1 / 3)
@@ -42,10 +42,10 @@ class TestCer:
 
     def test_empty_reference_is_zero(self):
         """空参考属语料 bug，不在 CER 维度放大（见 baseline.cer docstring）。"""
-        assert cer("", "任意") == 0.0
+        assert cer("", "任意") == pytest.approx(0.0)
 
     def test_whitespace_insensitive(self):
-        assert cer("今天晚上一起吃饭", "今天晚上 一起吃饭") == 0.0
+        assert cer("今天晚上一起吃饭", "今天晚上 一起吃饭") == pytest.approx(0.0)
 
 
 # ===== evaluate 指标 =====
@@ -56,18 +56,18 @@ class TestEvaluate:
                                  _msg("在的，怎么了", SIDE_MINE, 2)])]
         preds = [{"image": "a.png", "lines": ["对方：在吗？", "我：在的，怎么了"]}]
         m = evaluate(corpus, preds)
-        assert m["message_recall"] == 1.0
-        assert m["side_accuracy"] == 1.0
-        assert m["line_cer"] == 0.0
-        assert m["noise_intrusion"] == 0.0
-        assert m["dialogue_parse_rate"] == 1.0
+        assert m["message_recall"] == pytest.approx(1.0)
+        assert m["side_accuracy"] == pytest.approx(1.0)
+        assert m["line_cer"] == pytest.approx(0.0)
+        assert m["noise_intrusion"] == pytest.approx(0.0)
+        assert m["dialogue_parse_rate"] == pytest.approx(1.0)
 
     def test_wrong_side_penalizes_side_accuracy_only(self):
         corpus = [_rec("a.png", [_msg("在吗？", SIDE_OTHER, 1)])]
         preds = [{"image": "a.png", "lines": ["我：在吗？"]}]
         m = evaluate(corpus, preds)
-        assert m["message_recall"] == 1.0          # 文本匹配上了
-        assert m["side_accuracy"] == 0.0           # 但方向反了
+        assert m["message_recall"] == pytest.approx(1.0)          # 文本匹配上了
+        assert m["side_accuracy"] == pytest.approx(0.0)           # 但方向反了
 
     def test_missing_message_penalizes_recall(self):
         corpus = [_rec("a.png", [_msg("第一条", SIDE_OTHER, 1),
@@ -90,8 +90,8 @@ class TestEvaluate:
         ])]
         preds = [{"image": "a.png", "lines": ["时间：昨天 21:04", "对方：在吗？"]}]
         m = evaluate(corpus, preds)
-        assert m["noise_intrusion"] == 0.0
-        assert m["message_recall"] == 1.0
+        assert m["noise_intrusion"] == pytest.approx(0.0)
+        assert m["message_recall"] == pytest.approx(1.0)
 
     def test_wrapped_message_grouped_to_one(self):
         """同 msg 号的两条物理行 = 一条消息（折行合并后的比对粒度）。"""
@@ -100,8 +100,8 @@ class TestEvaluate:
         preds = [{"image": "a.png", "lines": ["对方：这份方案你先看看，有问题随时说。"]}]
         m = evaluate(corpus, preds)
         assert m["gt_messages"] == 1
-        assert m["message_recall"] == 1.0
-        assert m["line_cer"] == 0.0
+        assert m["message_recall"] == pytest.approx(1.0)
+        assert m["line_cer"] == pytest.approx(0.0)
 
     def test_missing_prediction_image_counts_all_gt_as_missed(self):
         corpus = [_rec("a.png", [_msg("在吗？", SIDE_OTHER, 1)]),
@@ -157,7 +157,7 @@ class TestCorpusIO:
 class TestBuildScene:
     def _scene(self, chat, font_scale=1.0, seed="t"):
         from gen_baseline_corpus import build_scene
-        return build_scene("wechat", "light", chat, font_scale, seed)
+        return build_scene(chat, font_scale, seed)
 
     def test_scene_has_other_message(self):
         _, gt, *_ = self._scene("single")

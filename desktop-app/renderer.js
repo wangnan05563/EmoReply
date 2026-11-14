@@ -947,13 +947,16 @@ function closeMode() {
 function renderCloseHint() {
   const mode = closeMode();
   const btn = $('winClose');
-  btn.dataset.tip = mode === CLOSE_EXIT
-    ? '关闭｜退出应用（想改回「每次询问」或「最小化到托盘」进设置中心）'
-    : mode === CLOSE_TRAY
-      ? '关闭｜收起窗口到系统托盘（程序不退出，托盘图标可唤回）'
-      : '关闭｜每次询问（收进托盘还是退出应用；可在设置中心固定下来）';
-  btn.setAttribute('aria-label', mode === CLOSE_EXIT ? '关闭并退出应用'
-    : mode === CLOSE_TRAY ? '关闭到托盘' : '关闭（每次询问）');
+  const tipByMode = {
+    [CLOSE_EXIT]: '关闭｜退出应用（想改回「每次询问」或「最小化到托盘」进设置中心）',
+    [CLOSE_TRAY]: '关闭｜收起窗口到系统托盘（程序不退出，托盘图标可唤回）',
+  };
+  const ariaByMode = {
+    [CLOSE_EXIT]: '关闭并退出应用',
+    [CLOSE_TRAY]: '关闭到托盘',
+  };
+  btn.dataset.tip = tipByMode[mode] || '关闭｜每次询问（收进托盘还是退出应用；可在设置中心固定下来）';
+  btn.setAttribute('aria-label', ariaByMode[mode] || '关闭（每次询问）');
   const radio = document.querySelector(`input[name="cfgCloseMode"][value="${mode}"]`);
   if (radio) radio.checked = true;
 }
@@ -1063,10 +1066,17 @@ function updMsg(text, isOk) {
 const mb = (bytes) => (Number(bytes) / 1048576).toFixed(1) + ' MB';
 
 // 首帧水合当前版本与内置仓库（失败不影响其他设置项）
-globalThis.emoReply.updateMeta().then((meta) => {
-  $('updRepo').textContent = meta.repo;
-  $('updCurrent').textContent = meta.version;
-}, (e) => console.warn('[renderer] 更新元开水合失败：', e?.message || e));
+async function hydrateUpdateMeta() {
+  try {
+    const meta = await globalThis.emoReply.updateMeta();
+    $('updRepo').textContent = meta.repo;
+    $('updCurrent').textContent = meta.version;
+  } catch (e) {
+    console.warn('[renderer] 更新元开水合失败：', e?.message || e);
+  }
+}
+// 经典 script（非 module）没有顶层 await：放到下一拍执行，失败已在函数内兜底
+setTimeout(hydrateUpdateMeta, 0);
 
 // 进度只在这注册一次（页面生命周期内不重复挂监听）
 globalThis.emoReply.onUpdateProgress((p) => {

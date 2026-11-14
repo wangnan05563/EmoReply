@@ -58,7 +58,7 @@ class TextCorrector(Protocol):
     """纠错器协议：行数契约——输出必须与输入等长、顺序一致（只改字不增删行）。"""
 
     def correct(self, lines: List[str], context: List[str]) -> List[str]:
-        """[lines]=待纠错行；[context]=同一屏的其余行（提供话题线索）。"""
+        """lines 为待纠错行，context 为同一屏的其余行（提供话题线索）。"""
         ...
 
 

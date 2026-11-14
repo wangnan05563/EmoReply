@@ -23,7 +23,13 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // S7204：发布包必须开启 R8 压缩/混淆，避免反编译直接读出业务逻辑。
+            // ML Kit / MediaPipe 的 AAR 自带 consumer proguard 规则，额外 keep 见 proguard-rules.pro。
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 

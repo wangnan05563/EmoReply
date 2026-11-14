@@ -260,7 +260,7 @@ ipcMain.handle('update:check', async () => {
   try {
     lastCheck = await getUpdater().check();
   } catch (e) {
-    lastCheck = { state: 'error', reason: 'unknown', message: '检查更新失败：' + String((e && e.message) || e) };
+    lastCheck = { state: 'error', reason: 'unknown', message: '检查更新失败：' + String(e?.message || e) };
   }
   if (lastCheck.state !== 'newer') lastFile = null; // 换了目标版本，旧下载包不再算数
   return lastCheck;
@@ -269,7 +269,7 @@ ipcMain.handle('update:check', async () => {
 let downloading = false;
 ipcMain.handle('update:download', async () => {
   if (downloading) return { state: 'error', message: '已有一个下载在进行中，请等它结束。' };
-  if (!lastCheck || lastCheck.state !== 'newer') return { state: 'error', message: '没有待下载的更新，请先检查更新。' };
+  if (lastCheck?.state !== 'newer') return { state: 'error', message: '没有待下载的更新，请先检查更新。' };
   downloading = true;
   let r;
   try {
@@ -277,7 +277,7 @@ ipcMain.handle('update:download', async () => {
       if (win && !win.isDestroyed()) win.webContents.send('update:progress', p);
     });
   } catch (e) {
-    r = { state: 'error', reason: 'unknown', message: '下载失败：' + String((e && e.message) || e) };
+    r = { state: 'error', reason: 'unknown', message: '下载失败：' + String(e?.message || e) };
   } finally {
     downloading = false;
   }
@@ -299,7 +299,7 @@ ipcMain.handle('update:install', () => {
 ipcMain.handle('update:open-dir', async () => {
   const dir = path.join(app.getPath('userData'), 'updates');
   try { fs.mkdirSync(dir, { recursive: true }); } catch (e) {
-    return { state: 'error', message: '更新目录创建失败：' + String((e && e.message) || e) };
+    return { state: 'error', message: '更新目录创建失败：' + String(e?.message || e) };
   }
   // openPath 成功返回空串、失败返回错误描述（Promise），别把 promise 当布尔判
   const err = await shell.openPath(dir);

@@ -232,6 +232,7 @@
        开着设置中心点关闭时弹层必须看得见，同时右上角四个按钮不能被封死（T03698 的教训）。 */
     #closeAsk {
       position: fixed; inset: 0; z-index: 75; display: none;
+      margin: 0; padding: 0; border: 0; max-width: none; max-height: none;
       background: rgba(15, 23, 42, 0.45);
       -webkit-app-region: drag; /* 同 #wizard：整层可拖窗口，面板另置 no-drag 保证可点 */
     }
@@ -355,7 +356,9 @@
   <!-- T03777：关闭询问弹层。这里刻意用「带文字按钮」而非全局图标按钮体系（T01531）：
        两个选项一个是收进托盘、一个是结束进程，误点代价不对称，文字比图标更难按错。
        必须排在 .win-ctrl 之前（同 #wizard 的 DOM 顺序铁律，否则控制条按钮的 no-drag 会被整层 drag 盖掉）。 -->
-  <div id="closeAsk" role="dialog" aria-modal="true" aria-labelledby="closeAskTitle">
+  <!-- 用原生 <dialog> 承载对话框语义（Sonar Web:S6819）；仍由 renderer 以 display 控制显隐，
+       不使用 showModal——本层 z-index 必须留在控制条(80)之下，改成 top-layer 会把右上角按钮封死。 -->
+  <dialog id="closeAsk" aria-modal="true" aria-labelledby="closeAskTitle">
     <div class="panel">
       <h2 id="closeAskTitle">关闭窗口时要做什么？</h2>
       <div class="step">收进托盘：程序继续运行，单击托盘图标或按 Alt+Shift+E 唤回。<br>退出应用：结束进程，需要重新打开程序。</div>
@@ -369,7 +372,7 @@
         <button id="closeAskTray" data-tip="最小化到托盘｜窗口收起，程序不退出">最小化到托盘</button>
       </div>
     </div>
-  </div>
+  </dialog>
 
   <h1>EmoReply 桌面端 <small>悬浮窗 · 剪贴板交付（不自动发送）</small></h1>
 

@@ -1,0 +1,500 @@
+[
+  {
+    "key": "027642da-0db5-447c-b72a-521f7d1fe500",
+    "rule": "javascript:S7785",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/renderer.js",
+    "project": "EmoReply",
+    "line": 1078,
+    "hash": "a0c433670f401b18d5fc9249f21a4ffa",
+    "textRange": {
+      "startLine": 1078,
+      "endLine": 1078,
+      "startOffset": 0,
+      "endOffset": 19
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer top-level await over an async function `hydrateUpdateMeta` call.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "async",
+      "es2022",
+      "modernize"
+    ],
+    "creationDate": "2026-11-14T18:14:05+0800",
+    "updateDate": "2026-11-14T18:14:05+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "a054faf0-1d8e-42ef-ad19-4ae72e61423a",
+    "rule": "javascript:S7785",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/scripts/updater.smoke.js",
+    "project": "EmoReply",
+    "line": 200,
+    "hash": "3cedc2e8bf48a2e8c451a284418cb2a0",
+    "textRange": {
+      "startLine": 200,
+      "endLine": 200,
+      "startOffset": 0,
+      "endOffset": 8
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer top-level await over an async function `runAll` call.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "async",
+      "es2022",
+      "modernize"
+    ],
+    "creationDate": "2026-11-14T18:14:05+0800",
+    "updateDate": "2026-11-14T18:14:05+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "9e5a1866-b467-4235-a59f-05abd1274d30",
+    "rule": "javascript:S7781",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 54,
+    "hash": "8926f2358ddfdf472eecd94348d641da",
+    "textRange": {
+      "startLine": 54,
+      "endLine": 54,
+      "startOffset": 42,
+      "endOffset": 47
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "This pattern can be replaced with '\\\\'.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "readability",
+      "es2021"
+    ],
+    "creationDate": "2026-11-14T18:14:05+0800",
+    "updateDate": "2026-11-14T18:14:05+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      },
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "c1391e03-c6fd-4386-b53a-b283349b9425",
+    "rule": "javascript:S7721",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 150,
+    "hash": "b5fa2c38b51815d559786ddc4ff70a4a",
+    "textRange": {
+      "startLine": 150,
+      "endLine": 150,
+      "startOffset": 2,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Move async function 'writeBody' to the outer scope.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "performance",
+      "optimization",
+      "javascript"
+    ],
+    "creationDate": "2026-11-14T18:14:05+0800",
+    "updateDate": "2026-11-14T18:14:05+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "EFFICIENT",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "5cf143f6-e882-48dd-b9ac-8e4cb54c7820",
+    "rule": "python:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+    "project": "EmoReply",
+    "line": 164,
+    "hash": "5c4eee3c6556bbd83fa6ec779a358fb3",
+    "textRange": {
+      "startLine": 164,
+      "endLine": 164,
+      "startOffset": 4,
+      "endOffset": 15
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 175,
+              "endLine": 175,
+              "startOffset": 19,
+              "endOffset": 21
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 179,
+              "endLine": 179,
+              "startOffset": 22,
+              "endOffset": 24
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 184,
+              "endLine": 184,
+              "startOffset": 4,
+              "endOffset": 7
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 186,
+              "endLine": 186,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 186,
+              "endLine": 186,
+              "startOffset": 13,
+              "endOffset": 16
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 190,
+              "endLine": 190,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 190,
+              "endLine": 190,
+              "startOffset": 28,
+              "endOffset": 31
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 195,
+              "endLine": 195,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 200,
+              "endLine": 200,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 200,
+              "endLine": 200,
+              "startOffset": 13,
+              "endOffset": 16
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 201,
+              "endLine": 201,
+              "startOffset": 30,
+              "endOffset": 32
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 205,
+              "endLine": 205,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 18 to the 15 allowed.",
+    "effort": "8min",
+    "debt": "8min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T18:14:05+0800",
+    "updateDate": "2026-11-14T18:14:05+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "d37332f5-3153-48e6-ad23-1b5b78d136a2",
+    "rule": "python:S1172",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+    "project": "EmoReply",
+    "line": 164,
+    "hash": "5c4eee3c6556bbd83fa6ec779a358fb3",
+    "textRange": {
+      "startLine": 164,
+      "endLine": 164,
+      "startOffset": 16,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove the unused function parameter \"app\".",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "unused"
+    ],
+    "creationDate": "2026-11-14T18:14:05+0800",
+    "updateDate": "2026-11-14T18:14:05+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "792e8ded-47e7-413d-ad01-bd16d7414ec8",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 140,
+    "hash": "812f68f1691475a4b1312e63450deedd",
+    "textRange": {
+      "startLine": 140,
+      "endLine": 140,
+      "startOffset": 8,
+      "endOffset": 39
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  }
+]

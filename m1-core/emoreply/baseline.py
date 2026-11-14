@@ -152,6 +152,122 @@ def _norm(s: str) -> str:
     return "".join((s or "").split())
 
 
+@dataclass
+class _Totals:
+    """逐图统计的累加器：先攒计数，末尾统一换算指标，避免主流程堆嵌套分支。"""
+
+    total_gt: int = 0
+    matched: int = 0
+    side_ok: int = 0
+    cer_sum: float = 0.0
+    total_pred: int = 0
+    pred_unmatched: int = 0
+    time_lines: int = 0
+    parse_applicable: int = 0
+    parse_ok: int = 0
+
+
+def _parse_predictions(preds: List[str]):
+    """预测行 → [(侧别, 正文, 是否时间标记)]，返回解析结果与时间行数。"""
+    parsed = []
+    time_lines = 0
+    for p in preds:
+        sender, body = parse_speaker_line(p)
+        side = SIDE_MINE if sender == "我" else SIDE_OTHER
+        is_time = p.strip().startswith(TIME_MARK_PREFIX)
+        if is_time:
+            time_lines += 1
+        parsed.append((side, body, is_time))
+    return parsed, time_lines
+
+
+def _match_pairs(gts: List[GtLine], parsed, used, match_ratio: float):
+    """贪心配对：每条 GT 取当前未占用、相似度最高的预测行。"""
+    pairs = []
+    for g in gts:
+        best_i, best_r = -1, 0.0
+        for i, (_side, body, is_time) in enumerate(parsed):
+            if used[i] or is_time:
+                continue
+            r = SequenceMatcher(None, _norm(g.text), _norm(body)).ratio()
+            if r > best_r:
+                best_i, best_r = i, r
+        if best_i >= 0 and best_r >= match_ratio:
+            used[best_i] = True
+            pairs.append((g, best_i))
+    return pairs
+
+
+def _score_pairs(pairs, parsed):
+    """返回 (CER 总和, 侧别正确数)：CER 只在匹配上的消息上计算。"""
+    cer_sum = 0.0
+    side_ok = 0
+    for g, i in pairs:
+        cer_sum += cer(g.text, parsed[i][1])
+        if parsed[i][0] == g.side:
+            side_ok += 1
+    return cer_sum, side_ok
+
+
+def _count_unmatched(used, parsed) -> int:
+    """未被任何 GT 匹配、且不是时间标记的预测行数（噪声误入）。"""
+    return sum(1 for i, u in enumerate(used) if not u and not parsed[i][2])
+
+
+def _evaluate_record(rec: CorpusRecord, pred_by_image: Dict, match_ratio: float,
+                     totals: _Totals) -> None:
+    """单图评测：缺预测直接记漏；有预测则解析、配对、累加各项指标。"""
+    gts = _gt_messages(rec)
+    preds = pred_by_image.get(rec.image)
+    if preds is None:
+        totals.total_gt += len(gts)       # 缺预测的图：GT 全记漏
+        if any(g.side == SIDE_OTHER for g in gts):
+            totals.parse_applicable += 1
+        return
+    parsed, time_lines = _parse_predictions(preds)
+    totals.total_pred += len(preds)
+    totals.time_lines += time_lines
+    used = [False] * len(preds)
+    pairs = _match_pairs(gts, parsed, used, match_ratio)
+    totals.total_gt += len(gts)
+    totals.matched += len(pairs)
+    cer_sum, side_ok = _score_pairs(pairs, parsed)
+    totals.cer_sum += cer_sum
+    totals.side_ok += side_ok
+    totals.pred_unmatched += _count_unmatched(used, parsed)
+    # 对话可解析：GT 有对方消息才适用（没有则链路本就解析不出 current）
+    if any(g.side == SIDE_OTHER for g in gts):
+        totals.parse_applicable += 1
+        _, current = split_dialogue_turns(list(preds))
+        if current is not None:
+            totals.parse_ok += 1
+
+
+def _build_metrics(corpus: List[CorpusRecord], unmatched_images: List[str],
+                   extra_preds: List[str], totals: _Totals) -> Dict:
+    """把累加器换算成对外指标（分母为 0 时给 None，避免除零与假 0）。"""
+    t = totals
+    return {
+        "images": len(corpus),
+        "images_without_prediction": len(unmatched_images),
+        "unmatched_images": unmatched_images,
+        "extra_prediction_images": extra_preds,
+        "gt_messages": t.total_gt,
+        "matched_messages": t.matched,
+        "message_recall": round(t.matched / t.total_gt, 4) if t.total_gt else None,
+        "side_accuracy": round(t.side_ok / t.matched, 4) if t.matched else None,
+        "line_cer": round(t.cer_sum / t.matched, 4) if t.matched else None,
+        "pred_lines": t.total_pred,
+        "time_mark_lines": t.time_lines,
+        # 分母剔除时间标记行：它们是合法结构标记，摊进分母会虚低误入率
+        "noise_intrusion": round(t.pred_unmatched / (t.total_pred - t.time_lines), 4)
+        if t.total_pred > t.time_lines else None,
+        "unmatched_pred_lines": t.pred_unmatched,
+        "dialogue_parse_rate": round(t.parse_ok / t.parse_applicable, 4)
+        if t.parse_applicable else None,
+    }
+
+
 def evaluate(corpus: List[CorpusRecord],
              predictions: List[Dict],
              *,
@@ -168,83 +284,11 @@ def evaluate(corpus: List[CorpusRecord],
     """
     pred_by_image = {p.get("image"): p.get("lines") or [] for p in predictions}
     unmatched_images = sorted(r.image for r in corpus if r.image not in pred_by_image)
-
-    total_gt = matched = side_ok = 0
-    cer_sum = 0.0
-    total_pred = pred_unmatched = time_lines = 0
-    parse_applicable = parse_ok = 0
-
+    totals = _Totals()
     for rec in corpus:
-        gts = _gt_messages(rec)
-        preds = pred_by_image.get(rec.image)
-        if preds is None:
-            total_gt += len(gts)          # 缺预测的图：GT 全记漏
-            if any(g.side == SIDE_OTHER for g in gts):
-                parse_applicable += 1
-            continue
-        used = [False] * len(preds)
-        total_pred += len(preds)
-
-        # 预测行一次性解析成 (侧别, 正文)：正文用于配对，侧别用于 side_accuracy。
-        # 时间标记行是结构标记不是消息：不参与配对、不计噪声误入（单列计数）。
-        parsed = []
-        for p in preds:
-            sender, body = parse_speaker_line(p)
-            side = SIDE_MINE if sender == "我" else SIDE_OTHER
-            is_time = p.strip().startswith(TIME_MARK_PREFIX)
-            if is_time:
-                time_lines += 1
-            parsed.append((side, body, is_time))
-
-        # 贪心配对：GT 按序取最优预测（SequenceMatcher 对归一化正文）
-        pairs = []  # (gt, pred_index)
-        for g in gts:
-            best_i, best_r = -1, 0.0
-            for i, (side, body, is_time) in enumerate(parsed):
-                if used[i] or is_time:
-                    continue
-                r = SequenceMatcher(None, _norm(g.text), _norm(body)).ratio()
-                if r > best_r:
-                    best_i, best_r = i, r
-            if best_i >= 0 and best_r >= match_ratio:
-                used[best_i] = True
-                pairs.append((g, best_i))
-
-        total_gt += len(gts)
-        matched += len(pairs)
-        for g, i in pairs:
-            cer_sum += cer(g.text, parsed[i][1])
-            if parsed[i][0] == g.side:
-                side_ok += 1
-        pred_unmatched += sum(
-            1 for i, u in enumerate(used) if not u and not parsed[i][2])
-
-        # 对话可解析：GT 有对方消息才适用（没有则链路本就解析不出 current）
-        if any(g.side == SIDE_OTHER for g in gts):
-            parse_applicable += 1
-            _, current = split_dialogue_turns(list(preds))
-            if current is not None:
-                parse_ok += 1
-
+        _evaluate_record(rec, pred_by_image, match_ratio, totals)
     extra_preds = sorted(set(pred_by_image) - {r.image for r in corpus})
-    return {
-        "images": len(corpus),
-        "images_without_prediction": len(unmatched_images),
-        "unmatched_images": unmatched_images,
-        "extra_prediction_images": extra_preds,
-        "gt_messages": total_gt,
-        "matched_messages": matched,
-        "message_recall": round(matched / total_gt, 4) if total_gt else None,
-        "side_accuracy": round(side_ok / matched, 4) if matched else None,
-        "line_cer": round(cer_sum / matched, 4) if matched else None,
-        "pred_lines": total_pred,
-        "time_mark_lines": time_lines,
-        # 分母剔除时间标记行：它们是合法结构标记，摊进分母会虚低误入率
-        "noise_intrusion": round(pred_unmatched / (total_pred - time_lines), 4)
-        if total_pred > time_lines else None,
-        "unmatched_pred_lines": pred_unmatched,
-        "dialogue_parse_rate": round(parse_ok / parse_applicable, 4) if parse_applicable else None,
-    }
+    return _build_metrics(corpus, unmatched_images, extra_preds, totals)
 
 
 def format_report(m: Dict) -> str:

@@ -39,7 +39,9 @@ function compareVersions(older, newer) {
   if (!x) return 1;             // 本机版本号读不懂（异常构建）：保守起见当作「有新版本」提示用户
   if (x.kind !== y.kind) return 0; // 口径不同不硬比，避免把 0.1.0 当成比 20261101 更新的版本
   const d = (x.a - y.a) || (x.b - y.b) || ((x.c || 0) - (y.c || 0));
-  return d < 0 ? -1 : d > 0 ? 1 : 0;
+  if (d < 0) return -1;
+  if (d > 0) return 1;
+  return 0;
 }
 
 /**
@@ -49,14 +51,14 @@ function compareVersions(older, newer) {
  * 前导点一律剥掉（隐藏文件与 `.`/`..` 这类幽灵名都不该出现在下载目录）。
  */
 function sanitizeName(name) {
-  const s = String(name || '').replace(/\\/g, '/');
+  const s = String(name || '').replaceAll('\\', '/');
   const base = s.slice(s.lastIndexOf('/') + 1).replace(/^\.+/, '');
-  return /^[\w][\w.\- ()+]*$/.test(base) && base.length <= 120 ? base : '';
+  return /^\w[\w.\- ()+]*$/.test(base) && base.length <= 120 ? base : '';
 }
 
 /** 选要下载的安装包：只要 Windows 的 .exe，优先 NSIS 安装器，其次 portable；忽略 blockmap/元数据。 */
 function pickAsset(release) {
-  const list = Array.isArray(release && release.assets) ? release.assets : [];
+  const list = Array.isArray(release?.assets) ? release.assets : [];
   const usable = list.filter((a) => a && typeof a.browser_download_url === 'string'
     && !/\.(blockmap|yml|yaml|json)$/i.test(String(a.name || '')));
   const win = usable.filter((a) => /\.exe$/i.test(String(a.name || '')));
@@ -65,14 +67,35 @@ function pickAsset(release) {
   return byName(/setup|installer/i) || byName(/portable/i) || win[0] || null;
 }
 
+/** 把响应体流式落盘，返回实际收到的字节数；进度回调按 200ms 节流。 */
+async function writeBody(res, file, total, onProgress) {
+  const fd = fs.openSync(file, 'w');
+  let received = 0;
+  let lastTick = 0;
+  try {
+    for await (const chunk of streamOf(res)) {
+      const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      fs.writeSync(fd, buf);
+      received += buf.length;
+      const now = Date.now();
+      if (now - lastTick >= 200 || received === total) {
+        lastTick = now;
+        if (onProgress) onProgress({ received, total, pct: total ? Math.min(99, Math.round(received / total * 100)) : 0 });
+      }
+    }
+  } finally {
+    fs.closeSync(fd);
+  }
+  return received;
+}
+
 /**
- * @param {object} o { currentVersion, dir, fetchImpl, spawnImpl, log, repo(仅测试可覆写) }
+ * @param {object} o { currentVersion, dir, fetchImpl, spawnImpl, repo(仅测试可覆写) }
  */
 function createUpdater(o = {}) {
   const repo = o.repo || REPO;
   const fetchImpl = o.fetchImpl || globalThis.fetch;
   const spawnImpl = o.spawnImpl || require('node:child_process').spawn;
-  const log = o.log || console;
   const dir = o.dir;
   const currentVersion = o.currentVersion || '0';
   if (typeof fetchImpl !== 'function') throw new Error('createUpdater 需要 fetch 实现');
@@ -90,7 +113,7 @@ function createUpdater(o = {}) {
         signal: AbortSignal.timeout(15000),
       });
     } catch (e) {
-      const msg = String((e && e.message) || e || '');
+      const msg = String(e?.message || e || '');
       return { state: 'error', message: /timeout|abort/i.test(msg)
         ? '检查更新超时：网络不通或 GitHub 无响应，请稍后再试。'
         : `连不上 GitHub（${repo}）：${msg}`, reason: 'network' };
@@ -107,8 +130,9 @@ function createUpdater(o = {}) {
     if (!res.ok) return { state: 'error', reason: 'http_' + res.status,
       message: `GitHub 返回异常状态 ${res.status}，请稍后再试。` };
 
-    let data;
-    try { data = await res.json(); } catch (e) {
+    // 响应体解析失败与「拿到一个坏 JSON」同归为 bad_json：这里用 catch 链避免静默吞异常
+    const data = await res.json().catch(() => null);
+    if (!data) {
       return { state: 'error', reason: 'bad_json', message: 'GitHub 返回内容解析失败，请稍后再试。' };
     }
     const latest = data && (data.tag_name || data.name);
@@ -123,8 +147,8 @@ function createUpdater(o = {}) {
     if (!asset) return { ...base, state: 'error', reason: 'no_asset',
       message: `发现新版本 ${latest}，但发布里没有可下载的 Windows 安装包。` };
     const name = sanitizeName(asset.name);
-    let url;
-    try { url = new URL(asset.browser_download_url); } catch (e) { url = null; }
+    const rawUrl = asset.browser_download_url;
+    const url = URL.canParse(rawUrl) ? new URL(rawUrl) : null;
     if (!name || !url || !ALLOW_HOSTS.has(url.hostname)) {
       return { ...base, state: 'error', reason: 'unsafe_asset',
         message: `发现新版本 ${latest}，但下载地址不在 GitHub 官方域名内，已拒绝。` };
@@ -133,36 +157,28 @@ function createUpdater(o = {}) {
       message: `发现新版本 ${latest}（当前 ${currentVersion}）。` };
   }
 
-  /** 下载到 dir/<name>；onProgress({received,total,pct})。返回 { state, file|message } */
-  async function download(info, onProgress) {
-    if (!info || info.state !== 'newer') return { state: 'error', message: '没有待下载的更新。' };
-    let url;
-    try { url = new URL(info.url); } catch (e) { return { state: 'error', message: '下载地址不合法。' }; }
+  /** 校验待下载目标：状态、域名白名单、文件名清洗缺一不可。返回 { state, url, name, file } 或错误结果。 */
+  function prepareDownload(info) {
+    if (info?.state !== 'newer') return { state: 'error', message: '没有待下载的更新。' };
+    const url = URL.canParse(info.url) ? new URL(info.url) : null;
+    if (!url) return { state: 'error', message: '下载地址不合法。' };
     if (!ALLOW_HOSTS.has(url.hostname)) return { state: 'error', message: '下载地址不在 GitHub 官方域名内，已拒绝。' };
     const name = sanitizeName(info.name);
     if (!name) return { state: 'error', message: '安装包文件名不合法，已拒绝。' };
-    const file = path.join(dir, name);
+    return { state: 'ok', url: info.url, name, file: path.join(dir, name) };
+  }
+
+  /** 下载到 dir/<name>；onProgress({received,total,pct})。返回 { state, file|message } */
+  async function download(info, onProgress) {
+    const prepared = prepareDownload(info);
+    if (prepared.state !== 'ok') return prepared;
+    const { url, name, file } = prepared;
     fs.mkdirSync(dir, { recursive: true });
     try {
-      const res = await fetchImpl(info.url, { headers: { 'User-Agent': 'emoreply-desktop-updater' } });
+      const res = await fetchImpl(url, { headers: { 'User-Agent': 'emoreply-desktop-updater' } });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      const total = Number(info.size) || Number(res.headers && res.headers.get && res.headers.get('content-length')) || 0;
-      const fd = fs.openSync(file, 'w');
-      let received = 0, lastTick = 0;
-      try {
-        for await (const chunk of streamOf(res)) {
-          const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-          fs.writeSync(fd, buf);
-          received += buf.length;
-          const now = Date.now();
-          if (now - lastTick >= 200 || received === total) {
-            lastTick = now;
-            if (onProgress) onProgress({ received, total, pct: total ? Math.min(99, Math.round(received / total * 100)) : 0 });
-          }
-        }
-      } finally {
-        fs.closeSync(fd);
-      }
+      const total = Number(info.size) || Number(res.headers?.get?.('content-length')) || 0;
+      const received = await writeBody(res, file, total, onProgress);
       if (total && received !== total) {
         fs.rmSync(file, { force: true });
         return { state: 'error', reason: 'size_mismatch',
@@ -172,7 +188,7 @@ function createUpdater(o = {}) {
         message: `新版安装包已下载完成（${(received / 1048576).toFixed(1)} MB）。` };
     } catch (e) {
       fs.rmSync(file, { force: true });
-      return { state: 'error', reason: 'download', message: '下载失败：' + (String((e && e.message) || e)) + '，请稍后再试。' };
+      return { state: 'error', reason: 'download', message: '下载失败：' + (String(e?.message || e)) + '，请稍后再试。' };
     }
   }
 
@@ -185,7 +201,7 @@ function createUpdater(o = {}) {
       if (child && typeof child.unref === 'function') child.unref();
       return { state: 'launched', file, message: '已启动安装程序，当前窗口将退出。' };
     } catch (e) {
-      return { state: 'error', message: '安装程序启动失败：' + (String((e && e.message) || e)) };
+      return { state: 'error', message: '安装程序启动失败：' + (String(e?.message || e)) };
     }
   }
 
@@ -194,7 +210,7 @@ function createUpdater(o = {}) {
 
 /** 兼容 Node undici（可异步迭代）与 Web stream（getReader）两种响应体。 */
 async function* streamOf(res) {
-  const b = res && res.body;
+  const b = res?.body;
   if (b && typeof b[Symbol.asyncIterator] === 'function') { yield* b; return; }
   if (b && typeof b.getReader === 'function') {
     const reader = b.getReader();

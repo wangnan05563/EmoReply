@@ -1,0 +1,6838 @@
+[
+  {
+    "key": "a0c2690d-d775-4e9f-8adc-7c3b38c2ea8b",
+    "rule": "kotlin:S7204",
+    "severity": "MAJOR",
+    "component": "EmoReply:android-app/app/build.gradle.kts",
+    "project": "EmoReply",
+    "line": 26,
+    "hash": "3f0939a00245a9122b91e02404b27786",
+    "textRange": {
+      "startLine": 26,
+      "endLine": 26,
+      "startOffset": 12,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Make sure that obfuscation is enabled in the release build configuration.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "cwe"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "VULNERABILITY",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "001fe03f-8405-4235-86ce-b6ce2b333f20",
+    "rule": "kotlin:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+    "project": "EmoReply",
+    "line": 219,
+    "hash": "e317291ef3a5441bb746fed508cbf812",
+    "textRange": {
+      "startLine": 219,
+      "endLine": 219,
+      "startOffset": 8,
+      "endOffset": 16
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 222,
+              "endLine": 222,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 222,
+              "endLine": 222,
+              "startOffset": 25,
+              "endOffset": 27
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 232,
+              "endLine": 232,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 236,
+              "endLine": 236,
+              "startOffset": 24,
+              "endOffset": 26
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 244,
+              "endLine": 244,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 244,
+              "endLine": 244,
+              "startOffset": 26,
+              "endOffset": 28
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 245,
+              "endLine": 245,
+              "startOffset": 16,
+              "endOffset": 18
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 249,
+              "endLine": 249,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 250,
+              "endLine": 250,
+              "startOffset": 10,
+              "endOffset": 15
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 251,
+              "endLine": 251,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 253,
+              "endLine": 253,
+              "startOffset": 10,
+              "endOffset": 15
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 255,
+              "endLine": 255,
+              "startOffset": 10,
+              "endOffset": 15
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:android-app/app/src/main/java/com/emoreply/poc/update/UpdateManager.kt",
+            "textRange": {
+              "startLine": 256,
+              "endLine": 256,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this method to reduce its Cognitive Complexity from 16 to the 15 allowed.",
+    "effort": "6min",
+    "debt": "6min",
+    "author": "",
+    "tags": [
+      "brain-overload",
+      "architecture"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "95ad57ab-240e-4376-9d2c-1b94e6b87eda",
+    "rule": "Web:S6819",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/index.html",
+    "project": "EmoReply",
+    "line": 358,
+    "hash": "5c4db80a6faad1e9289363564e56b20a",
+    "textRange": {
+      "startLine": 358,
+      "endLine": 358,
+      "startOffset": 2,
+      "endOffset": 85
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use <dialog> instead of the dialog role to ensure accessibility across all devices.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "accessibility"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "e229f39c-e2f4-4f3d-adc9-a5a7d60d6cb8",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/main.js",
+    "project": "EmoReply",
+    "line": 263,
+    "hash": "d51cec3418cae8bf43ac5e6bd2e71536",
+    "textRange": {
+      "startLine": 263,
+      "endLine": 263,
+      "startOffset": 82,
+      "endOffset": 96
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "d57579a5-10f5-4c43-a902-0cca41060a63",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/main.js",
+    "project": "EmoReply",
+    "line": 272,
+    "hash": "9194d1a2859a974f423878a11ec65f5c",
+    "textRange": {
+      "startLine": 272,
+      "endLine": 272,
+      "startOffset": 6,
+      "endOffset": 47
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "3073edc4-4e6a-48ab-ad16-1e5b4dd917db",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/main.js",
+    "project": "EmoReply",
+    "line": 280,
+    "hash": "72ec1f1fed65d14eddf6c5948edb802e",
+    "textRange": {
+      "startLine": 280,
+      "endLine": 280,
+      "startOffset": 72,
+      "endOffset": 86
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "9a979098-3ecb-4971-b9c5-5ea50da8d77c",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/main.js",
+    "project": "EmoReply",
+    "line": 302,
+    "hash": "ad17f1047872def3d4fd6e556180ee3f",
+    "textRange": {
+      "startLine": 302,
+      "endLine": 302,
+      "startOffset": 60,
+      "endOffset": 74
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "6e16ffbc-11e7-4fe0-8884-be9d46cdc42d",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/renderer.js",
+    "project": "EmoReply",
+    "line": 952,
+    "hash": "6c052505f4ae9e0430d52911ec06f876",
+    "textRange": {
+      "startLine": 952,
+      "endLine": 954,
+      "startOffset": 6,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "confusing"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "47b54e07-fb5a-4070-a937-984d2108cf6e",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/renderer.js",
+    "project": "EmoReply",
+    "line": 956,
+    "hash": "ac718844035bbb4c1fca050b9f00ddd0",
+    "textRange": {
+      "startLine": 956,
+      "endLine": 956,
+      "startOffset": 6,
+      "endOffset": 48
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "confusing"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "a89d8e1a-5ab6-4ef6-96a7-e6d7f69dbaab",
+    "rule": "javascript:S7785",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/renderer.js",
+    "project": "EmoReply",
+    "line": 1066,
+    "hash": "53768f9f79174d1158d154f63e9863bc",
+    "textRange": {
+      "startLine": 1066,
+      "endLine": 1066,
+      "startOffset": 33,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer top-level await over using a promise chain.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "async",
+      "es2022",
+      "modernize"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "ab782662-7733-4fb3-a67a-05263152943e",
+    "rule": "javascript:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 109,
+    "hash": "50933e532b2538087013ab45adf64254",
+    "textRange": {
+      "startLine": 109,
+      "endLine": 109,
+      "startOffset": 15,
+      "endOffset": 19
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 111,
+              "endLine": 111,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 120,
+              "endLine": 120,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 135,
+              "endLine": 135,
+              "startOffset": 22,
+              "endOffset": 24
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 142,
+              "endLine": 142,
+              "startOffset": 24,
+              "endOffset": 26
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 156,
+              "endLine": 156,
+              "startOffset": 25,
+              "endOffset": 27
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 159,
+              "endLine": 159,
+              "startOffset": 16,
+              "endOffset": 17
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 175,
+              "endLine": 175,
+              "startOffset": 23,
+              "endOffset": 25
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 179,
+              "endLine": 179,
+              "startOffset": 43,
+              "endOffset": 45
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 186,
+              "endLine": 186,
+              "startOffset": 23,
+              "endOffset": 25
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 204,
+              "endLine": 204,
+              "startOffset": 44,
+              "endOffset": 46
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 207,
+              "endLine": 207,
+              "startOffset": 74,
+              "endOffset": 76
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 214,
+              "endLine": 214,
+              "startOffset": 4,
+              "endOffset": 9
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 243,
+              "endLine": 243,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 250,
+              "endLine": 250,
+              "startOffset": 6,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl. 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 251,
+              "endLine": 251,
+              "startOffset": 37,
+              "endOffset": 39
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 251,
+              "endLine": 251,
+              "startOffset": 70,
+              "endOffset": 72
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 261,
+              "endLine": 261,
+              "startOffset": 2,
+              "endOffset": 7
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 263,
+              "endLine": 263,
+              "startOffset": 55,
+              "endOffset": 56
+            },
+            "msg": "+2 (incl. 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 264,
+              "endLine": 264,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+2 (incl. 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 267,
+              "endLine": 267,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 274,
+              "endLine": 274,
+              "startOffset": 6,
+              "endOffset": 8
+            },
+            "msg": "+2 (incl. 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 277,
+              "endLine": 277,
+              "startOffset": 28,
+              "endOffset": 33
+            },
+            "msg": "+3 (incl. 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 278,
+              "endLine": 278,
+              "startOffset": 51,
+              "endOffset": 53
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 278,
+              "endLine": 278,
+              "startOffset": 76,
+              "endOffset": 78
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 279,
+              "endLine": 279,
+              "startOffset": 38,
+              "endOffset": 39
+            },
+            "msg": "+3 (incl. 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 279,
+              "endLine": 279,
+              "startOffset": 16,
+              "endOffset": 18
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 281,
+              "endLine": 281,
+              "startOffset": 6,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl. 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 287,
+              "endLine": 287,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 288,
+              "endLine": 288,
+              "startOffset": 24,
+              "endOffset": 29
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+            "textRange": {
+              "startLine": 293,
+              "endLine": 293,
+              "startOffset": 20,
+              "endOffset": 21
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 39 to the 15 allowed.",
+    "effort": "29min",
+    "debt": "29min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "01ae4f92-0700-4625-a8d9-0561dc3c40c8",
+    "rule": "javascript:S1854",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 211,
+    "hash": "914053e625c83d97a8d4a3baa7aa2986",
+    "textRange": {
+      "startLine": 211,
+      "endLine": 211,
+      "startOffset": 6,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this useless assignment to variable \"l7mode\".",
+    "effort": "1min",
+    "debt": "1min",
+    "author": "",
+    "tags": [
+      "cwe",
+      "unused"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "9e66abbb-b06c-4b5c-a122-a7227b110993",
+    "rule": "javascript:S7781",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 249,
+    "hash": "a79e35d76c76444dcdb44c7b2ed3c703",
+    "textRange": {
+      "startLine": 249,
+      "endLine": 249,
+      "startOffset": 111,
+      "endOffset": 118
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `String#replaceAll()` over `String#replace()`.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "readability",
+      "es2021"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      },
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "4a9b237f-f539-4fb0-9b35-27c052691053",
+    "rule": "javascript:S7781",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 251,
+    "hash": "315beb92bc1a618d673cb0bbdc5d445a",
+    "textRange": {
+      "startLine": 251,
+      "endLine": 251,
+      "startOffset": 90,
+      "endOffset": 97
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `String#replaceAll()` over `String#replace()`.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "readability",
+      "es2021"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      },
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "778ea7e1-ec11-46ab-a64c-dc78dbe72627",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 251,
+    "hash": "315beb92bc1a618d673cb0bbdc5d445a",
+    "textRange": {
+      "startLine": 251,
+      "endLine": 251,
+      "startOffset": 68,
+      "endOffset": 82
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "18487b60-3be3-4820-a4e3-02307438e016",
+    "rule": "javascript:S7767",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 263,
+    "hash": "24e315d7a332beda078f004d8f8414cf",
+    "textRange": {
+      "startLine": 263,
+      "endLine": 263,
+      "startOffset": 18,
+      "endOffset": 48
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use `Math.trunc` instead of `| 0`.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "confusing"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      },
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "13592252-0276-40b8-a5fe-fefc241b9598",
+    "rule": "javascript:S2486",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 277,
+    "hash": "8d42a72b06ee1737c72ad07e68e93474",
+    "textRange": {
+      "startLine": 277,
+      "endLine": 277,
+      "startOffset": 28,
+      "endOffset": 50
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Handle this exception or don't catch it at all.",
+    "effort": "1h",
+    "debt": "1h",
+    "author": "",
+    "tags": [
+      "cwe",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "16ccc1c6-da09-40a1-bd1c-4ef6e66f36dd",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 278,
+    "hash": "0454a91680e49c1b766f96ecd312e4a5",
+    "textRange": {
+      "startLine": 278,
+      "endLine": 278,
+      "startOffset": 48,
+      "endOffset": 60
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "bb6a7895-59d5-4780-88ef-39bde32f8915",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 278,
+    "hash": "0454a91680e49c1b766f96ecd312e4a5",
+    "textRange": {
+      "startLine": 278,
+      "endLine": 278,
+      "startOffset": 73,
+      "endOffset": 88
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "8e3c27b5-decf-4d6b-9e16-c3112aa8e815",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 279,
+    "hash": "7b48dd3c85741bee87f0418638ba2ade",
+    "textRange": {
+      "startLine": 279,
+      "endLine": 279,
+      "startOffset": 13,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "ca061787-15d8-447f-ae0b-912cd4db5937",
+    "rule": "javascript:S2486",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 288,
+    "hash": "9930e3a74498bcb65605fdf954fe0991",
+    "textRange": {
+      "startLine": 288,
+      "endLine": 288,
+      "startOffset": 24,
+      "endOffset": 56
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Handle this exception or don't catch it at all.",
+    "effort": "1h",
+    "debt": "1h",
+    "author": "",
+    "tags": [
+      "cwe",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "aa91e09e-557f-490f-b9f0-86c8cd989d52",
+    "rule": "javascript:S2486",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 301,
+    "hash": "550051ee6b000602ffe414172dfff76d",
+    "textRange": {
+      "startLine": 301,
+      "endLine": 303,
+      "startOffset": 6,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Handle this exception or don't catch it at all.",
+    "effort": "1h",
+    "debt": "1h",
+    "author": "",
+    "tags": [
+      "cwe",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "4118f99c-3591-47d3-8bbd-664f647cad7c",
+    "rule": "javascript:S2486",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 316,
+    "hash": "550051ee6b000602ffe414172dfff76d",
+    "textRange": {
+      "startLine": 316,
+      "endLine": 318,
+      "startOffset": 6,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Handle this exception or don't catch it at all.",
+    "effort": "1h",
+    "debt": "1h",
+    "author": "",
+    "tags": [
+      "cwe",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "135656e1-8c84-4ae1-a0a3-a85a88c8f7a4",
+    "rule": "javascript:S2486",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/close-ask-e2e.js",
+    "project": "EmoReply",
+    "line": 329,
+    "hash": "550051ee6b000602ffe414172dfff76d",
+    "textRange": {
+      "startLine": 329,
+      "endLine": 331,
+      "startOffset": 4,
+      "endOffset": 3
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Handle this exception or don't catch it at all.",
+    "effort": "1h",
+    "debt": "1h",
+    "author": "",
+    "tags": [
+      "cwe",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "fd07b6e9-fe2c-48bb-b746-ec5fca175418",
+    "rule": "javascript:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+    "project": "EmoReply",
+    "line": 92,
+    "hash": "50933e532b2538087013ab45adf64254",
+    "textRange": {
+      "startLine": 92,
+      "endLine": 92,
+      "startOffset": 15,
+      "endOffset": 19
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 93,
+              "endLine": 93,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 101,
+              "endLine": 101,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 113,
+              "endLine": 113,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 117,
+              "endLine": 117,
+              "startOffset": 4,
+              "endOffset": 8
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 137,
+              "endLine": 137,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 140,
+              "endLine": 140,
+              "startOffset": 4,
+              "endOffset": 8
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 139,
+              "endLine": 139,
+              "startOffset": 46,
+              "endOffset": 48
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 146,
+              "endLine": 146,
+              "startOffset": 20,
+              "endOffset": 22
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 151,
+              "endLine": 151,
+              "startOffset": 49,
+              "endOffset": 51
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 158,
+              "endLine": 158,
+              "startOffset": 54,
+              "endOffset": 56
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 182,
+              "endLine": 182,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 183,
+              "endLine": 183,
+              "startOffset": 9,
+              "endOffset": 11
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 184,
+              "endLine": 184,
+              "startOffset": 4,
+              "endOffset": 8
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 187,
+              "endLine": 187,
+              "startOffset": 37,
+              "endOffset": 38
+            },
+            "msg": "+2 (incl. 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 187,
+              "endLine": 187,
+              "startOffset": 58,
+              "endOffset": 59
+            },
+            "msg": "+3 (incl. 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 189,
+              "endLine": 189,
+              "startOffset": 4,
+              "endOffset": 9
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 203,
+              "endLine": 203,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 205,
+              "endLine": 205,
+              "startOffset": 29,
+              "endOffset": 31
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 206,
+              "endLine": 206,
+              "startOffset": 9,
+              "endOffset": 11
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 208,
+              "endLine": 208,
+              "startOffset": 24,
+              "endOffset": 26
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 209,
+              "endLine": 209,
+              "startOffset": 9,
+              "endOffset": 11
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 212,
+              "endLine": 212,
+              "startOffset": 4,
+              "endOffset": 8
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 211,
+              "endLine": 211,
+              "startOffset": 25,
+              "endOffset": 27
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 214,
+              "endLine": 214,
+              "startOffset": 22,
+              "endOffset": 24
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 219,
+              "endLine": 219,
+              "startOffset": 42,
+              "endOffset": 43
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 229,
+              "endLine": 229,
+              "startOffset": 54,
+              "endOffset": 56
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 241,
+              "endLine": 241,
+              "startOffset": 62,
+              "endOffset": 64
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 242,
+              "endLine": 242,
+              "startOffset": 62,
+              "endOffset": 64
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 244,
+              "endLine": 244,
+              "startOffset": 25,
+              "endOffset": 27
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 248,
+              "endLine": 248,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+            "textRange": {
+              "startLine": 249,
+              "endLine": 249,
+              "startOffset": 20,
+              "endOffset": 21
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 34 to the 15 allowed.",
+    "effort": "24min",
+    "debt": "24min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "ba6f0678-3147-4b5a-a449-dbf1f3bf460b",
+    "rule": "javascript:S7735",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+    "project": "EmoReply",
+    "line": 137,
+    "hash": "7e9530d7452614d6e9dc99475ca13913",
+    "textRange": {
+      "startLine": 137,
+      "endLine": 137,
+      "startOffset": 6,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Unexpected negated condition.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "",
+    "tags": [
+      "readability"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "8d007bb2-e902-497f-8bdd-7b22e3d503a3",
+    "rule": "javascript:S7735",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+    "project": "EmoReply",
+    "line": 183,
+    "hash": "4e5af8e0f5c39bd138cb29b3fb4b4039",
+    "textRange": {
+      "startLine": 183,
+      "endLine": 183,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Unexpected negated condition.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "",
+    "tags": [
+      "readability"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "e3382ee5-aecc-4a90-9835-f9d777fdff9e",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+    "project": "EmoReply",
+    "line": 187,
+    "hash": "bf8603241dd4fa564d88e1f2b32b78a6",
+    "textRange": {
+      "startLine": 187,
+      "endLine": 187,
+      "startOffset": 49,
+      "endOffset": 78
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "confusing"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "d3771bc0-c603-48b5-bc95-dbaf313af6d2",
+    "rule": "javascript:S2486",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/update-e2e.js",
+    "project": "EmoReply",
+    "line": 189,
+    "hash": "712524e4dc5db92f26632db3a278478c",
+    "textRange": {
+      "startLine": 189,
+      "endLine": 189,
+      "startOffset": 4,
+      "endOffset": 63
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Handle this exception or don't catch it at all.",
+    "effort": "1h",
+    "debt": "1h",
+    "author": "",
+    "tags": [
+      "cwe",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "667dfe01-4b86-45d7-a6f0-1d566faabd75",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/updater.smoke.js",
+    "project": "EmoReply",
+    "line": 69,
+    "hash": "b2ce21110d5da2051bb2bdf15ff44124",
+    "textRange": {
+      "startLine": 69,
+      "endLine": 69,
+      "startOffset": 18,
+      "endOffset": 36
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "readability"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "b907c0de-8bb5-4729-ad24-6276c90b0a87",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/updater.smoke.js",
+    "project": "EmoReply",
+    "line": 72,
+    "hash": "cc736fa8381859fbf257a62a3e7ccdf6",
+    "textRange": {
+      "startLine": 72,
+      "endLine": 72,
+      "startOffset": 18,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "readability"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "81b074a0-4111-4f0d-a991-023f4da27012",
+    "rule": "javascript:S5850",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/scripts/updater.smoke.js",
+    "project": "EmoReply",
+    "line": 83,
+    "hash": "7c2e1ff837660b16d1fe7a46e3ae1126",
+    "textRange": {
+      "startLine": 83,
+      "endLine": 83,
+      "startOffset": 8,
+      "endOffset": 19
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Group parts of the regex together to make the intended operator precedence explicit.",
+    "effort": "10min",
+    "debt": "10min",
+    "author": "",
+    "tags": [
+      "regex",
+      "type-dependent"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "c3786783-5cd3-48fd-96fe-2536fddc6233",
+    "rule": "javascript:S7755",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/updater.smoke.js",
+    "project": "EmoReply",
+    "line": 137,
+    "hash": "32635f067cd4ce81815890c33af37592",
+    "textRange": {
+      "startLine": 137,
+      "endLine": 137,
+      "startOffset": 32,
+      "endOffset": 47
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `.at(…)` over `[….length - index]`.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "readability",
+      "performance",
+      "es2022"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "cb099248-32f1-4784-9b6b-2b2f376c1c47",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/scripts/updater.smoke.js",
+    "project": "EmoReply",
+    "line": 155,
+    "hash": "facff22bc8a8db5e2541b0dc2ad8ff8e",
+    "textRange": {
+      "startLine": 155,
+      "endLine": 155,
+      "startOffset": 55,
+      "endOffset": 73
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "readability"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "f99015dd-1fa0-4a53-b745-626a0bf066b6",
+    "rule": "javascript:S7785",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/scripts/updater.smoke.js",
+    "project": "EmoReply",
+    "line": 191,
+    "hash": "d50b774aa936407f8cd253c8598b4ed1",
+    "textRange": {
+      "startLine": 191,
+      "endLine": 191,
+      "startOffset": 7,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer top-level await over using a promise chain.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "async",
+      "es2022",
+      "modernize"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "5189c095-a4d8-4ba4-9b0f-039bf993c528",
+    "rule": "javascript:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+    "project": "EmoReply",
+    "line": 53,
+    "hash": "50933e532b2538087013ab45adf64254",
+    "textRange": {
+      "startLine": 53,
+      "endLine": 53,
+      "startOffset": 15,
+      "endOffset": 19
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 57,
+              "endLine": 57,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 65,
+              "endLine": 65,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 84,
+              "endLine": 84,
+              "startOffset": 54,
+              "endOffset": 56
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 93,
+              "endLine": 93,
+              "startOffset": 75,
+              "endOffset": 77
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 96,
+              "endLine": 96,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 100,
+              "endLine": 100,
+              "startOffset": 6,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl. 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 108,
+              "endLine": 108,
+              "startOffset": 54,
+              "endOffset": 56
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 117,
+              "endLine": 117,
+              "startOffset": 23,
+              "endOffset": 25
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 139,
+              "endLine": 139,
+              "startOffset": 25,
+              "endOffset": 27
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 142,
+              "endLine": 142,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 146,
+              "endLine": 146,
+              "startOffset": 63,
+              "endOffset": 65
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 148,
+              "endLine": 148,
+              "startOffset": 6,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl. 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 154,
+              "endLine": 154,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 166,
+              "endLine": 166,
+              "startOffset": 4,
+              "endOffset": 8
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 165,
+              "endLine": 165,
+              "startOffset": 59,
+              "endOffset": 61
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 172,
+              "endLine": 172,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/scripts/win-ctrl-e2e.js",
+            "textRange": {
+              "startLine": 173,
+              "endLine": 173,
+              "startOffset": 20,
+              "endOffset": 21
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 19 to the 15 allowed.",
+    "effort": "9min",
+    "debt": "9min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "b2528d99-37f0-423f-afa1-68cc714e3da2",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 42,
+    "hash": "b5919e77f990aa0ce54ea79248865940",
+    "textRange": {
+      "startLine": 42,
+      "endLine": 42,
+      "startOffset": 22,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "confusing"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "c9bfdbfe-7f5f-43f4-ad5d-ab16323bcc1d",
+    "rule": "javascript:S7781",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 52,
+    "hash": "c4ee7482cb4811ef4963591e9404ed6b",
+    "textRange": {
+      "startLine": 52,
+      "endLine": 52,
+      "startOffset": 31,
+      "endOffset": 38
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `String#replaceAll()` over `String#replace()`.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "readability",
+      "es2021"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      },
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "42805e17-53e4-470b-9943-fb6d4b18e0b1",
+    "rule": "javascript:S6397",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 54,
+    "hash": "d3725e1e7949ed878add564a22e8412c",
+    "textRange": {
+      "startLine": 54,
+      "endLine": 54,
+      "startOffset": 11,
+      "endOffset": 15
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Replace this character class by the character itself.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "regex",
+      "type-dependent"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "dfb2d84e-cdc4-4347-be5c-3fa86c25c03b",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 59,
+    "hash": "f6efbe53378d01cf73c1121aff8dcf97",
+    "textRange": {
+      "startLine": 59,
+      "endLine": 59,
+      "startOffset": 29,
+      "endOffset": 54
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "38cba6f9-791d-4700-b6aa-71fa122ca12b",
+    "rule": "javascript:S1854",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 75,
+    "hash": "512588e90abdebc188e12d42a0e47245",
+    "textRange": {
+      "startLine": 75,
+      "endLine": 75,
+      "startOffset": 8,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this useless assignment to variable \"log\".",
+    "effort": "1min",
+    "debt": "1min",
+    "author": "",
+    "tags": [
+      "cwe",
+      "unused"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "4badb7f1-6fcc-4639-8dd9-52ac8dc60dab",
+    "rule": "javascript:S1481",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 75,
+    "hash": "512588e90abdebc188e12d42a0e47245",
+    "textRange": {
+      "startLine": 75,
+      "endLine": 75,
+      "startOffset": 8,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove the declaration of the unused 'log' variable.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "unused"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "9e0cb296-a766-4c8e-9abb-bae0c25ba1ad",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 93,
+    "hash": "14178b93bde667f640875d738087e4fb",
+    "textRange": {
+      "startLine": 93,
+      "endLine": 93,
+      "startOffset": 26,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "900f4e1d-8ccf-4f85-a66c-b0ab2efdbecc",
+    "rule": "javascript:S2486",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 111,
+    "hash": "994caeec5a0ad9d835a3ffca147a07a8",
+    "textRange": {
+      "startLine": 111,
+      "endLine": 113,
+      "startOffset": 37,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Handle this exception or don't catch it at all.",
+    "effort": "1h",
+    "debt": "1h",
+    "author": "",
+    "tags": [
+      "cwe",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "8eaf5d84-ab9c-4549-80d8-f21c9142d063",
+    "rule": "javascript:S2486",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 127,
+    "hash": "86ee26da74924de9edb3c74fb1559061",
+    "textRange": {
+      "startLine": 127,
+      "endLine": 127,
+      "startOffset": 55,
+      "endOffset": 80
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Handle this exception or don't catch it at all.",
+    "effort": "1h",
+    "debt": "1h",
+    "author": "",
+    "tags": [
+      "cwe",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "c1ca71d3-5532-4d8e-811c-8314edee475e",
+    "rule": "javascript:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 137,
+    "hash": "dee48d743155978ddb2eddd5985e4775",
+    "textRange": {
+      "startLine": 137,
+      "endLine": 137,
+      "startOffset": 17,
+      "endOffset": 25
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 138,
+              "endLine": 138,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 140,
+              "endLine": 140,
+              "startOffset": 37,
+              "endOffset": 42
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 141,
+              "endLine": 141,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 143,
+              "endLine": 143,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 148,
+              "endLine": 148,
+              "startOffset": 6,
+              "endOffset": 8
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 149,
+              "endLine": 149,
+              "startOffset": 60,
+              "endOffset": 62
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 153,
+              "endLine": 153,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 154,
+              "endLine": 154,
+              "startOffset": 45,
+              "endOffset": 46
+            },
+            "msg": "+2 (incl. 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 158,
+              "endLine": 158,
+              "startOffset": 10,
+              "endOffset": 12
+            },
+            "msg": "+2 (incl. 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 160,
+              "endLine": 160,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl. 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 160,
+              "endLine": 160,
+              "startOffset": 69,
+              "endOffset": 70
+            },
+            "msg": "+4 (incl. 3 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 166,
+              "endLine": 166,
+              "startOffset": 6,
+              "endOffset": 8
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 166,
+              "endLine": 166,
+              "startOffset": 16,
+              "endOffset": 18
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 173,
+              "endLine": 173,
+              "startOffset": 6,
+              "endOffset": 11
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:desktop-app/updater.js",
+            "textRange": {
+              "startLine": 175,
+              "endLine": 175,
+              "startOffset": 81,
+              "endOffset": 83
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 22 to the 15 allowed.",
+    "effort": "12min",
+    "debt": "12min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "792e8ded-47e7-413d-ad01-bd16d7414ec8",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 138,
+    "hash": "812f68f1691475a4b1312e63450deedd",
+    "textRange": {
+      "startLine": 138,
+      "endLine": 138,
+      "startOffset": 8,
+      "endOffset": 39
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "f629e368-6674-4908-82ca-5a3c1aff2b32",
+    "rule": "javascript:S2486",
+    "severity": "MINOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 140,
+    "hash": "d9ad3b4d16d6e08bedc3e302e188bb42",
+    "textRange": {
+      "startLine": 140,
+      "endLine": 140,
+      "startOffset": 37,
+      "endOffset": 98
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Handle this exception or don't catch it at all.",
+    "effort": "1h",
+    "debt": "1h",
+    "author": "",
+    "tags": [
+      "cwe",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "3cedaff2-12cf-4110-9a2f-044e91ddbb56",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 149,
+    "hash": "cfd4646f341f083bc8dac83fe52fada2",
+    "textRange": {
+      "startLine": 149,
+      "endLine": 149,
+      "startOffset": 48,
+      "endOffset": 115
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "795252fd-54fd-40f7-990c-92025c0b129e",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 175,
+    "hash": "b96cd4692d2236fcbe0d521a747cb4db",
+    "textRange": {
+      "startLine": 175,
+      "endLine": 175,
+      "startOffset": 79,
+      "endOffset": 93
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "0fe693b5-d8f3-46f5-b709-2ceefc046f6a",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 188,
+    "hash": "8ac404594d8a20c2b474d48293aa44e0",
+    "textRange": {
+      "startLine": 188,
+      "endLine": 188,
+      "startOffset": 63,
+      "endOffset": 77
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "7ba4d47a-84e9-41c9-a55e-74c6b811e89d",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "EmoReply:desktop-app/updater.js",
+    "project": "EmoReply",
+    "line": 197,
+    "hash": "4a4b7478e53f562cd72712e3ba7805bc",
+    "textRange": {
+      "startLine": 197,
+      "endLine": 197,
+      "startOffset": 12,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": true,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "39dc9b49-64b2-4dc9-b981-98283ee8a618",
+    "rule": "python:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:m1-core/emoreply/baseline.py",
+    "project": "EmoReply",
+    "line": 155,
+    "hash": "1a1ac55f0ad4055a5d3f3cfe653df981",
+    "textRange": {
+      "startLine": 155,
+      "endLine": 155,
+      "startOffset": 4,
+      "endOffset": 12
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 169,
+              "endLine": 169,
+              "startOffset": 52,
+              "endOffset": 54
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 177,
+              "endLine": 177,
+              "startOffset": 4,
+              "endOffset": 7
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 180,
+              "endLine": 180,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 182,
+              "endLine": 182,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 191,
+              "endLine": 191,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 193,
+              "endLine": 193,
+              "startOffset": 29,
+              "endOffset": 31
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 195,
+              "endLine": 195,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 201,
+              "endLine": 201,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 203,
+              "endLine": 203,
+              "startOffset": 12,
+              "endOffset": 15
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 204,
+              "endLine": 204,
+              "startOffset": 16,
+              "endOffset": 18
+            },
+            "msg": "+4 (incl 3 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 204,
+              "endLine": 204,
+              "startOffset": 27,
+              "endOffset": 29
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 207,
+              "endLine": 207,
+              "startOffset": 16,
+              "endOffset": 18
+            },
+            "msg": "+4 (incl 3 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 209,
+              "endLine": 209,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 209,
+              "endLine": 209,
+              "startOffset": 27,
+              "endOffset": 30
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 215,
+              "endLine": 215,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 217,
+              "endLine": 217,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 220,
+              "endLine": 220,
+              "startOffset": 51,
+              "endOffset": 54
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 223,
+              "endLine": 223,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 226,
+              "endLine": 226,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 237,
+              "endLine": 237,
+              "startOffset": 55,
+              "endOffset": 57
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 238,
+              "endLine": 238,
+              "startOffset": 53,
+              "endOffset": 55
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 239,
+              "endLine": 239,
+              "startOffset": 48,
+              "endOffset": 50
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 244,
+              "endLine": 244,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/baseline.py",
+            "textRange": {
+              "startLine": 246,
+              "endLine": 246,
+              "startOffset": 69,
+              "endOffset": 71
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 49 to the 15 allowed.",
+    "effort": "39min",
+    "debt": "39min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "1e991e4c-ceba-4571-aa06-71f91798729c",
+    "rule": "python:S125",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/emoreply/correction.py",
+    "project": "EmoReply",
+    "line": 61,
+    "hash": "08524df518d24e79eb916d05558efd85",
+    "textRange": {
+      "startLine": 61,
+      "endLine": 61,
+      "startOffset": 8,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this commented out code.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "unused"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "ea4f8f82-f57d-409e-b433-bc8c99259ffd",
+    "rule": "python:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:m1-core/emoreply/preprocess.py",
+    "project": "EmoReply",
+    "line": 800,
+    "hash": "a23851820e6527fdf21026d31b362b37",
+    "textRange": {
+      "startLine": 800,
+      "endLine": 800,
+      "startOffset": 4,
+      "endOffset": 23
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/preprocess.py",
+            "textRange": {
+              "startLine": 811,
+              "endLine": 811,
+              "startOffset": 4,
+              "endOffset": 7
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/preprocess.py",
+            "textRange": {
+              "startLine": 812,
+              "endLine": 812,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/preprocess.py",
+            "textRange": {
+              "startLine": 813,
+              "endLine": 813,
+              "startOffset": 22,
+              "endOffset": 24
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/preprocess.py",
+            "textRange": {
+              "startLine": 814,
+              "endLine": 814,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/preprocess.py",
+            "textRange": {
+              "startLine": 817,
+              "endLine": 817,
+              "startOffset": 4,
+              "endOffset": 7
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/preprocess.py",
+            "textRange": {
+              "startLine": 820,
+              "endLine": 820,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/preprocess.py",
+            "textRange": {
+              "startLine": 822,
+              "endLine": 822,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/preprocess.py",
+            "textRange": {
+              "startLine": 825,
+              "endLine": 825,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/preprocess.py",
+            "textRange": {
+              "startLine": 827,
+              "endLine": 827,
+              "startOffset": 8,
+              "endOffset": 12
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/emoreply/preprocess.py",
+            "textRange": {
+              "startLine": 830,
+              "endLine": 830,
+              "startOffset": 4,
+              "endOffset": 7
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.",
+    "effort": "7min",
+    "debt": "7min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "fd59dd20-5573-4319-a81a-103d18669ce2",
+    "rule": "python:S1172",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+    "project": "EmoReply",
+    "line": 89,
+    "hash": "68a1d2aebc3a8e3d85a9aee762b86379",
+    "textRange": {
+      "startLine": 89,
+      "endLine": 89,
+      "startOffset": 24,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove the unused function parameter \"app\".",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "unused"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "d62e3504-cd32-49b7-a650-f344114c3cbc",
+    "rule": "python:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+    "project": "EmoReply",
+    "line": 95,
+    "hash": "8c99ca5db620295b02e9807eb5bb2f3c",
+    "textRange": {
+      "startLine": 95,
+      "endLine": 95,
+      "startOffset": 4,
+      "endOffset": 15
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 109,
+              "endLine": 109,
+              "startOffset": 22,
+              "endOffset": 24
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 122,
+              "endLine": 122,
+              "startOffset": 4,
+              "endOffset": 7
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 124,
+              "endLine": 124,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 124,
+              "endLine": 124,
+              "startOffset": 13,
+              "endOffset": 16
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 127,
+              "endLine": 127,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 127,
+              "endLine": 127,
+              "startOffset": 28,
+              "endOffset": 31
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 136,
+              "endLine": 136,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 144,
+              "endLine": 144,
+              "startOffset": 44,
+              "endOffset": 46
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 146,
+              "endLine": 146,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 146,
+              "endLine": 146,
+              "startOffset": 13,
+              "endOffset": 16
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 147,
+              "endLine": 147,
+              "startOffset": 30,
+              "endOffset": 32
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 152,
+              "endLine": 152,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 152,
+              "endLine": 152,
+              "startOffset": 50,
+              "endOffset": 53
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 154,
+              "endLine": 154,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 154,
+              "endLine": 154,
+              "startOffset": 34,
+              "endOffset": 37
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 156,
+              "endLine": 156,
+              "startOffset": 12,
+              "endOffset": 16
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 161,
+              "endLine": 161,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 161,
+              "endLine": 161,
+              "startOffset": 29,
+              "endOffset": 32
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 161,
+              "endLine": 161,
+              "startOffset": 60,
+              "endOffset": 63
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 170,
+              "endLine": 170,
+              "startOffset": 4,
+              "endOffset": 7
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 171,
+              "endLine": 171,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 32 to the 15 allowed.",
+    "effort": "22min",
+    "debt": "22min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "e1cd3cc1-91d9-4013-9df3-f8411768abf3",
+    "rule": "python:S1172",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+    "project": "EmoReply",
+    "line": 95,
+    "hash": "8c99ca5db620295b02e9807eb5bb2f3c",
+    "textRange": {
+      "startLine": 95,
+      "endLine": 95,
+      "startOffset": 26,
+      "endOffset": 36
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove the unused function parameter \"theme\".",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "unused"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "109d3fab-45a2-43e7-a9fe-5805ee03d27f",
+    "rule": "python:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+    "project": "EmoReply",
+    "line": 177,
+    "hash": "96be782fe5f425d28b465161f9bfe19f",
+    "textRange": {
+      "startLine": 177,
+      "endLine": 177,
+      "startOffset": 4,
+      "endOffset": 16
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 198,
+              "endLine": 198,
+              "startOffset": 4,
+              "endOffset": 7
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 202,
+              "endLine": 202,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 212,
+              "endLine": 212,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 217,
+              "endLine": 217,
+              "startOffset": 26,
+              "endOffset": 28
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 223,
+              "endLine": 223,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 229,
+              "endLine": 229,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 232,
+              "endLine": 232,
+              "startOffset": 12,
+              "endOffset": 16
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 233,
+              "endLine": 233,
+              "startOffset": 16,
+              "endOffset": 19
+            },
+            "msg": "+4 (incl 3 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 236,
+              "endLine": 236,
+              "startOffset": 12,
+              "endOffset": 16
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 238,
+              "endLine": 238,
+              "startOffset": 16,
+              "endOffset": 19
+            },
+            "msg": "+4 (incl 3 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 246,
+              "endLine": 246,
+              "startOffset": 28,
+              "endOffset": 30
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 247,
+              "endLine": 247,
+              "startOffset": 12,
+              "endOffset": 15
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 249,
+              "endLine": 249,
+              "startOffset": 47,
+              "endOffset": 49
+            },
+            "msg": "+4 (incl 3 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 256,
+              "endLine": 256,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 265,
+              "endLine": 265,
+              "startOffset": 26,
+              "endOffset": 28
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 271,
+              "endLine": 271,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 273,
+              "endLine": 273,
+              "startOffset": 8,
+              "endOffset": 12
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 278,
+              "endLine": 278,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 42 to the 15 allowed.",
+    "effort": "32min",
+    "debt": "32min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "ff847285-1e2a-4bcf-996b-dc86ff5fdf79",
+    "rule": "python:S1481",
+    "severity": "MINOR",
+    "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+    "project": "EmoReply",
+    "line": 203,
+    "hash": "facc5225c40e107b03a9109d0e97f0b3",
+    "textRange": {
+      "startLine": 203,
+      "endLine": 203,
+      "startOffset": 15,
+      "endOffset": 18
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 213,
+              "endLine": 213,
+              "startOffset": 15,
+              "endOffset": 18
+            },
+            "msg": "Assignment to unused local variable \"fpx\".",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Replace the unused local variable \"fpx\" with \"_\".",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "unused"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "9b9ae4e5-1af3-4d6b-8865-e25871a33f73",
+    "rule": "python:S125",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+    "project": "EmoReply",
+    "line": 267,
+    "hash": "c449ab4e2eb070485af7d0861c38e0ba",
+    "textRange": {
+      "startLine": 267,
+      "endLine": 267,
+      "startOffset": 8,
+      "endOffset": 38
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this commented out code.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "unused"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "d8228136-6eaa-4596-a607-e0dacd4c2df6",
+    "rule": "python:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+    "project": "EmoReply",
+    "line": 288,
+    "hash": "36999f0b7d2b4dd75cc52066ae8a601f",
+    "textRange": {
+      "startLine": 288,
+      "endLine": 288,
+      "startOffset": 4,
+      "endOffset": 8
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 296,
+              "endLine": 296,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 304,
+              "endLine": 304,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 305,
+              "endLine": 305,
+              "startOffset": 12,
+              "endOffset": 15
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 306,
+              "endLine": 306,
+              "startOffset": 16,
+              "endOffset": 19
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 307,
+              "endLine": 307,
+              "startOffset": 20,
+              "endOffset": 23
+            },
+            "msg": "+4 (incl 3 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:m1-core/scripts/gen_baseline_corpus.py",
+            "textRange": {
+              "startLine": 308,
+              "endLine": 308,
+              "startOffset": 24,
+              "endOffset": 27
+            },
+            "msg": "+5 (incl 4 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.",
+    "effort": "6min",
+    "debt": "6min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "654187b9-2d22-4e69-ac2b-3667634961b3",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 35,
+    "hash": "9d32cd562c88767249093e997859d6f7",
+    "textRange": {
+      "startLine": 35,
+      "endLine": 35,
+      "startOffset": 15,
+      "endOffset": 39
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "877890a7-80a9-46b5-9bf0-c28737d996a7",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 45,
+    "hash": "aacc39f286a20c6f6fe42ee6440b0ffb",
+    "textRange": {
+      "startLine": 45,
+      "endLine": 45,
+      "startOffset": 15,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "7288862a-9943-4400-9bce-61645a5f8591",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 48,
+    "hash": "0f0f1a9e2a8c33505b4575e3c793f141",
+    "textRange": {
+      "startLine": 48,
+      "endLine": 48,
+      "startOffset": 15,
+      "endOffset": 50
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "929b1e88-b31f-4b85-a198-02dd73300dbd",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 59,
+    "hash": "f7c9656f6a7b78c240025319a7f219c4",
+    "textRange": {
+      "startLine": 59,
+      "endLine": 59,
+      "startOffset": 15,
+      "endOffset": 41
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "1e5bc5d6-5b25-42f1-8682-ef81331f5550",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 60,
+    "hash": "7eca950cd078006a2411bac2bbdec4fb",
+    "textRange": {
+      "startLine": 60,
+      "endLine": 60,
+      "startOffset": 15,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "1a317fbc-8e82-402a-a33f-aa468afdd5f1",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 61,
+    "hash": "81b4a98e999a711136d2a7b408b80d76",
+    "textRange": {
+      "startLine": 61,
+      "endLine": 61,
+      "startOffset": 15,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "c93d5a35-b904-4463-8234-60a55bc8f99d",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 62,
+    "hash": "269088166270150903fae15cd689967d",
+    "textRange": {
+      "startLine": 62,
+      "endLine": 62,
+      "startOffset": 15,
+      "endOffset": 42
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "5f6ac5f4-48f7-40b7-9296-804f0cdbe93e",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 63,
+    "hash": "9fc0002b33639b1f83b68afffbb179a1",
+    "textRange": {
+      "startLine": 63,
+      "endLine": 63,
+      "startOffset": 15,
+      "endOffset": 46
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "44da49a2-73b4-45b1-bc62-6bd43256324e",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 69,
+    "hash": "49d09733887e698e2446c98f2a610019",
+    "textRange": {
+      "startLine": 69,
+      "endLine": 69,
+      "startOffset": 15,
+      "endOffset": 41
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "5cb60cb5-1af2-4017-94d1-b714960cba35",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 70,
+    "hash": "f9426c723f2b4910a3d109e2615c1bc4",
+    "textRange": {
+      "startLine": 70,
+      "endLine": 70,
+      "startOffset": 15,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "2af2ca0c-b016-4b7f-886e-cda8f924bc02",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 93,
+    "hash": "269088166270150903fae15cd689967d",
+    "textRange": {
+      "startLine": 93,
+      "endLine": 93,
+      "startOffset": 15,
+      "endOffset": 42
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "c3b0cb95-f9ce-4d78-80a4-c92c447fd059",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 94,
+    "hash": "f7c9656f6a7b78c240025319a7f219c4",
+    "textRange": {
+      "startLine": 94,
+      "endLine": 94,
+      "startOffset": 15,
+      "endOffset": 41
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "6a3b765f-38fe-44c7-94d4-719b15cdd390",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 103,
+    "hash": "f7c9656f6a7b78c240025319a7f219c4",
+    "textRange": {
+      "startLine": 103,
+      "endLine": 103,
+      "startOffset": 15,
+      "endOffset": 41
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "b59a3b9a-9b51-4783-913e-a75617713cea",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05727_baseline_eval.py",
+    "project": "EmoReply",
+    "line": 104,
+    "hash": "81b4a98e999a711136d2a7b408b80d76",
+    "textRange": {
+      "startLine": 104,
+      "endLine": 104,
+      "startOffset": 15,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "df5127c4-1af7-43d5-9d49-5c7b3d23066c",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05729_p1.py",
+    "project": "EmoReply",
+    "line": 27,
+    "hash": "52d3825cfe7e85082237d54e10f39b8b",
+    "textRange": {
+      "startLine": 27,
+      "endLine": 27,
+      "startOffset": 15,
+      "endOffset": 57
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "0fac3422-0d49-4b15-8d68-1f90bfd6da1e",
+    "rule": "python:S1244",
+    "severity": "MAJOR",
+    "component": "EmoReply:m1-core/tests/test_t05729_p1.py",
+    "project": "EmoReply",
+    "line": 33,
+    "hash": "0c1aabe0afa9f4797317a0aa77e654d3",
+    "textRange": {
+      "startLine": 33,
+      "endLine": 33,
+      "startOffset": 15,
+      "endOffset": 46
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not perform equality checks with floating point values.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [
+      "pytorch",
+      "data-science",
+      "numpy",
+      "suspicious"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "BUG",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "63f36fe6-6c45-4e7e-b943-721398645016",
+    "rule": "python:S7500",
+    "severity": "MINOR",
+    "component": "EmoReply:m1-core/tests/test_t05730_correction_poc.py",
+    "project": "EmoReply",
+    "line": 80,
+    "hash": "723094d3fe3e83f7594b7e1b74fb04e6",
+    "textRange": {
+      "startLine": 80,
+      "endLine": 80,
+      "startOffset": 58,
+      "endOffset": 73
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Replace this comprehension with passing the iterable to the collection constructor call",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "",
+    "tags": [],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "84c16251-2531-45af-bb74-2bc3034dd103",
+    "rule": "python:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:scripts/api_push.py",
+    "project": "EmoReply",
+    "line": 65,
+    "hash": "36999f0b7d2b4dd75cc52066ae8a601f",
+    "textRange": {
+      "startLine": 65,
+      "endLine": 65,
+      "startOffset": 4,
+      "endOffset": 8
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 70,
+              "endLine": 70,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 73,
+              "endLine": 73,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 79,
+              "endLine": 79,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 83,
+              "endLine": 83,
+              "startOffset": 4,
+              "endOffset": 7
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 91,
+              "endLine": 91,
+              "startOffset": 37,
+              "endOffset": 39
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 92,
+              "endLine": 92,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 99,
+              "endLine": 99,
+              "startOffset": 8,
+              "endOffset": 13
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 101,
+              "endLine": 101,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 107,
+              "endLine": 107,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 108,
+              "endLine": 108,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 117,
+              "endLine": 117,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 120,
+              "endLine": 120,
+              "startOffset": 33,
+              "endOffset": 35
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 125,
+              "endLine": 125,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 137,
+              "endLine": 137,
+              "startOffset": 47,
+              "endOffset": 49
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 143,
+              "endLine": 143,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/api_push.py",
+            "textRange": {
+              "startLine": 152,
+              "endLine": 152,
+              "startOffset": 58,
+              "endOffset": 60
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 30 to the 15 allowed.",
+    "effort": "20min",
+    "debt": "20min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  },
+  {
+    "key": "9bd0bd77-35e7-4a55-b45b-2bbaa2232f55",
+    "rule": "python:S3776",
+    "severity": "CRITICAL",
+    "component": "EmoReply:scripts/publish-release.py",
+    "project": "EmoReply",
+    "line": 426,
+    "hash": "63bfce9b7b3d526d0f9b44a9d7d22e3b",
+    "textRange": {
+      "startLine": 426,
+      "endLine": 426,
+      "startOffset": 4,
+      "endOffset": 19
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 441,
+              "endLine": 441,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 441,
+              "endLine": 441,
+              "startOffset": 30,
+              "endOffset": 33
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 444,
+              "endLine": 444,
+              "startOffset": 4,
+              "endOffset": 6
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 444,
+              "endLine": 444,
+              "startOffset": 24,
+              "endOffset": 26
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 444,
+              "endLine": 444,
+              "startOffset": 51,
+              "endOffset": 54
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 446,
+              "endLine": 446,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl 1 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 446,
+              "endLine": 446,
+              "startOffset": 19,
+              "endOffset": 22
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 450,
+              "endLine": 450,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 450,
+              "endLine": 450,
+              "startOffset": 38,
+              "endOffset": 41
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 453,
+              "endLine": 453,
+              "startOffset": 12,
+              "endOffset": 14
+            },
+            "msg": "+3 (incl 2 for nesting)",
+            "msgFormattings": []
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "EmoReply:scripts/publish-release.py",
+            "textRange": {
+              "startLine": 453,
+              "endLine": 453,
+              "startOffset": 38,
+              "endOffset": 41
+            },
+            "msg": "+1",
+            "msgFormattings": []
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.",
+    "effort": "6min",
+    "debt": "6min",
+    "author": "",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-11-14T17:44:00+0800",
+    "updateDate": "2026-11-14T17:44:00+0800",
+    "type": "CODE_SMELL",
+    "scope": "MAIN",
+    "quickFixAvailable": false,
+    "messageFormattings": [],
+    "codeVariants": [],
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "prioritizedRule": false,
+    "fromSonarQubeUpdate": false,
+    "internalTags": [],
+    "linkedTicketStatus": "NOT_LINKED"
+  }
+]

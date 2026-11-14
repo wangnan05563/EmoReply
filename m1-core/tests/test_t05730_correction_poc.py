@@ -76,8 +76,9 @@ class TestOpenAICompatibleContract:
     def _patch(self, monkeypatch, content=None, error=None):
         import urllib.request
         if error is not None:
-            monkeypatch.setattr(urllib.request, "urlopen",
-                                lambda req, timeout=None: (_ for _ in ()).throw(error))
+            def _raise(*_args, **_kwargs):
+                raise error
+            monkeypatch.setattr(urllib.request, "urlopen", _raise)
         else:
             monkeypatch.setattr(urllib.request, "urlopen",
                                 lambda req, timeout=None: self._FakeResp(content))

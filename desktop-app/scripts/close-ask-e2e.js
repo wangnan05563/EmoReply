@@ -12,6 +12,7 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
+const { spawn, spawnSync, execFileSync } = require('node:child_process');
 const guard = require('./profile-guard');
 
 const PORT = 9222;
@@ -77,7 +78,6 @@ async function pressEscape(cdp) {
 }
 // 托盘单击的等价路径：二次启动同 profile 拿不到单实例锁 → second-instance → showWindowFromTray
 function wakeBySecondInstance() {
-  const { spawnSync } = require('node:child_process');
   const exe = path.join(__dirname, '..', 'node_modules', 'electron', 'dist', 'electron.exe');
   spawnSync(exe, ['.', '--user-data-dir=' + PROFILE], {
     cwd: path.join(__dirname, '..'),
@@ -106,24 +106,26 @@ const ASK_SNAP = `(async (mode) => ({
   action: localStorage.getItem(${JSON.stringify(ACTION_KEY)}),
 }))`;
 
-async function main() {
-  // 护栏：本单会写「记住退出应用」并真的把进程打死，绝不能跑在真实用户档案上
+// 护栏：本单会写「记住退出应用」并真的把进程打死，绝不能跑在真实用户档案上
+function requireProfileArg() {
   if (!PROFILE) {
     console.error('用法：node scripts/close-ask-e2e.js <e2e 专用 profile 目录>\n'
       + '（必须显式传入，且必须是被 --user-data-dir 使用的独立目录）');
     process.exit(3);
   }
-  const cdp0 = await connect(await getTarget());
-  await cdp0.send('Page.enable');
-  const cfgFile = await guard.readCfgFile((expr) => ev(cdp0, expr));
+}
+
+// 二次护栏：设置文件必须在传入的 profile 目录内，且不是真实用户档案
+async function requireIsolatedProfile(cdp) {
+  const cfgFile = await guard.readCfgFile((expr) => ev(cdp, expr));
   const profileRoot = path.resolve(PROFILE) + path.sep;
   if (guard.isDefaultProfileFile(cfgFile) || !path.resolve(cfgFile).startsWith(profileRoot)) {
     console.error(guard.guardHint(cfgFile));
     process.exit(3);
   }
-  await sleep(400);
+}
 
-  console.log('L. T03777 关闭交互');
+async function runAskCases(cdp0) {
   // 复位：只清本单两枚键（不动 wizard/主题等，避免污染 ui-e2e 的首启判据）
   await ev(cdp0, `localStorage.removeItem(${JSON.stringify(ACTION_KEY)}); localStorage.removeItem(${JSON.stringify(REMEMBER_KEY)}); true`);
   await sleep(400);
@@ -205,22 +207,63 @@ async function main() {
     && l6.aria === '关闭并退出应用' && l6.action === 'exit_app' && l6.remember === '1', JSON.stringify(l6));
   const l6d = readSettings();
   t('L6b 设置页的选择落盘（close_action=exit_app）', l6d[ACTION_KEY] === 'exit_app' && l6d[REMEMBER_KEY] === '1', JSON.stringify(l6d));
+}
 
-  // L7 末条：已记住 exit → 点关闭进程真退出（CDP 断开 / target 消失才算通过）
-  // 退出会掐断这条 IPC 的回执，所以拿不到值不算失败——判据只在「target 是否消失」。
-  let l7mode = '(回执随进程退出中断)';
+// L7 末条：记住 exit → 点关闭进程真退出。退出会掐断这条 IPC 的回执，
+// 所以拿不到值不算失败——判据只在「target 是否消失」。
+async function quitViaCloseButton(cdp) {
   try {
-    l7mode = await Promise.race([ev(cdp0, `globalThis.emoReply.closeWindow()`), sleep(4000).then(() => '(回执超时)')]);
-  } catch (e) { l7mode = '连接中断：' + (e.message || e); }
-  const gone = !(await pollTarget(15000));
-  t('L7 记住「直接退出」后点关闭→进程退出（EmoReply target 消失）', gone, 'mode=' + l7mode);
+    return await Promise.race([ev(cdp, 'globalThis.emoReply.closeWindow()'), sleep(4000).then(() => '(回执超时)')]);
+  } catch (e) {
+    return '连接中断：' + (e.message || e);
+  }
+}
 
-  // N1 原生关闭路径（Alt+F4 / WM_CLOSE 等价）：L7 之后磁盘上仍是「记住 exit_app」，
-  // 重启同一 profile 再发 WM_CLOSE，必须同样真退出。
-  // 这条断言是踩过坑才加的：isQuitting 早先只在按钮路径的 exitApp() 里置位，
-  // 原生关闭会放行 close 事件却没人置位 → window-all-closed 见 tray 还在就不 quit，
-  // 结果窗口销毁、进程僵在托盘（且 showWindowFromTray 对已销毁窗口直接 return，点不动）。
-  const { spawn, execFileSync } = require('node:child_process');
+// taskkill 不带 /F = 向该 PID 的顶层窗口投递 WM_CLOSE；非 0 退出说明没送到。
+async function sendWmClose(pid) {
+  try {
+    const out = String(execFileSync('taskkill', ['/PID', String(pid)], { encoding: 'utf8' }) || '');
+    return 'sent:' + out.replaceAll(/\s+/g, ' ').trim();
+  } catch (e) {
+    return 'taskkill非0:'
+      + String(e?.stdout || e?.stderr || e?.message || e).replaceAll(/\s+/g, ' ').trim();
+  }
+}
+
+// 进程仍活着时分三种结局：弹层还开着=策略没按「记住退出」走；有页面没弹层=WM_CLOSE 没投进去；
+// 一个页面都没有=窗口已销毁而进程滞留，即本单红线「托盘僵尸」。
+async function describeStillAlive(port) {
+  const pages = (await (await fetch(`http://127.0.0.1:${port}/json`)).json())
+    .filter((p) => p.type === 'page');
+  if (!pages.length) return 'CDP 无 page(窗口已销毁·进程滞留=真僵尸)';
+  const ws = await connect(pages[0].webSocketDebuggerUrl);
+  const st = await ev(ws, `({ask:getComputedStyle(document.querySelector('#closeAsk')).display, hidden:document.hidden})`);
+  try { ws.close(); } catch (e) { console.debug('CDP 关闭失败：' + (e.message || e)); }
+  return `page=${pages.length} 弹层display=${st?.ask} 窗口hidden=${st?.hidden}`
+    + (st?.ask === 'block' ? '(被弹窗拦下，未按记住的退出)' : '(窗口仍在，WM_CLOSE 未生效)');
+}
+
+// 逐秒判活并留痕：只看最终结果分不清是慢、是卡、还是判活本身在骗人。
+async function waitForPidExit(pid) {
+  // 20s 不是拍脑袋：实测 WM_CLOSE 落到主进程消失约 5s（Electron 要走完
+  // window-all-closed → app.quit → will-quit），12s 在机器忙时会擦边假失败。
+  const t0 = Date.now();
+  const trace = [];
+  while (Date.now() - t0 < 20000) {
+    const on = aliveByPid(pid);
+    trace.push(`${Math.trunc((Date.now() - t0) / 1000)}s${on ? 'A' : 'X'}`);
+    if (!on) return { dead: true, trace };
+    await sleep(1000);
+  }
+  return { dead: false, trace };
+}
+
+// N1 原生关闭路径（Alt+F4 / WM_CLOSE 等价）：L7 之后磁盘上仍是「记住 exit_app」，
+// 重启同一 profile 再发 WM_CLOSE，必须同样真退出。
+// 这条断言是踩过坑才加的：isQuitting 早先只在按钮路径的 exitApp() 里置位，
+// 原生关闭会放行 close 事件却没人置位 → window-all-closed 见 tray 还在就不 quit，
+// 结果窗口销毁、进程僵在托盘（且 showWindowFromTray 对已销毁窗口直接 return，点不动）。
+async function runNativeCloseCase() {
   const exe = path.join(__dirname, '..', 'node_modules', 'electron', 'dist', 'electron.exe');
   // 必须真的删掉这个键：脚本自身跑在 node 里，继承来的 ELECTRON_RUN_AS_NODE 会让
   // electron.exe 退化成纯 node 解释器（`node .`），窗口根本不起来。
@@ -238,54 +281,43 @@ async function main() {
   });
   child.unref();
   fs.closeSync(relaunchLog);
+
   const up = await pollFor(25000, () => getTarget(PORT2));
-  let n1 = '新实例未起来（见 ' + path.join(PROFILE, 'relaunch.log') + '），跳过 WM_CLOSE';
+  let note = '新实例未起来（见 ' + path.join(PROFILE, 'relaunch.log') + '），跳过 WM_CLOSE';
   if (up) {
     await sleep(1200);
-    // 把 taskkill 的回执留成证据：不带 /F 时它是「向该 PID 的顶层窗口投递 WM_CLOSE」，
-    // 投不到（无可视窗口）会非 0 退出。原先 catch 掉只记 'sent'，失败时根本分不清
-    // 「没送到」还是「送到了但进程没退」——这两种的结论完全相反。
-    try {
-      n1 = 'sent:' + String(execFileSync('taskkill', ['/PID', String(child.pid)], { encoding: 'utf8' }) || '').replace(/\s+/g, ' ').trim();
-    } catch (e) {
-      n1 = 'taskkill非0:' + String((e && (e.stdout || e.stderr)) || (e && e.message) || e).replace(/\s+/g, ' ').trim();
-    }
+    note = await sendWmClose(child.pid);
   }
-  // 20s 不是拍脑袋：实测 WM_CLOSE 落到主进程消失约 5s（Electron 要走完
-  // window-all-closed → app.quit → will-quit），12s 在机器忙时会擦边假失败。
-  // 逐秒留痕而不是「等 20s 再看一眼」：同一条路径在独立探针里 5.5s 退干净，
-  // 在套件里却拖过 20s——只看最终结果分不清是慢、是卡、还是判活本身在骗人。
-  const t0 = Date.now();
-  const trace = [];
-  let dead = false;
-  while (Date.now() - t0 < 20000) {
-    const on = aliveByPid(child.pid);
-    trace.push(`${((Date.now() - t0) / 1000) | 0}s${on ? 'A' : 'X'}`);
-    if (!on) { dead = true; break; }
-    await sleep(1000);
-  }
+  const { dead, trace } = await waitForPidExit(child.pid);
   if (!dead) {
-    // 进程还活着时分清三种结局：问弹层还开着=策略没按「记住退出」走（配置读取问题）；
-    // 有页面但没弹层=WM_CLOSE 没投进去；页面一个都没了=窗口已销毁而进程滞留，才是本单红线「托盘僵尸」。
-    // 判据一律走 /json 的全量 page（不看标题）：标题随主题/首启水印变化，按 /EmoReply/ 过滤会假报「页面没了」。
-    let why = 'CDP 无 page(窗口已销毁·进程滞留=真僵尸)';
-    try {
-      const pages = (await (await fetch(`http://127.0.0.1:${PORT2}/json`)).json()).filter((p) => p.type === 'page');
-      if (pages.length) {
-        const ws = await connect(pages[0].webSocketDebuggerUrl);
-        const st = await ev(ws, `({ask:getComputedStyle(document.querySelector('#closeAsk')).display, hidden:document.hidden})`);
-        try { ws.close(); } catch (e) { /* 已断 */ }
-        why = `page=${pages.length} 弹层display=${st && st.ask} 窗口hidden=${st && st.hidden}`
-          + (st && st.ask === 'block' ? '(被弹窗拦下，未按记住的退出)' : '(窗口仍在，WM_CLOSE 未生效)');
-      }
-    } catch (e) { why = 'page 状态读取失败：' + (e.message || e); }
-    n1 += ' | ' + why + ' | trace=' + trace.join(',');
+    let why;
+    try { why = await describeStillAlive(PORT2); }
+    catch (e) { why = 'page 状态读取失败：' + (e.message || e); }
+    note += ' | ' + why + ' | trace=' + trace.join(',');
   }
-  t('N1 记住退出 + 原生关闭(Alt+F4 等价 WM_CLOSE)→进程真退出，不退化成托盘僵尸态', dead, 'wmclose=' + n1);
+  return { dead, note };
+}
+
+async function main() {
+  requireProfileArg();
+  const cdp0 = await connect(await getTarget());
+  await cdp0.send('Page.enable');
+  await requireIsolatedProfile(cdp0);
+  await sleep(400);
+
+  console.log('L. T03777 关闭交互');
+  await runAskCases(cdp0);
+
+  const l7mode = await quitViaCloseButton(cdp0);
+  const gone = !(await pollTarget(15000));
+  t('L7 记住「直接退出」后点关闭→进程退出（EmoReply target 消失）', gone, 'mode=' + l7mode);
+
+  const { dead, note } = await runNativeCloseCase();
+  t('N1 记住退出 + 原生关闭(Alt+F4 等价 WM_CLOSE)→进程真退出，不退化成托盘僵尸态', dead, 'wmclose=' + note);
 
   console.log(`\n===== T03777 E2E: PASS ${pass} / FAIL ${fail} =====`);
   if (fails.length) fails.forEach((f) => console.log('  FAIL> ' + f));
-  try { cdp0.close(); } catch (e) { /* 连接多半已随应用退出断掉 */ }
+  try { cdp0.close(); } catch (e) { console.debug('CDP 关闭失败：' + (e.message || e)); }
   // 先摘掉 socket 再等一拍才 exit：L7 会让渲染进程连同 WS 一起消失，
   // 若 process.exit 抢在 undici 投递关闭事件之前，Windows 上的 node 会命中
   // libuv 断言（src/win/async.c UV_HANDLE_CLOSING）并abort —— 断言全绿也拿不到退出码 0。
@@ -299,6 +331,7 @@ async function pollTarget(timeoutMs) {
     try {
       await getTarget();
     } catch (e) {
+      console.debug('target 已消失（进程已退）：' + (e.message || e));
       return false; // 页面没了 = 进程已退
     }
     await sleep(500);
@@ -314,6 +347,7 @@ async function pollFor(timeoutMs, probe) {
       await probe();
       return true;
     } catch (e) {
+      console.debug('等待实例就绪：' + (e.message || e));
       await sleep(500);
     }
   }
@@ -323,10 +357,10 @@ async function pollFor(timeoutMs, probe) {
 // 按 PID 判存活（tasklist 精确匹配，绝不按映像名——同机还有别的 electron/node 进程）
 function aliveByPid(pid) {
   try {
-    return require('node:child_process')
-      .execFileSync('tasklist', ['/FI', 'PID eq ' + pid, '/NH'], { encoding: 'utf8' })
+    return execFileSync('tasklist', ['/FI', 'PID eq ' + pid, '/NH'], { encoding: 'utf8' })
       .includes(String(pid));
   } catch (e) {
+    console.warn('tasklist 判活失败：' + (e.message || e));
     return false;
   }
 }

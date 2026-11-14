@@ -24,13 +24,13 @@ W = 1440
 class TestConfidence:
     def test_default_confidence_full(self):
         """节点树路径无置信信号，默认 1.0 不误伤。"""
-        assert OcrLine("x", 0, 1, 0, 1).confidence == 1.0
+        assert OcrLine("x", 0, 1, 0, 1).confidence == pytest.approx(1.0)
 
     def test_low_confidence_threshold(self):
         assert is_low_confidence(0.59)
         assert not is_low_confidence(0.60)      # 阈值含边界：0.6 不算疑似
         assert not is_low_confidence(None)      # 缺失不判疑似
-        assert LOW_CONFIDENCE_THRESHOLD == 0.6
+        assert LOW_CONFIDENCE_THRESHOLD == pytest.approx(0.6)
 
 
 # ===== 动态列分界 =====

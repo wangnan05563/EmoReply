@@ -62,6 +62,74 @@ def iso(dt_line):
     return {"name": name, "email": email, "date": dt}
 
 
+def _split_commit(raw):
+    """commit 原文 → (author 行, committer 行, 提交信息)。"""
+    hdr, _, msg = raw.partition(b"\n\n")
+    hl = hdr.decode("utf-8", "replace").splitlines()
+    author = next(l[7:] for l in hl if l.startswith("author "))
+    committer = next(l[10:] for l in hl if l.startswith("committer "))
+    return author, committer, msg.decode("utf-8", "replace")
+
+
+def _diff_pairs(sha, parent):
+    """git diff-tree → [(状态, 路径)]；只接受 A/M/T/D 四类变更。"""
+    out = g(["diff-tree", "-r", "--no-commit-id", "--name-status", "-z", parent, sha],
+            text=False)
+    items = [x.decode("utf-8", "replace") for x in out.split(b"\0") if x]
+    pairs = []
+    for i in range(0, len(items), 2):
+        st = items[i]
+        if st[0] not in "AMTD":
+            raise RuntimeError("unsupported status %r in %s" % (st, sha))
+        pairs.append((st, items[i + 1]))
+    return pairs
+
+
+def _entry_for(st, path, sha, token):
+    """单文件树条目：删除给空 blob，其余上传 blob 并回读校验。"""
+    if st.startswith("D"):
+        return {"path": path, "mode": "100644", "type": "blob", "sha": None}
+    blob = g(["cat-file", "blob", sha + ":" + path], text=False)
+    local_blob = g(["rev-parse", sha + ":" + path])
+    res = api("/git/blobs", token, "POST", {
+        "content": base64.b64encode(blob).decode("ascii"),
+        "encoding": "base64",
+    })
+    if res["sha"] != local_blob:
+        raise RuntimeError("blob sha mismatch for %s: %s != %s" % (path, res["sha"], local_blob))
+    ls = g(["ls-tree", sha, "--", path])
+    mode = ls.split()[0] if ls else "100644"
+    return {"path": path, "mode": mode, "type": "blob", "sha": res["sha"]}
+
+
+def _push_one(sha, idx, shas, local_base, prev_commit, prev_tree, token):
+    """把一个本地 commit 重放到远端，返回 (新 commit sha, 新 tree sha)。"""
+    author, committer, message = _split_commit(g(["cat-file", "commit", sha], text=False))
+    parent = g(["rev-parse", sha + "^"])
+    expected_parent = local_base if idx == 0 else shas[idx - 1]
+    if parent != expected_parent:
+        raise RuntimeError("local parent chain broken at " + sha)
+
+    entries = [_entry_for(st, path, sha, token) for st, path in _diff_pairs(sha, parent)]
+    tree = api("/git/trees", token, "POST", {"base_tree": prev_tree, "tree": entries})
+    local_tree = g(["rev-parse", sha + "^{tree}"])
+    if tree["sha"] != local_tree:
+        raise RuntimeError("tree sha mismatch at %s: %s != %s" % (sha[:8], tree["sha"], local_tree))
+
+    new = api("/git/commits", token, "POST", {
+        "message": message,
+        "tree": tree["sha"],
+        "parents": [prev_commit],
+        "author": iso(author),
+        "committer": iso(committer),
+    })
+    same = new["sha"] == sha
+    print("  %s -> %s  tree=OK  sha=%s  %s"
+          % (sha[:8], new["sha"][:8], "SAME" if same else "REWRITTEN",
+             message.splitlines()[0][:52]), flush=True)
+    return new["sha"], tree["sha"]
+
+
 def main():
     token = get_token()
     local_base = g(["rev-parse", "origin/main"])
@@ -80,63 +148,9 @@ def main():
         raise RuntimeError("remote tree mismatch: %s != %s" % (api_tree, prev_tree))
     print("base=%s  commits=%d" % (remote_sha[:8], len(shas)), flush=True)
 
-    for idx, s in enumerate(shas):
-        raw = g(["cat-file", "commit", s], text=False)
-        hdr, _, msg = raw.partition(b"\n\n")
-        hl = hdr.decode("utf-8", "replace").splitlines()
-        author = next(l[7:] for l in hl if l.startswith("author "))
-        committer = next(l[10:] for l in hl if l.startswith("committer "))
-        message = msg.decode("utf-8", "replace")
-        parent = g(["rev-parse", s + "^"])
-        expected_parent = local_base if idx == 0 else shas[idx - 1]
-        if parent != expected_parent:
-            raise RuntimeError("local parent chain broken at " + s)
-
-        out = g(["diff-tree", "-r", "--no-commit-id", "--name-status", "-z", parent, s], text=False)
-        items = [x.decode("utf-8", "replace") for x in out.split(b"\0") if x]
-        pairs = []
-        i = 0
-        while i < len(items):
-            st = items[i]
-            if st[0] not in "AMTD":
-                raise RuntimeError("unsupported status %r in %s" % (st, s))
-            pairs.append((st, items[i + 1]))
-            i += 2
-
-        entries = []
-        for st, path in pairs:
-            if st.startswith("D"):
-                entries.append({"path": path, "mode": "100644", "type": "blob", "sha": None})
-                continue
-            blob = g(["cat-file", "blob", s + ":" + path], text=False)
-            local_blob = g(["rev-parse", s + ":" + path])
-            res = api("/git/blobs", token, "POST", {
-                "content": base64.b64encode(blob).decode("ascii"),
-                "encoding": "base64",
-            })
-            if res["sha"] != local_blob:
-                raise RuntimeError("blob sha mismatch for %s: %s != %s" % (path, res["sha"], local_blob))
-            ls = g(["ls-tree", s, "--", path])
-            mode = ls.split()[0] if ls else "100644"
-            entries.append({"path": path, "mode": mode, "type": "blob", "sha": res["sha"]})
-
-        tree = api("/git/trees", token, "POST", {"base_tree": prev_tree, "tree": entries})
-        local_tree = g(["rev-parse", s + "^{tree}"])
-        if tree["sha"] != local_tree:
-            raise RuntimeError("tree sha mismatch at %s: %s != %s" % (s[:8], tree["sha"], local_tree))
-
-        new = api("/git/commits", token, "POST", {
-            "message": message,
-            "tree": tree["sha"],
-            "parents": [prev_commit],
-            "author": iso(author),
-            "committer": iso(committer),
-        })
-        same = new["sha"] == s
-        print("  %s -> %s  tree=OK  sha=%s  %s"
-              % (s[:8], new["sha"][:8], "SAME" if same else "REWRITTEN",
-                 message.splitlines()[0][:52]), flush=True)
-        prev_commit, prev_tree = new["sha"], tree["sha"]
+    for idx, sha in enumerate(shas):
+        prev_commit, prev_tree = _push_one(sha, idx, shas, local_base,
+                                           prev_commit, prev_tree, token)
 
     # optimistic-lock check, then move the remote branch
     now = api("/git/ref/heads/main", token)["object"]["sha"]
