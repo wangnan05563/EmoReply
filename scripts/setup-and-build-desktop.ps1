@@ -108,6 +108,54 @@ function Remove-Tree {
     elseif ([System.IO.File]::Exists($Path)) { [System.IO.File]::Delete($Path) }
 }
 
+# 韧性删除/移动（桌面构建踩坑 T05736）：刚解压出的 node.exe 常被 Windows Defender 实时
+# 扫描以独占方式持锁，紧随其后的 Move-Item 会「访问被拒绝」；上一轮中断残留的目录若被
+# 外部进程/索引服务持锁，删除也会失败。统一加重试（默认 6 次、每次间隔 800ms），等锁释放
+# 后重试。与 Invoke-DesktopPackage 注释记录的「防病毒/索引服务持锁」处置思路一致。
+function Remove-Resilient {
+    param([string]$Path, [int]$Attempts = 6)
+    for ($i = 1; $i -le $Attempts; $i++) {
+        try {
+            if ([System.IO.Directory]::Exists($Path)) { [System.IO.Directory]::Delete($Path, $true) }
+            elseif ([System.IO.File]::Exists($Path)) { [System.IO.File]::Delete($Path) }
+            return $true
+        } catch { if ($i -lt $Attempts) { Start-Sleep -Milliseconds 800 } }
+    }
+    return $false
+}
+
+function Move-Resilient {
+    param([string]$From, [string]$To, [int]$Attempts = 6)
+    for ($i = 1; $i -le $Attempts; $i++) {
+        try {
+            Move-Item -LiteralPath $From -Destination $To -Force
+            return $true
+        } catch { if ($i -lt $Attempts) { Start-Sleep -Milliseconds 800 } }
+    }
+    return $false
+}
+
+# 改名挪开（释放规范路径，绕开锁文件）：锁在文件句柄（与路径无关），重命名父目录
+# 即释放 electron-builder 需要的空输出目录；旧目录待防病毒/索引服务释放句柄后，
+# 下一次 best-effort 删除即可清掉。与 clean-release.ps1 的 Move-Aside-Resilient 同思路。
+# 实测：app.asar 被 Defender 持锁时 [IO]::Delete 整目录抛 IOException，但 Move-Item 重命名
+# 父目录稳定成功（T05736 复现）。GUID 后缀保证每次目标名唯一，避免残留碰撞。
+function Move-Aside-Unique {
+    param([string]$Path, [int]$Attempts = 8)
+    for ($i = 1; $i -le $Attempts; $i++) {
+        $trash = $Path + '.trash-' + [Guid]::NewGuid().ToString('N').Substring(0, 12)
+        try {
+            Move-Item -LiteralPath $Path -Destination $trash -Force -ErrorAction Stop
+            # 被挪开的旧目录 best-effort 清理（锁文件跳过，绝不致命）
+            Remove-Resilient -Path $trash -Attempts 2 | Out-Null
+            return $true
+        } catch {
+            if ($i -lt $Attempts) { Start-Sleep -Milliseconds 1000 }
+        }
+    }
+    return $false
+}
+
 function Get-OfflinePackage {
     param([string]$Url, [string]$ZipName)
 
@@ -130,7 +178,7 @@ function Expand-Package {
     New-Item -ItemType Directory -Force -Path $ExtractTo | Out-Null
     # 暂存目录刻意放在 NodeRoot 下（与目标同盘）：Move-Item 才会走重命名，
     # 若用 $env:TEMP 则退化成跨盘整包复制，多花数分钟
-    Remove-Tree $Staging
+    if (Test-Path -LiteralPath $Staging) { if (-not (Remove-Resilient $Staging)) { throw "清理暂存目录失败（可能被外部进程持锁）：$Staging" } }
     New-Item -ItemType Directory -Force -Path $Staging | Out-Null
     [System.IO.Compression.ZipFile]::ExtractToDirectory($Zip, $Staging)
 
@@ -138,9 +186,11 @@ function Expand-Package {
     if (-not (Test-Path $src)) { throw "包内未找到目录 '$Inner'：$Zip" }
 
     $dst = Join-Path $ExtractTo $Inner
-    if (Test-Path $dst) { Remove-Tree $dst }
-    Move-Item -LiteralPath $src -Destination $dst
-    Remove-Tree $Staging
+    if (Test-Path -LiteralPath $dst) { if (-not (Remove-Resilient $dst)) { throw "清理已存在目标失败（可能被外部进程/防病毒持锁）：$dst" } }
+    # 刚解压出的 node.exe 常被 Windows Defender 实时扫描持锁，紧随其后的 Move-Item 会
+    # 「访问被拒绝」；用韧性移动重试，等锁释放（见 Move-Resilient / Remove-Resilient）。
+    if (-not (Move-Resilient -From $src -To $dst)) { throw "移动解压目录失败（可能被外部进程/防病毒持锁）：$src -> $dst" }
+    if (Test-Path -LiteralPath $Staging) { Remove-Resilient $Staging }
 }
 
 function Find-ExistingNode {
@@ -242,16 +292,28 @@ function Invoke-InstallerPackage {
     # patch 号（YYYYMMDD-NNN）非合法 semver 的兼容由 pkg-semver.js 处理
     # （打包期临时改写为 0.1.0-YYYYMMDD-NNN，结束无论成败还原原文件）。
     # 产物统一复制进交付目录 release\desktop，与绿色便携版放在一起。
-    $ebDist = Join-Path $ReleaseDir 'desktop-installer'
-    # 每次全量重建 electron-builder 输出目录，避免旧版本安装包残留被重复搬运
-    if (Test-Path $ebDist) { Remove-Tree $ebDist }
+    #
+    # T05736 关键修复：electron-builder 默认输出到 release\desktop-installer，而该目录内的
+    # app.asar 常被 Windows Defender/索引服务以独占方式持锁——重命名父目录在持锁时也会失败，
+    # 导致 electron-builder 的 EnsureEmptyDir 抛 IOException 中断整条流水线。改为每次构建
+    # 写入一个全新的唯一输出目录（时间戳+PID），彻底绕开锁文件；旧 desktop-installer（含持锁
+    # app.asar）仅做 best-effort 挪开/清理，失败也绝不影响本次构建。唯一目录用完后立即回收。
+    $ebDist = Join-Path $ReleaseDir ('desktop-installer-' + (Get-Date -Format 'yyyyMMddHHmmss') + '-' + $PID)
 
     # node.exe 已在组件阶段前置于 PATH，直接调用；pkg-semver.js 内部经 npx
     # 解析本地 node_modules\.bin\electron-builder（node 目录自带 npx.cmd）。
     $pkgSemver = Join-Path $AppDir 'scripts\pkg-semver.js'
     if (-not (Test-Path $pkgSemver)) { throw "未找到 pkg-semver.js：$pkgSemver" }
-    $rc = Invoke-Native { & node $pkgSemver --win --x64 }
-    if ($rc -ne 0) { throw "electron-builder 打包失败（exit $rc）" }
+
+    # 通过环境变量把唯一输出目录传给 pkg-semver（它会在打包期改写 package.json 的
+    # build.directories.output，结束无论成败还原），避免改 electron-builder 配置文件。
+    $env:EMO_REPLY_EB_OUTPUT = $ebDist
+    try {
+        $rc = Invoke-Native { & node $pkgSemver --win --x64 }
+        if ($rc -ne 0) { throw "electron-builder 打包失败（exit $rc）" }
+    } finally {
+        $env:EMO_REPLY_EB_OUTPUT = $null
+    }
 
     New-Item -ItemType Directory -Force -Path $DistDir | Out-Null
     # 只搬 NSIS setup 主安装包（artifactName = EmoReply-<version>-x64.exe）；
@@ -265,6 +327,16 @@ function Invoke-InstallerPackage {
         Copy-Item -LiteralPath $s.FullName -Destination $dest -Force
         if (-not $firstDest) { $firstDest = $dest }
     }
+
+    # 回收本次唯一输出目录（含 win-unpacked/blockmap/portable，不进交付）；best-effort：
+    # 若刚产出的 app.asar 正被 Defender 扫描持锁，挪开即可，留待后续运行清理。
+    if (Test-Path -LiteralPath $ebDist) {
+        if (-not (Move-Aside-Unique $ebDist)) { Remove-Resilient $ebDist }
+    }
+    # 旧 desktop-installer（含历史持锁 app.asar）顺手 best-effort 挪开，绝不致命。
+    $legacy = Join-Path $ReleaseDir 'desktop-installer'
+    if (Test-Path -LiteralPath $legacy) { Move-Aside-Unique $legacy | Out-Null }
+
     # 返回交付目录内的路径（而非 electron-builder 输出目录），成功摘要直接展示交付位
     return $firstDest
 }

@@ -42,7 +42,9 @@ if ($PurgeAll) {
     $targets += $relFull
 } else {
     if ($Scope -in @('desktop', 'all')) {
-        $targets += (Join-Path $relFull 'desktop-installer')
+        # 注意：desktop-installer 系列（含 desktop-installer / desktop-installer.build /
+        # desktop-installer-<时间戳>-<PID>）统一在下方 desktop-installer* 循环里 best-effort 处理，
+        # 不在此显式列出，避免与循环重复处理。
         $targets += (Join-Path $relFull 'desktop')
         $targets += (Join-Path $rootFull 'desktop-app\dist')
     }
@@ -73,28 +75,28 @@ foreach ($t in $targets) {
 }
 
 # Resilient delete: a single in-use item (e.g. an AV scanner briefly locking a
-# large .asar) must not abort the whole one-click pipeline. Retry a few times, and
-# if an item is still held, skip it (warn) so the build step can overwrite it.
+# large .asar) must not abort the whole one-click pipeline. Delete best-effort and
+# skip (warn) anything still held — WITHOUT sleep-retry: a permanently held file
+# (Defender real-time scan on app.asar) will never clear by waiting, and retrying
+# used to stall the build for minutes (T05736). Freed paths are handled by the
+# move-aside path; skipped items are cleaned on a later run when the lock lifts.
 function Remove-Resilient {
-    param([string]$Path, [int]$Attempts = 4)
-    for ($i = 1; $i -le $Attempts; $i++) {
-        try {
-            if ([System.IO.Directory]::Exists($Path)) {
-                # Remove children individually so one locked child can't abort the batch.
-                foreach ($c in [System.IO.Directory]::GetFileSystemEntries($Path)) {
-                    Remove-Resilient -Path $c -Attempts $Attempts
-                }
-                [System.IO.Directory]::Delete($Path, $false)
-            } else {
-                [System.IO.File]::Delete($Path)
+    param([string]$Path)
+    try {
+        if ([System.IO.Directory]::Exists($Path)) {
+            # Remove children individually so one locked child can't abort the batch.
+            foreach ($c in [System.IO.Directory]::GetFileSystemEntries($Path)) {
+                Remove-Resilient -Path $c
             }
-            return $true
-        } catch {
-            if ($i -lt $Attempts) { Start-Sleep -Milliseconds 700 }
+            [System.IO.Directory]::Delete($Path, $false)
+        } else {
+            [System.IO.File]::Delete($Path)
         }
+        return $true
+    } catch {
+        Write-Warning ("[clean-release] SKIP (in use): " + $Path)
+        return $false
     }
-    Write-Warning ("[clean-release] SKIP (still in use after retries): " + $Path)
-    return $false
 }
 
 # Move a target aside (rename) so the canonical path is freed for the next build
@@ -105,22 +107,41 @@ function Remove-Resilient {
 # moved-aside dir is then cleaned best-effort (locked items skipped, never
 # fatal). If rename is unavailable we fall back to in-place resilient delete.
 function Move-Aside-Resilient {
-    param([string]$Path, [int]$Attempts = 4)
+    param([string]$Path, [int]$Attempts = 8)
     for ($i = 1; $i -le $Attempts; $i++) {
-        $stamp = (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + $PID
+        $stamp = (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + $PID + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 6)
         $trash = $Path + '.trash-' + $stamp
         try {
             Move-Item -LiteralPath $Path -Destination $trash -Force -ErrorAction Stop
-            Remove-Resilient -Path $trash -Attempts 2 | Out-Null
+            Remove-Resilient -Path $trash | Out-Null
             return $true
         } catch {
-            if ($i -lt $Attempts) { Start-Sleep -Milliseconds 700 }
+            if ($i -lt $Attempts) { Start-Sleep -Milliseconds 1000 }
         }
     }
     return $false
 }
 
+# Best-effort cleanup of stale *.trash-* dirs left by prior move-aside when a
+# child file (e.g. app.asar) was still held by AV/indexer. Non-fatal: locked
+# items are skipped, so a dir may linger until the handle is released and a
+# later run finishes the job. Keeps the release dir from accumulating orphans.
+function Clear-StaleTrash {
+    param([string]$Root)
+    foreach ($t in Get-ChildItem -LiteralPath $Root -Directory -Filter '*.trash-*' -ErrorAction SilentlyContinue) {
+        Remove-Resilient -Path $t.FullName | Out-Null
+    }
+}
+
 $removed = 0
+# Clean stale *.trash-* leftovers and ALL desktop-installer* dirs (canonical
+# desktop-installer / electron-builder 临时 desktop-installer.build / 每轮唯一输出
+# desktop-installer-<时间戳>-<PID>）from previous runs first (best-effort). 若某子文件
+# （如 app.asar）仍被防病毒/索引服务持锁，挪开/跳过即可，绝不致命；锁释放后由后续运行收尾。
+Clear-StaleTrash -Root $relFull
+foreach ($d in Get-ChildItem -LiteralPath $relFull -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'desktop-installer*' }) {
+    if (-not (Move-Aside-Resilient -Path $d.FullName)) { Remove-Resilient -Path $d.FullName }
+}
 foreach ($p in $doomed) {
     if ($PSCmdlet.ShouldProcess($p, 'Clean')) {
         if ([System.IO.Directory]::Exists($p)) {
