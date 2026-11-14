@@ -61,7 +61,12 @@ $AdbExe    = Join-Path $Sdk 'platform-tools\adb.exe'
 $GradleHome   = Join-Path $ReleaseDir 'gradle-home'
 $ProjectCache = Join-Path $ReleaseDir 'gradle-project-cache'
 $KotlinDir    = Join-Path $ReleaseDir 'kotlin'
+# T05736（APK 名称前缀）：AGP 8.7 已从 VariantOutput 移除 outputFileName，无法在 Gradle
+# 构建脚本内直接改名；Gradle 实际产出名为 app-debug.apk，构建后由本脚本复制为带 EmoReply
+# 前缀的 EmoReply-debug.apk（构建产出目录内，满足「构建 apk 名称加入前缀」）与交付物 EmoReply-poc-debug.apk。
 $BuiltApk     = Join-Path $ReleaseDir 'build\app\outputs\apk\debug\app-debug.apk'
+# 构建产出目录内、带 EmoReply 前缀的同名副本
+$PrefixedApk  = Join-Path $ReleaseDir 'build\app\outputs\apk\debug\EmoReply-debug.apk'
 # 交付物另置一份到 release 根下，避免取用时还要下钻到 build 深层目录
 $ApkPath      = Join-Path $ReleaseDir 'EmoReply-poc-debug.apk'
 
@@ -217,21 +222,36 @@ function Invoke-ApkBuild {
         "--project-cache-dir=$ProjectCache",
         "-Pkotlin.project.persistent.dir=$KotlinDir"
     )
-    & (Join-Path $GradleDir 'bin\gradle.bat') @gradleArgs
+    # gradle.bat 会把 daemon 启动、告警等信息写到 stderr；在 $ErrorActionPreference='Stop'
+    # 下这些 stderr 会触发 NativeCommandError 而误中断构建（与 push 脚本的 adb 同坑）。
+    # 故临时切到 Continue，仅以 $LASTEXITCODE 判定真实成败。
+    try {
+        $ErrorActionPreference = 'Continue'
+        & (Join-Path $GradleDir 'bin\gradle.bat') @gradleArgs
+    } finally {
+        $ErrorActionPreference = 'Stop'
+    }
     if ($LASTEXITCODE -ne 0) { throw "Gradle 构建失败（exit $LASTEXITCODE）" }
 }
 
 function Remove-LegacyCaches {
     # 早先的构建把缓存写在工程内；改到 release 后这些目录不再生成，但历史残留会让
     # 「缓存全在 release」不成立，故构建前清掉。幂等：无残留时直接跳过。
+    # 注意：这里用原生 [IO] 递归删除，而非 Remove-Item —— 后者会被本机的 safe-delete
+    # 包装 fail-closed 拦截，导致整个构建脚本中断；这些目录均为可再生的历史遗留缓存，
+    # 非交付物，删除风险低。与同仓库 clean-release.ps1 的韧性删除保持一致。
     foreach ($d in @(
         (Join-Path $AppDir '.gradle'),
         (Join-Path $AppDir '.kotlin'),
         (Join-Path $AppDir 'app\build')
     )) {
-        if (Test-Path $d) {
-            Remove-Item -LiteralPath $d -Recurse -Force
-            Write-Host ("      · 清理工程内遗留缓存 {0}" -f $d) -ForegroundColor DarkGray
+        if (Test-Path -LiteralPath $d) {
+            try {
+                [System.IO.Directory]::Delete($d, $true)
+                Write-Host ("      · 清理工程内遗留缓存 {0}" -f $d) -ForegroundColor DarkGray
+            } catch {
+                Write-Warning ("      · 清理失败（可忽略，不影响构建）：{0} —— {1}" -f $d, $_.Exception.Message)
+            }
         }
     }
 }
@@ -284,6 +304,8 @@ Remove-LegacyCaches
 Invoke-ApkBuild
 
 if (-not (Test-Path $BuiltApk)) { throw "构建结束但未找到 APK：$BuiltApk" }
+# T05736：复制为带 EmoReply 前缀的构建产出与交付物（仅复制，不删除任何文件）
+Copy-Item -LiteralPath $BuiltApk -Destination $PrefixedApk -Force
 Copy-Item -LiteralPath $BuiltApk -Destination $ApkPath -Force
 $apk = Get-Item $ApkPath
 

@@ -49,6 +49,11 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    // T05736（APK 名称前缀）：AGP 8.7 已从 VariantOutput 移除 outputFileName，
+    // 无法在 Gradle 构建脚本内直接改名；故交付物前缀改由构建脚本在产出后复制/改名实现
+    // （见 scripts/setup-and-build-android.ps1：实际产物 app-debug.apk -> EmoReply-debug.apk
+    // 及交付物 EmoReply-poc-debug.apk）。产品 logo 图标替换见 res/ 覆盖。
 }
 
 // 构建产物统一落在工程外的 release 目录：删掉 release 即等于彻底清空构建残留，
