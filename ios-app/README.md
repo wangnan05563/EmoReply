@@ -27,7 +27,7 @@ ios-app/
 
 ## 首次接入步骤（Mac 上约 5 分钟）
 
-1. **核心回归**：`cd ios-app && swift test` —— 全部测试应通过（含加密静态不可读、禁语拦截、四风格互异等）。
+1. **核心回归**：`cd ios-app && swift test --scratch-path ../release/ios-build` —— 全部测试应通过（含加密静态不可读、禁语拦截、四风格互异等）。构建中间物统一落在工程 `release/`，工程内不产生 `.build/`。
 2. **Xcode 包装**：`Xcode → File → New → Project → iOS App`（命名 EmoReply，Interface=SwiftUI），
    然后把 `App/EmoReplyApp.swift`、`App/ContentView.swift` 拖入工程，并把本仓库 `ios-app/`
    目录（含 Package.swift）拖入 → Xcode 会识别为本地 Swift Package，target 依赖 `EmoReplyCore` 即可。

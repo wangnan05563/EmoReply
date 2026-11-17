@@ -53,22 +53,33 @@ $GradleDir = Join-Path $AndroidRoot 'gradle-8.9'
 $Staging   = Join-Path $AndroidRoot '.staging'
 $AdbExe    = Join-Path $Sdk 'platform-tools\adb.exe'
 
-# 构建相关的四类落点全部收敛到 release 之下，使「删掉 release」等价于「清理干净」：
-#   gradle-home          —— 依赖缓存与构建缓存（GRADLE_USER_HOME）
+# 构建相关的落点：工程私有缓存仍收敛在 release，依赖缓存改为多项目共享目录：
+#   GRADLE_USER_HOME     —— 依赖缓存与构建缓存，优先取环境变量（如 D:\code\Data_Gradle，多项目共用），
+#                           未设置时回落到 release\gradle-home，保证单机无配置也能构建
 #   gradle-project-cache —— 工程级 .gradle 元数据（--project-cache-dir）
 #   kotlin               —— KGP 的 .kotlin 会话数据（kotlin.project.persistent.dir）
 #   build                —— 编译产物（见 app/build.gradle.kts 的 buildDirectory）
-$GradleHome   = Join-Path $ReleaseDir 'gradle-home'
+$GradleHome   = $env:GRADLE_USER_HOME
+if (-not $GradleHome) { $GradleHome = Join-Path $ReleaseDir 'gradle-home' }
 $ProjectCache = Join-Path $ReleaseDir 'gradle-project-cache'
 $KotlinDir    = Join-Path $ReleaseDir 'kotlin'
 # T05736（APK 名称前缀）：AGP 8.7 已从 VariantOutput 移除 outputFileName，无法在 Gradle
 # 构建脚本内直接改名；Gradle 实际产出名为 app-debug.apk，构建后由本脚本复制为带 EmoReply
-# 前缀的 EmoReply-debug.apk（构建产出目录内，满足「构建 apk 名称加入前缀」）与交付物 EmoReply-poc-debug.apk。
+# 前缀的构建产出与交付物。
+# 版本号：产物名统一加版本号，版本取 desktop-app/package.json 的 version（与发布 tag 同口径），
+# 每次发版自动跟随，不硬编码；poc/debug 等其余命名保持原样。
+$ReleaseVersion = '0.1.0'
+$pkgJson = Join-Path $ProjectRoot 'desktop-app\package.json'
+if (Test-Path -LiteralPath $pkgJson) {
+    $verMatch = [regex]::Match([System.IO.File]::ReadAllText($pkgJson), '"version"\s*:\s*"([^"]+)"')
+    if ($verMatch.Success) { $ReleaseVersion = $verMatch.Groups[1].Value.Trim() }
+}
+$ApkStem      = 'EmoReply-' + $ReleaseVersion
 $BuiltApk     = Join-Path $ReleaseDir 'build\app\outputs\apk\debug\app-debug.apk'
-# 构建产出目录内、带 EmoReply 前缀的同名副本
-$PrefixedApk  = Join-Path $ReleaseDir 'build\app\outputs\apk\debug\EmoReply-debug.apk'
+# 构建产出目录内、带 EmoReply 前缀与版本号的副本
+$PrefixedApk  = Join-Path $ReleaseDir ('build\app\outputs\apk\debug\' + $ApkStem + '-debug.apk')
 # 交付物另置一份到 release 根下，避免取用时还要下钻到 build 深层目录
-$ApkPath      = Join-Path $ReleaseDir 'EmoReply-poc-debug.apk'
+$ApkPath      = Join-Path $ReleaseDir ($ApkStem + '-poc-debug.apk')
 
 # 镜像选择：本机实测直连 dl.google.com / repo.maven.apache.org 不稳定，
 # 故统一走腾讯云与清华 TUNA；镜像路径与离线包文件名一一对应，便于人工预置包。
@@ -204,8 +215,8 @@ function Invoke-ApkBuild {
     $env:JAVA_HOME = $JdkHome
     $env:ANDROID_HOME = $Sdk
     $env:ANDROID_SDK_ROOT = $Sdk
-    # GRADLE_USER_HOME 只在本进程内覆盖：机器上的全局值供其它项目共享，改全局会波及它们；
-    # 进程内指向 release，才能保证「删掉 release = 依赖与构建缓存一并清空」
+    # 依赖缓存优先使用环境变量 GRADLE_USER_HOME（多项目共享，避免每个工程各存一份），
+    # 未配置时才回落到 release\gradle-home；本进程内统一赋值，确保 Gradle 与脚本口径一致
     $env:GRADLE_USER_HOME = $GradleHome
     $env:Path = "$JdkHome\bin;$(Join-Path $Sdk 'platform-tools');$env:Path"
 
@@ -262,6 +273,7 @@ Write-Host ("  环境根目录：{0}" -f $AndroidRoot)
 Write-Host ("  工程目录  ：{0}" -f $AppDir)
 Write-Host ("  离线包目录：{0}" -f $CacheDir)
 Write-Host ("  交付/缓存 ：{0}" -f $ReleaseDir)
+Write-Host ("  依赖缓存 ：{0}" -f $GradleHome)
 Write-Host ''
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -304,7 +316,7 @@ Remove-LegacyCaches
 Invoke-ApkBuild
 
 if (-not (Test-Path $BuiltApk)) { throw "构建结束但未找到 APK：$BuiltApk" }
-# T05736：复制为带 EmoReply 前缀的构建产出与交付物（仅复制，不删除任何文件）
+# T05736：复制为带 EmoReply 前缀与版本号的构建产出与交付物（仅复制，不删除任何文件）
 Copy-Item -LiteralPath $BuiltApk -Destination $PrefixedApk -Force
 Copy-Item -LiteralPath $BuiltApk -Destination $ApkPath -Force
 $apk = Get-Item $ApkPath

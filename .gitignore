@@ -22,6 +22,8 @@ release/
 desktop-app/node_modules/
 desktop-app/dist/
 desktop-app/tmp/
+# pkg-semver 中断保护备份（正常构建结束会自动删除，仅异常残留时忽略）
+desktop-app/package.json.pkg-semver-backup
 
 # Python POC（m1-core）
 __pycache__/
@@ -77,3 +79,8 @@ desktop.ini
 # ---------- 补充（2026-10-18 git 初始化时补扫） ----------
 /.build/
 .pytest_cache/
+
+# ---------- 可重复构建产物（2026-11-16 统一收口）----------
+# 根级构建中间目录与输出目录；各端产物已统一落 release/，此处为兜底
+/build/
+/dist/

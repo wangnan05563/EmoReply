@@ -3,7 +3,7 @@
     EmoReply PoC —— 一键推送到真机并启动测试。
 
 .DESCRIPTION
-    复用构建产物（release\EmoReply-poc-debug.apk），依次完成：
+    复用构建产物（release\EmoReply-<版本>-poc-debug.apk），依次完成：
     检测设备 → 安装 APK → 启动主界面 → 授予通知监听权限 → 提示输入法切换命令。
     设备未连接、APK 缺失、多台设备等异常一律给出明确提示后退出，不做隐式重试。
 
@@ -20,7 +20,7 @@
 param(
     # 环境安装根目录，其下含 sdk\platform-tools\adb.exe；默认取 ANDROID_ROOT 或工程内 local.properties
     [string]$AndroidRoot,
-    # 待安装的 APK，默认 <ProjectRoot>\release\EmoReply-poc-debug.apk
+    # 待安装的 APK，默认取 release 下最新的 EmoReply-<版本>-poc-debug.apk
     [string]$ApkPath,
     # 安装完成后不自动启动应用
     [switch]$NoLaunch,
@@ -34,7 +34,18 @@ $ErrorActionPreference = 'Stop'
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot 'common-paths.ps1')
 $AndroidRoot = Resolve-AndroidRoot -ProjectRoot $ProjectRoot -Override $AndroidRoot
-if (-not $ApkPath) { $ApkPath = Join-Path $ProjectRoot 'release\EmoReply-poc-debug.apk' }
+if (-not $ApkPath) {
+    # 交付物名带版本号：取 release 下最新一份；无匹配时回退旧的无版本号名
+    $deliverables = @(
+        Get-ChildItem -LiteralPath (Join-Path $ProjectRoot 'release') -Filter 'EmoReply-*-poc-debug.apk' -File -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending
+    )
+    if ($deliverables.Count -gt 0) {
+        $ApkPath = $deliverables[0].FullName
+    } else {
+        $ApkPath = Join-Path $ProjectRoot 'release\EmoReply-poc-debug.apk'
+    }
+}
 
 $AdbExe = Join-Path $AndroidRoot 'sdk\platform-tools\adb.exe'
 $Package = 'com.emoreply.poc'

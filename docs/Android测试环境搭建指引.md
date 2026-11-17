@@ -74,7 +74,7 @@ $adb = "E:\Android\sdk\platform-tools\adb.exe"
 ### 2.4 一键脚本（推荐入口）
 
 ```bat
-REM 环境准备 + 构建打包，并把 APK 复制到 release\EmoReply-poc-debug.apk
+REM 环境准备 + 构建打包，并把 APK 复制到 release\EmoReply-<版本>-poc-debug.apk
 scripts\安卓构建打包.cmd
 
 REM 已构建过、只想重装并跑一轮真机验证（默认不切输入法，-SetIme 才切）
@@ -82,7 +82,7 @@ scripts\安卓推送测试.cmd
 ```
 
 - 构建产物：`release\build\app\outputs\apk\debug\app-debug.apk`（当前 versionCode 249401 / 0.1.0-poc）。
-- 推送脚本默认读取 `release\EmoReply-poc-debug.apk`，所以**重装前先跑一次构建脚本**；
+- 推送脚本默认读取 `release\EmoReply-<版本>-poc-debug.apk`（取最新一份），所以**重装前先跑一次构建脚本**；
   也可用 `-ApkPath` 显式指定其他 APK。
 - 脚本会依次完成：检测设备 → 安装 → 启动 `MainActivity` → 代授权通知监听 → 提示输入法切换命令。
 

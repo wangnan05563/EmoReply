@@ -1,6 +1,6 @@
 {
   "name": "emoreply-desktop",
-  "version": "20261114-001",
+  "version": "0.1.0-20261117-001",
   "description": "EmoReply 桌面端 POC：悬浮窗 + 剪贴板交付（T01054，壳选型：Electron）",
   "main": "main.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "productName": "EmoReply",
     "copyright": "Copyright © 2026 EmoReply",
     "directories": {
-      "output": "../release/desktop-installer"
+      "output": "D:\\code\\otherProjects\\EmoReply\\release\\desktop-installer-20261117222145-61088"
     },
     "files": [
       "main.js",

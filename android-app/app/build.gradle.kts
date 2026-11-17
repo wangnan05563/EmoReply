@@ -13,7 +13,7 @@ android {
         applicationId = "com.emoreply.poc"
         minSdk = 26
         targetSdk = 35
-        versionCode = 250901
+        versionCode = 251201
         versionName = "0.1.0-poc"
         // T01124：截图 OCR POC 仅 arm64 真机（三星 S 系列），控制 .so 体积
         ndk {
@@ -58,8 +58,8 @@ android {
 
     // T05736（APK 名称前缀）：AGP 8.7 已从 VariantOutput 移除 outputFileName，
     // 无法在 Gradle 构建脚本内直接改名；故交付物前缀改由构建脚本在产出后复制/改名实现
-    // （见 scripts/setup-and-build-android.ps1：实际产物 app-debug.apk -> EmoReply-debug.apk
-    // 及交付物 EmoReply-poc-debug.apk）。产品 logo 图标替换见 res/ 覆盖。
+    // （见 scripts/setup-and-build-android.ps1：Gradle 产物 app-debug.apk -> 带品牌与版本号的
+    // 构建产出/交付物，poc/debug 等标识保持原样）。产品 logo 图标替换见 res/ 覆盖。
 }
 
 // 构建产物统一落在工程外的 release 目录：删掉 release 即等于彻底清空构建残留，

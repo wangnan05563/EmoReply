@@ -4,15 +4,19 @@
     Remove build artifacts under the release directory before a build.
 .DESCRIPTION
     Scope selects which artifacts are removed:
-      desktop : release\desktop-installer, release\desktop, legacy desktop-app\dist
-      android : release\build\app\outputs, release\EmoReply-poc-debug.apk
-      all     : both groups (used by the one-click build + publish pipeline)
-    Toolchains and caches (release\toolchain, npm-cache, gradle-home,
-    gradle-project-cache, kotlin, downloads) are preserved by default:
-    they are expensive to rebuild and are NOT build artifacts.
-    -PurgeCaches removes those cache directories as well.
+      desktop : release\desktop-installer* (含临时唯一目录), release\desktop, 历史 desktop-app\dist
+      android : release\build\app\outputs, release\EmoReply-<版本>-poc-debug.apk（旧名一并清理），
+                以及工程内历史缓存 android-app\app\build / .gradle / .kotlin
+      all     : both groups + Python 本地缓存（m1-core 的 __pycache__ / .pytest_cache）
+    Toolchains and per-project caches still under release (release\toolchain,
+    gradle-project-cache, kotlin, downloads) are preserved by default: they are
+    expensive to rebuild and are NOT build artifacts. Shared Gradle/npm caches
+    live outside release (GRADLE_USER_HOME / npm_config_cache env vars, e.g.
+    D:\code\Data_Gradle / D:\code\Data_npm\npm-cache) and are never touched here.
+    -PurgeCaches removes the release-local cache directories as well.
     -PurgeAll removes the whole release directory; the build scripts recreate
-    it from scratch, so deleting release by hand is always safe.
+    it from scratch, so deleting release by hand is always safe (shared caches
+    outside release are unaffected).
     Every target is verified to live inside the project root before deletion.
     All paths are derived from the project root; no absolute path is hardcoded.
 .EXAMPLE
@@ -50,7 +54,26 @@ if ($PurgeAll) {
     }
     if ($Scope -in @('android', 'all')) {
         $targets += (Join-Path $relFull 'build\app\outputs')
+        # 交付物名带版本号（EmoReply-<版本>-poc-debug.apk），按模式清理所有旧版本
+        foreach ($f in Get-ChildItem -LiteralPath $relFull -Filter 'EmoReply-*-poc-debug.apk' -File -ErrorAction SilentlyContinue) {
+            $targets += $f.FullName
+        }
+        # 兼容旧的无版本号命名（历史残留，幂等）
         $targets += (Join-Path $relFull 'EmoReply-poc-debug.apk')
+        # 工程内历史缓存：早先版本的 Gradle/Kotlin 缓存曾写在 android-app 下，
+        # 现在统一由构建参数赶进 release，这里只清理可能的历史残留（可再生，非交付物）
+        $targets += (Join-Path $rootFull 'android-app\app\build')
+        $targets += (Join-Path $rootFull 'android-app\.gradle')
+        $targets += (Join-Path $rootFull 'android-app\.kotlin')
+    }
+    if ($Scope -eq 'all') {
+        # Python 本地缓存：跑 pytest / 评测脚本时生成，可再生成，不属于交付物
+        $targets += (Join-Path $rootFull 'm1-core\.pytest_cache')
+        foreach ($d in Get-ChildItem -LiteralPath (Join-Path $rootFull 'm1-core') -Directory -Recurse -Filter '__pycache__' -ErrorAction SilentlyContinue) {
+            $targets += $d.FullName
+        }
+        # iOS SwiftPM 构建中间物（swift build/test 默认会写 .build；README 已改为 --scratch-path 指向 release）
+        $targets += (Join-Path $rootFull 'ios-app\.build')
     }
     if ($PurgeCaches) {
         foreach ($n in @('toolchain', 'npm-cache', 'gradle-home', 'gradle-project-cache', 'kotlin', 'downloads')) {

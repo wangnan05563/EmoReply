@@ -60,10 +60,12 @@ $NodeExe     = Join-Path $NodeDir 'node.exe'
 $NpmCmd      = Join-Path $NodeDir 'npm.cmd'
 $Staging     = Join-Path $NodeRoot '.staging'
 
-# 构建相关的落点全部收敛到 release 之下，使「删掉 release」等价于「清理干净」：
-#   npm-cache —— npm 下载缓存（--cache 指定；默认会写进用户 AppData，污染全局）
+# 构建相关的落点：交付物与工程私有产物收敛在 release；npm 下载缓存改为多项目共享目录：
+#   npm-cache —— 优先取环境变量 npm_config_cache（如 D:\code\Data_npm\npm-cache，多项目共用），
+#               未设置时回落到 release\npm-cache，保证单机无配置也能构建
 #   desktop   —— 打包产物（Electron 运行时 + resources\app）
-$NpmCache    = Join-Path $ReleaseDir 'npm-cache'
+$NpmCache    = $env:npm_config_cache
+if (-not $NpmCache) { $NpmCache = Join-Path $ReleaseDir 'npm-cache' }
 $DistDir     = Join-Path $ReleaseDir 'desktop'
 $ExeName     = 'EmoReply.exe'
 
@@ -219,7 +221,8 @@ function Find-ExistingNode {
 function Invoke-NpmInstall {
     # npm install 到 desktop-app：registry 与 Electron 二进制镜像均指向 npmmirror，
     # 直连 registry.npmjs.org / github release 在本机实测不稳定（与安卓侧同因）。
-    # npm 缓存收敛到 release\npm-cache，保证「删掉 release = 缓存一并清空」。
+    # npm 缓存优先使用环境变量 npm_config_cache（多项目共享，避免重复下载），
+    # 未配置时才回落到 release\npm-cache；--cache 显式传入，确保镜像与脚本口径一致。
     if (-not (Test-Path (Join-Path $AppDir 'package.json'))) { throw "未找到 {0}" -f (Join-Path $AppDir 'package.json') }
     $env:ELECTRON_MIRROR = $ElectronMirror
     New-Item -ItemType Directory -Force -Path $NpmCache | Out-Null
@@ -337,6 +340,20 @@ function Invoke-InstallerPackage {
     $legacy = Join-Path $ReleaseDir 'desktop-installer'
     if (Test-Path -LiteralPath $legacy) { Move-Aside-Unique $legacy | Out-Null }
 
+    # 兜底：electron-builder 的输出已由 pkg-semver.js 强制指向 release；若配置漂移或有人
+    # 手工直调 CLI，工程内可能重新出现 desktop-app\dist（历史默认输出目录）。发现即挪进
+    # release，保证「工程内不落任何可重复构建物，删 release 即清空」始终成立。
+    $strayDist = Join-Path $AppDir 'dist'
+    if (Test-Path -LiteralPath $strayDist) {
+        $strayDest = Join-Path $ReleaseDir ('dist-stray-' + (Get-Date -Format 'yyyyMMddHHmmss') + '-' + $PID)
+        Move-Item -LiteralPath $strayDist -Destination $strayDest -Force -ErrorAction SilentlyContinue
+        if (Test-Path -LiteralPath $strayDest) {
+            Write-Warning ("electron-builder 在工程内留下了 dist，已挪到：" + $strayDest)
+        } else {
+            Write-Warning ("electron-builder 在工程内留下了 dist，且未能挪走：" + $strayDist)
+        }
+    }
+
     # 返回交付目录内的路径（而非 electron-builder 输出目录），成功摘要直接展示交付位
     return $firstDest
 }
@@ -347,6 +364,7 @@ Write-Host ("  环境根目录：{0}" -f $NodeRoot)
 Write-Host ("  应用目录  ：{0}" -f $AppDir)
 Write-Host ("  离线包目录：{0}" -f $CacheDir)
 Write-Host ("  交付/缓存 ：{0}" -f $ReleaseDir)
+Write-Host ("  npm 缓存 ：{0}" -f $NpmCache)
 Write-Host ''
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem

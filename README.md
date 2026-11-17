@@ -335,8 +335,15 @@ REM 已装好环境、只想重装 APK 并跑一轮真机验证
 scripts\安卓推送测试.cmd
 ```
 
-> 构建产物统一外置到 `release/`（`android-app/app/build.gradle.kts:56` 把 `layout.buildDirectory` 指到这里），
-> 该目录不入库；被清理后重跑上面的脚本即可再生成。
+> 构建产物、工程私有缓存与工具链收敛在 `release/`：Android 的 `build/` 与 APK、桌面绿色包与
+> NSIS 安装包、electron-builder 的临时输出、pytest 缓存与 iOS SwiftPM 构建目录都在这里；工程内
+> （含 `desktop-app`）不再产生 `dist/` 之类的可重复构建物。删除 `release/` 即等于彻底清理工程侧
+> 产物，重跑 `scripts\安卓构建打包.cmd` / `scripts\PC构建打包.cmd` 即可再生。
+>
+> **多项目共享的依赖缓存放在 `release/` 之外，由环境变量指定**：
+> `GRADLE_USER_HOME`（默认建议 `D:\code\Data_Gradle`）与 `npm_config_cache`（默认建议
+> `D:\code\Data_npm\npm-cache`）。构建脚本优先读取这两个环境变量，未设置时才回落到
+> `release\gradle-home` / `release\npm-cache`，因此没有配置的机器也能直接构建。
 
 首次使用还需在系统设置里完成三步授权：**通知使用权** → **启用输入法** → **设为默认输入法**（应用首页可一键跳转对应设置页）。
 
@@ -344,8 +351,10 @@ scripts\安卓推送测试.cmd
 
 ```bash
 cd m1-core
-python -m pytest -q
+python -B -m pytest -q
 ```
+
+> `-B` 不写 `__pycache__`；pytest 缓存按 `m1-core/pytest.ini` 落到 `release/m1-core/.pytest_cache`。
 
 ## 配置
 
@@ -451,7 +460,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - run: cd m1-core && python -m pytest -q
+      - run: cd m1-core && python -B -m pytest -q
   desktop:
     runs-on: windows-latest
     steps:
