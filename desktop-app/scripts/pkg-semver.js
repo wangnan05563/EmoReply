@@ -84,9 +84,20 @@ try {
   code = e.status || 1;
 } finally {
   if (modified) {
-    fs.writeFileSync(pkgPath, orig);
-    if (fs.existsSync(backupPath)) { fs.unlinkSync(backupPath); }
-    console.log('[pkg-semver] 已还原 package.json');
+    // 清理/还原的每一步都单独容错：任一失败（文件被防病毒/沙箱钩子持锁）都不能
+    // 从这里抛出，否则会跳过下方的安装包回写，令整条发布链在 asset 收集处失败。
+    try {
+      fs.writeFileSync(pkgPath, orig);
+      console.log('[pkg-semver] 已还原 package.json');
+    } catch (e) {
+      console.warn(`[pkg-semver] 还原 package.json 失败：${e.message}`);
+    }
+    try {
+      if (fs.existsSync(backupPath)) { fs.unlinkSync(backupPath); }
+    } catch (e) {
+      // 备份残留无害：下次运行开头会先用它还原 package.json 再重建。绝不中断主流程。
+      console.warn(`[pkg-semver] 删除临时备份失败（下次运行会自动还原）：${e.message}`);
+    }
   }
 }
 
